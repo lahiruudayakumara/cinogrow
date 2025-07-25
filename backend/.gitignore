@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.so
+
+# Virtual environment
+env/
+.venv/
+venv/
+ENV/
+
+# Environment variables
+.env
+.env.*
+
+# Pytest cache
+.pytest_cache/
+
+# Jupyter Notebook checkpoints (if used)
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+
+# Logs
+*.log
+
+# Model files
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.onnx
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Docker
+*.pid
+*.pid.lock
+docker-compose.override.yml
+
+# mypy & coverage
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# FastAPI docs cache
+*.sqlite3
+
+# Any uploads or temp data
+uploads/
+tmp/

@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+sqlmodel
+passlib[bcrypt]
+python-jose
+scikit-learn
+pillow

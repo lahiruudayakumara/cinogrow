@@ -1,75 +1,253 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-
-export default function HomeScreen() {
+const Weather = () => {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Hi Udari!</Text>
+          <Text style={styles.subtitle}>Here's what your farm looks like today.</Text>
+        </View>
+
+        {/* Weather Cards */}
+        <View style={styles.weatherCards}>
+          {/* Rainfall Card */}
+          <View style={[styles.weatherCard, styles.rainfallCard]}>
+            <View style={styles.cardIcon}>
+              <Ionicons name="rainy" size={24} color="#4A90E2" />
+            </View>
+            <Text style={styles.cardLabel}>Rainfall</Text>
+            <Text style={styles.cardValue}>12mm</Text>
+          </View>
+
+          {/* Temperature Card */}
+          <View style={[styles.weatherCard, styles.temperatureCard]}>
+            <View style={styles.cardIcon}>
+              <Ionicons name="thermometer" size={24} color="#FF6B6B" />
+            </View>
+            <Text style={styles.cardLabel}>Temperature</Text>
+            <Text style={styles.cardValue}>28°C</Text>
+          </View>
+        </View>
+
+        {/* Wind Speed Card */}
+        <View style={[styles.weatherCard, styles.windCard]}>
+          <View style={styles.windCardContent}>
+            <View style={styles.cardIcon}>
+              <Ionicons name="leaf" size={24} color="#4CAF50" />
+            </View>
+            <View style={styles.windInfo}>
+              <Text style={styles.cardLabel}>Wind Speed</Text>
+              <Text style={styles.cardValue}>15 km/h</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>Find My Yield</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Farm Assistant</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* What's Happening Section */}
+        <View style={styles.whatsHappening}>
+          <Text style={styles.sectionTitle}>What's Happening</Text>
+          
+          <View style={styles.alertCard}>
+            <View style={styles.alertIcon}>
+              <Ionicons name="rainy" size={20} color="#4A90E2" />
+            </View>
+            <View style={styles.alertContent}>
+              <Text style={styles.alertTitle}>Alert</Text>
+              <Text style={styles.alertDescription}>
+                Rain expected tomorrow - delay pruning
+              </Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  header: {
+    marginTop: 20,
+    marginBottom: 24,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#4CAF50',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666666',
+    lineHeight: 22,
+  },
+  weatherCards: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  weatherCard: {
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  rainfallCard: {
+    backgroundColor: '#E3F2FD',
+    flex: 0.48,
+  },
+  temperatureCard: {
+    backgroundColor: '#FFE5E5',
+    flex: 0.48,
+  },
+  windCard: {
+    backgroundColor: '#E8F5E8',
+    marginBottom: 24,
+  },
+  windCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    width: '100%',
   },
-  stepContainer: {
-    gap: 8,
+  windInfo: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  cardIcon: {
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  cardLabel: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 4,
+  },
+  cardValue: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  actionButtons: {
+    marginBottom: 32,
+  },
+  primaryButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  secondaryButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  secondaryButtonText: {
+    color: '#4CAF50',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  whatsHappening: {
+    marginBottom: 100,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#4CAF50',
+    marginBottom: 16,
+  },
+  alertCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  alertIcon: {
+    marginRight: 12,
+  },
+  alertContent: {
+    flex: 1,
+  },
+  alertTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  alertDescription: {
+    fontSize: 14,
+    color: '#666666',
+    lineHeight: 20,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  activeNavItem: {
+    // Active state styling handled by icon color
   },
 });
+
+export default Weather;

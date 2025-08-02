@@ -21,6 +21,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="upload-soil" options={{ title: 'Upload Soil Sample' }} />
         <Stack.Screen name="+not-found" />
         {/* Farm/Weather Screens */}
         <Stack.Screen 

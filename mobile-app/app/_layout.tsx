@@ -22,6 +22,64 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
+        {/* Farm/Weather Screens */}
+        <Stack.Screen 
+          name="farm-details" 
+          options={{ 
+            title: "Farm Details",
+            headerShown: true 
+          }} 
+        />
+        <Stack.Screen 
+          name="farm-assistance" 
+          options={{ 
+            title: "Farm Assistant",
+            headerShown: true 
+          }} 
+        />
+        <Stack.Screen 
+          name="past-yield-form" 
+          options={{ 
+            title: "Past Yield",
+            headerShown: true 
+          }} 
+        />
+        <Stack.Screen 
+          name="yield-prediction" 
+          options={{ 
+            title: "Yield Prediction",
+            headerShown: true 
+          }} 
+        />
+        {/* Fertilizer Screens */}
+        <Stack.Screen 
+          name="fertilizer-home" 
+          options={{ 
+            title: "Fertilizer Assistant",
+            headerShown: true 
+          }} 
+        />
+        <Stack.Screen 
+          name="upload-leaf" 
+          options={{ 
+            title: "Upload Leaf Image",
+            headerShown: true 
+          }} 
+        />
+        <Stack.Screen 
+          name="upload-soil" 
+          options={{ 
+            title: "Upload Soil Image",
+            headerShown: true 
+          }} 
+        />
+        <Stack.Screen 
+          name="fertilizer-result" 
+          options={{ 
+            title: "Fertilizer Results",
+            headerShown: true 
+          }} 
+        />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

@@ -9,38 +9,47 @@ import {
     ScrollView,
     SafeAreaView,
 } from 'react-native';
-import { launchImageLibrary, ImagePickerResponse, MediaType } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+
+type UploadSoilScreenNavigationProp = StackNavigationProp<
+    FertilizerStackParamList,
+    'FertilizerUploadSoil'
+>;
+
+type UploadSoilScreenRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerUploadSoil'>;
 
 interface UploadSoilScreenProps {
-    navigation?: any; // Replace with proper navigation type if using React Navigation
+    navigation: UploadSoilScreenNavigationProp;
+    route: UploadSoilScreenRouteProp;
 }
 
-const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation }) => {
+const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }) => {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const { fromLeaf, leafImage } = route.params || {};
 
     const handleGoBack = () => {
-        if (navigation) {
-            navigation.goBack();
-        }
+        navigation.goBack();
     };
 
-    const handleChooseFile = () => {
-        const options = {
-            mediaType: 'photo' as MediaType,
-            includeBase64: false,
-            maxHeight: 2000,
-            maxWidth: 2000,
-        };
+    const handleChooseFile = async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+            });
 
-        launchImageLibrary(options, (response: ImagePickerResponse) => {
-            if (response.didCancel || response.errorMessage) {
-                return;
+            if (!result.canceled && result.assets[0]) {
+                setSelectedImage(result.assets[0].uri);
             }
-
-            if (response.assets && response.assets[0]) {
-                setSelectedImage(response.assets[0].uri || null);
-            }
-        });
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Error', 'Failed to pick image');
+        }
     };
 
     const handleUploadSoilSample = () => {
@@ -49,11 +58,13 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation }) => {
             return;
         }
 
-        // Handle the upload logic here
-        Alert.alert('Upload Started', 'Your soil sample is being uploaded...');
-
-        // Example: Navigate to next screen or perform upload
-        // navigation.navigate('ResultScreen');
+        // Navigate to PhotoPreview for soil image, passing both images
+        navigation.navigate('FertilizerPhotoPreview', {
+            imageUri: selectedImage,
+            imageType: 'soil',
+            leafImage: leafImage,
+            soilImage: selectedImage,
+        });
     };
 
     const CameraIcon = () => (

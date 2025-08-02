@@ -9,55 +9,69 @@ import {
     SafeAreaView,
     StatusBar,
 } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+
+type PhotoPreviewNavigationProp = StackNavigationProp<
+    FertilizerStackParamList,
+    'FertilizerPhotoPreview'
+>;
+
+type PhotoPreviewRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerPhotoPreview'>;
 
 interface PhotoPreviewProps {
-    leafImage?: string;
-    soilImage?: string;
-    detectedIssues?: string[];
-    onRetakePhoto?: () => void;
-    onSaveAnalysis?: () => void;
-    onShareResults?: () => void;
+    navigation: PhotoPreviewNavigationProp;
+    route: PhotoPreviewRouteProp;
 }
 
-const PhotoPreview: React.FC<PhotoPreviewProps> = ({
-    leafImage,
-    soilImage,
-    detectedIssues = ['Nitrogen deficiency', 'Early leaf spot'],
-    onRetakePhoto,
-    onSaveAnalysis,
-    onShareResults,
-}) => {
+const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
+    const { imageUri, imageType, leafImage, soilImage } = route.params;
+
+    const detectedIssues = ['Nitrogen deficiency', 'Early leaf spot'];
+
+    const handleRetakePhoto = () => {
+        navigation.goBack();
+    };
+
+    const handleContinue = () => {
+        if (imageType === 'leaf') {
+            // After leaf photo, go to soil upload with leaf image
+            navigation.navigate('FertilizerUploadSoil', {
+                fromLeaf: true,
+                leafImage: imageUri
+            });
+        } else if (imageType === 'soil') {
+            // After soil photo, go back to home with both images
+            navigation.navigate('FertilizerHome', {
+                leafImage: leafImage,
+                soilImage: imageUri,
+            });
+        }
+    }; const handleGetResults = () => {
+        // If both images are available, go directly to results
+        if (leafImage && soilImage) {
+            navigation.navigate('FertilizerResult', {
+                leafImage,
+                soilImage,
+            });
+        }
+    };
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* Header */}
-                <Text style={styles.headerTitle}>Complete Agricultural Analysis</Text>
+                <Text style={styles.headerTitle}>
+                    {imageType === 'leaf' ? 'Leaf Sample Preview' : 'Soil Sample Preview'}
+                </Text>
 
-                {/* Photo Cards */}
+                {/* Current Photo */}
                 <View style={styles.photoContainer}>
                     <View style={styles.photoCard}>
-                        <View style={styles.leafCardBorder}>
+                        <View style={imageType === 'leaf' ? styles.leafCardBorder : styles.soilCardBorder}>
                             <Image
-                                source={
-                                    leafImage
-                                        ? { uri: leafImage }
-                                        : require('./assets/leaf-placeholder.jpg') // You'll need to add placeholder images
-                                }
-                                style={styles.photoImage}
-                                resizeMode="cover"
-                            />
-                        </View>
-                    </View>
-
-                    <View style={styles.photoCard}>
-                        <View style={styles.soilCardBorder}>
-                            <Image
-                                source={
-                                    soilImage
-                                        ? { uri: soilImage }
-                                        : require('./assets/soil-placeholder.jpg') // You'll need to add placeholder images
-                                }
+                                source={{ uri: imageUri }}
                                 style={styles.photoImage}
                                 resizeMode="cover"
                             />
@@ -65,10 +79,10 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
                     </View>
                 </View>
 
-                {/* Detected Issues Card */}
+                {/* Analysis Preview */}
                 <View style={styles.issuesCard}>
                     <View style={styles.issuesHeader}>
-                        <Text style={styles.issuesTitle}>Detected Issues</Text>
+                        <Text style={styles.issuesTitle}>Preliminary Analysis</Text>
                         <View style={styles.warningIcon}>
                             <Text style={styles.warningSymbol}>!</Text>
                         </View>
@@ -80,47 +94,25 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
                     ))}
                 </View>
 
-                {/* Fertilizer Recommendations */}
-                <Text style={styles.sectionTitle}>Fertilizer Recommendations</Text>
-
-                {/* Inorganic Fertilizers */}
-                <View style={styles.recommendationSection}>
-                    <Text style={styles.subsectionTitle}>Inorganic Fertilizers</Text>
-                    <Text style={styles.recommendationText}>
-                        NPK 20-10-10 at 200kg/ha + Urea 46% at 100kg/ha + TSP at 150kg/ha
-                    </Text>
-                </View>
-
-                {/* Organic Fertilizers */}
-                <View style={styles.recommendationSection}>
-                    <Text style={styles.subsectionTitle}>Organic Fertilizers</Text>
-                    <Text style={styles.recommendationText}>
-                        Compost 3 tonnes/ha + Poultry manure 2 tonnes/ha + Neem cake 500kg/ha
-                    </Text>
-                </View>
-
-                {/* Application Method */}
-                <View style={styles.recommendationSection}>
-                    <Text style={styles.subsectionTitle}>Application Method</Text>
-                    <Text style={styles.recommendationText}>
-                        Split in over 50% at planting, 25% at flowering
-                    </Text>
-                </View>
-
                 {/* Action Buttons */}
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.secondaryButton} onPress={onRetakePhoto}>
-                        <Text style={styles.secondaryButtonText}>Retake Photos</Text>
+                    <TouchableOpacity style={styles.secondaryButton} onPress={handleRetakePhoto}>
+                        <Text style={styles.secondaryButtonText}>Retake Photo</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.primaryButton} onPress={onSaveAnalysis}>
-                        <Text style={styles.primaryButtonText}>Save Analysis</Text>
+                    <TouchableOpacity style={styles.primaryButton} onPress={handleContinue}>
+                        <Text style={styles.primaryButtonText}>
+                            {imageType === 'leaf' ? 'Continue to Soil' : 'Continue'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={styles.shareButton} onPress={onShareResults}>
-                    <Text style={styles.shareButtonText}>Share Results</Text>
-                </TouchableOpacity>
+                {/* Show results button if both images are available */}
+                {leafImage && soilImage && (
+                    <TouchableOpacity style={styles.shareButton} onPress={handleGetResults}>
+                        <Text style={styles.shareButtonText}>Get Complete Results</Text>
+                    </TouchableOpacity>
+                )}
             </ScrollView>
         </SafeAreaView>
     );

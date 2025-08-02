@@ -9,38 +9,42 @@ import {
     ScrollView,
     SafeAreaView,
 } from 'react-native';
-import { launchImageLibrary, ImagePickerResponse, MediaType } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+
+type UploadLeafScreenNavigationProp = StackNavigationProp<
+    FertilizerStackParamList,
+    'FertilizerUploadLeaf'
+>;
 
 interface UploadLeafScreenProps {
-    navigation?: any; // Replace with proper navigation type if using React Navigation
+    navigation: UploadLeafScreenNavigationProp;
 }
 
 const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const handleGoBack = () => {
-        if (navigation) {
-            navigation.goBack();
-        }
+        navigation.goBack();
     };
 
-    const handleChooseFile = () => {
-        const options = {
-            mediaType: 'photo' as MediaType,
-            includeBase64: false,
-            maxHeight: 2000,
-            maxWidth: 2000,
-        };
+    const handleChooseFile = async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+            });
 
-        launchImageLibrary(options, (response: ImagePickerResponse) => {
-            if (response.didCancel || response.errorMessage) {
-                return;
+            if (!result.canceled && result.assets[0]) {
+                setSelectedImage(result.assets[0].uri);
             }
-
-            if (response.assets && response.assets[0]) {
-                setSelectedImage(response.assets[0].uri || null);
-            }
-        });
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Error', 'Failed to pick image');
+        }
     };
 
     const handleUploadLeafSample = () => {
@@ -49,11 +53,12 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
             return;
         }
 
-        // Handle the upload logic here
-        Alert.alert('Upload Started', 'Your leaf sample is being uploaded...');
-
-        // Example: Navigate to next screen or perform upload
-        // navigation.navigate('ResultScreen');
+        // Navigate to PhotoPreview for leaf image
+        navigation.navigate('FertilizerPhotoPreview', {
+            imageUri: selectedImage,
+            imageType: 'leaf',
+            leafImage: selectedImage,
+        });
     };
 
     const CameraIcon = () => (

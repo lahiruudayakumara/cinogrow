@@ -9,23 +9,30 @@ import {
     SafeAreaView,
     Share,
 } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+
+type FertilizerResultScreenNavigationProp = StackNavigationProp<
+    FertilizerStackParamList,
+    'FertilizerResult'
+>;
+
+type FertilizerResultScreenRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerResult'>;
 
 interface FertilizerResultScreenProps {
-    navigation?: any; // Replace with proper navigation type if using React Navigation
-    leafImage?: string;
-    soilImage?: string;
+    navigation: FertilizerResultScreenNavigationProp;
+    route: FertilizerResultScreenRouteProp;
 }
 
 const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
     navigation,
-    leafImage = 'https://example.com/leaf-sample.jpg', // Replace with actual image
-    soilImage = 'https://example.com/soil-sample.jpg'  // Replace with actual image
+    route,
 }) => {
+    const { leafImage, soilImage } = route.params;
 
     const handleBackToHome = () => {
-        if (navigation) {
-            navigation.navigate('Home');
-        }
+        navigation.navigate('FertilizerHome', {});
     };
 
     const handleShareResults = async () => {
@@ -58,7 +65,7 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
                             <Image
                                 source={{ uri: leafImage }}
                                 style={styles.sampleImage}
-                                defaultSource={require('./assets/leaf-placeholder.png')} // Add placeholder
+                                defaultSource={require('../../assets/images/icon.png')} // Add placeholder
                             />
                         </View>
                     </View>
@@ -68,7 +75,7 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
                             <Image
                                 source={{ uri: soilImage }}
                                 style={styles.sampleImage}
-                                defaultSource={require('./assets/soil-placeholder.png')} // Add placeholder
+                                defaultSource={require('../../assets/images/icon.png')} // Add placeholder
                             />
                         </View>
                     </View>

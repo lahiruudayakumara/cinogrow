@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,7 +8,21 @@ import {
     SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+
+type FertilizerHomeScreenNavigationProp = StackNavigationProp<
+    FertilizerStackParamList,
+    'FertilizerHome'
+>;
+
+type FertilizerHomeScreenRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerHome'>;
+
+interface FertilizerHomeScreenProps {
+    navigation: FertilizerHomeScreenNavigationProp;
+    route: FertilizerHomeScreenRouteProp;
+}
 
 interface RecommendationItem {
     id: string;
@@ -17,7 +31,20 @@ interface RecommendationItem {
     description: string;
 }
 
-const Fertilizer: React.FC = () => {
+const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) => {
+    const [leafImage, setLeafImage] = useState<string | null>(null);
+    const [soilImage, setSoilImage] = useState<string | null>(null);
+
+    // Update state when returning from other screens
+    useEffect(() => {
+        if (route.params?.leafImage) {
+            setLeafImage(route.params.leafImage);
+        }
+        if (route.params?.soilImage) {
+            setSoilImage(route.params.soilImage);
+        }
+    }, [route.params]);
+
     const recentRecommendations: RecommendationItem[] = [
         {
             id: '1',
@@ -34,18 +61,32 @@ const Fertilizer: React.FC = () => {
     ];
 
     const handleUploadLeafSample = () => {
-        // Navigate to upload soil screen
-        router.push('/upload-soil');
+        // Navigate to upload leaf screen
+        navigation.navigate('FertilizerUploadLeaf');
     };
 
     const handleUploadSoilSample = () => {
-        // Handle soil sample upload
-        console.log('Upload soil sample');
-    };
-
-    const handleGetRecommendations = () => {
-        // Handle getting complete recommendations
-        console.log('Get complete fertilizer recommendations');
+        // Navigate to upload soil screen
+        navigation.navigate('FertilizerUploadSoil', {
+            leafImage: leafImage || undefined
+        });
+    }; const handleGetRecommendations = () => {
+        // Navigate to fertilizer result screen if both images are uploaded
+        if (leafImage && soilImage) {
+            navigation.navigate('FertilizerResult', {
+                leafImage,
+                soilImage,
+            });
+        } else {
+            // Show an alert or navigate to upload the missing sample
+            if (!leafImage && !soilImage) {
+                navigation.navigate('FertilizerUploadLeaf');
+            } else if (!leafImage) {
+                navigation.navigate('FertilizerUploadLeaf');
+            } else if (!soilImage) {
+                navigation.navigate('FertilizerUploadSoil', {});
+            }
+        }
     };
 
     const handleRecommendationPress = (item: RecommendationItem) => {
@@ -119,12 +160,22 @@ const Fertilizer: React.FC = () => {
 
                     {/* Get Recommendations Button */}
                     <TouchableOpacity
-                        style={styles.recommendationsButton}
+                        style={[
+                            styles.recommendationsButton,
+                            leafImage && soilImage && styles.recommendationsButtonActive
+                        ]}
                         onPress={handleGetRecommendations}
                         activeOpacity={0.8}
                     >
                         <Text style={styles.recommendationsButtonText}>
-                            Get Complete Fertilizer Recommendations
+                            {leafImage && soilImage
+                                ? 'Get Complete Fertilizer Recommendations'
+                                : !leafImage && !soilImage
+                                    ? 'Start with Leaf Sample'
+                                    : !leafImage
+                                        ? 'Upload Leaf Sample to Continue'
+                                        : 'Upload Soil Sample to Continue'
+                            }
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -199,6 +250,9 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         paddingHorizontal: 24,
         alignItems: 'center',
+    },
+    recommendationsButtonActive: {
+        backgroundColor: '#2E7D32',
     },
     recommendationsButtonText: {
         color: 'white',

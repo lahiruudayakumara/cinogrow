@@ -29,6 +29,13 @@ export default function TabLayout() {
         }),
       }}>
 
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'weather',
+          tabBarIcon: ({ color, size }) => <Ionicons name="partly-sunny" size={size || 24} color={color} />,
+        }}
+      />
 
       <Tabs.Screen
         name="fertilizer"
@@ -45,13 +52,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="flask-outline" size={size || 24} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'weather',
-          tabBarIcon: ({ color, size }) => <Ionicons name="partly-sunny" size={size || 24} color={color} />,
-        }}
-      />
+
       <Tabs.Screen
         name="pests"
         options={{

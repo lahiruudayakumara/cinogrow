@@ -29,8 +29,71 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
         navigation.goBack();
     };
 
+    const requestCameraPermission = async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Required', 'Camera permission is required to take photos.');
+            return false;
+        }
+        return true;
+    };
+
+    const requestMediaLibraryPermission = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Required', 'Photo library permission is required to select images.');
+            return false;
+        }
+        return true;
+    };
+
     const handleChooseFile = async () => {
+        Alert.alert(
+            'Select Image',
+            'Choose how you want to select your image',
+            [
+                {
+                    text: 'Camera',
+                    onPress: openCamera,
+                },
+                {
+                    text: 'Photo Library',
+                    onPress: openImageLibrary,
+                },
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+            ]
+        );
+    };
+
+    const openCamera = async () => {
         try {
+            const hasPermission = await requestCameraPermission();
+            if (!hasPermission) return;
+
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets[0]) {
+                setSelectedImage(result.assets[0].uri);
+            }
+        } catch (error) {
+            console.error('Error taking photo:', error);
+            Alert.alert('Error', 'Failed to take photo');
+        }
+    };
+
+    const openImageLibrary = async () => {
+        try {
+            const hasPermission = await requestMediaLibraryPermission();
+            if (!hasPermission) return;
+
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
@@ -103,7 +166,7 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                 </View>
 
                 {/* Upload Area */}
-                <View style={styles.uploadArea}>
+                <TouchableOpacity style={styles.uploadArea} onPress={handleChooseFile}>
                     {selectedImage ? (
                         <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
                     ) : (
@@ -113,16 +176,17 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                             </View>
                             <Text style={styles.uploadTitle}>Upload Leaf Photo</Text>
                             <Text style={styles.uploadSubtitle}>
-                                Drag and drop your leaf image here,{'\n'}or click to browse
+                                Tap here to select photo from camera or gallery
                             </Text>
                         </>
                     )}
 
-                    <TouchableOpacity style={styles.chooseFileButton} onPress={handleChooseFile}>
-                        <ImageIcon />
-                        <Text style={styles.chooseFileText}>Choose File</Text>
-                    </TouchableOpacity>
-                </View>
+                    {selectedImage && (
+                        <TouchableOpacity style={styles.changePhotoButton} onPress={handleChooseFile}>
+                            <Text style={styles.changePhotoText}>Change Photo</Text>
+                        </TouchableOpacity>
+                    )}
+                </TouchableOpacity>
 
                 {/* Upload Button */}
                 <TouchableOpacity
@@ -314,6 +378,50 @@ const styles = StyleSheet.create({
     uploadButtonText: {
         color: 'white',
         fontSize: 18,
+        fontWeight: '600',
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 15,
+        width: '100%',
+    },
+    cameraButton: {
+        backgroundColor: '#4CAF50',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 25,
+        flex: 1,
+    },
+    galleryButton: {
+        backgroundColor: '#2196F3',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 25,
+        flex: 1,
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: '600',
+        marginLeft: 8,
+    },
+    changePhotoButton: {
+        backgroundColor: '#FF9800',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        marginTop: 10,
+    },
+    changePhotoText: {
+        color: 'white',
+        fontSize: 12,
         fontWeight: '600',
     },
 });

@@ -1,12 +1,10 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
 import { Platform } from 'react-native';
-
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Colors } from '@/constants/Colors';
+import { HapticTab } from '@/components/HapticTab';
+import TabBarBackground from '@/components/ui/TabBarBackground';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -23,21 +21,50 @@ export default function TabLayout() {
             // Use a transparent background on iOS to show the blur effect
             position: 'absolute',
           },
-          default: {},
+          default: {
+            // Add specific Android styling if needed
+            elevation: 4,
+            height: 60,
+          },
         }),
       }}>
+
+
       <Tabs.Screen
-        name="index"
+        name="fertilizer"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Fertilizer',
+          tabBarIcon: ({ color, size }) => <Ionicons name="leaf-outline" size={size || 24} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="oil"
+        options={{
+          title: 'Oil',
+          tabBarIcon: ({ color, size }) => <Ionicons name="flask-outline" size={size || 24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="index"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'weather',
+          tabBarIcon: ({ color, size }) => <Ionicons name="partly-sunny" size={size || 24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="pests"
+        options={{
+          title: 'Pests',
+          tabBarIcon: ({ color, size }) => <Ionicons name="bug-outline" size={size || 24} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size || 24} color={color} />,
         }}
       />
     </Tabs>

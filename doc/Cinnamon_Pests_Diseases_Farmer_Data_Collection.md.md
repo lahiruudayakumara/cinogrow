@@ -7,9 +7,6 @@ A dataset collection and machine learning pipeline for detecting pests and disea
 - [Data Collection by Farmers](#data-collection-by-farmers)
 - [Dataset Structure](#dataset-structure)
 - [Data Storage & Management](#data-storage--management)
-- [Machine Learning Pipeline](#machine-learning-pipeline)
-- [Future Work](#future-work)
-- [Contact](#contact)
 
 ## Introduction
 This project aims to create a comprehensive dataset of cinnamon leaves, including healthy, pest-infected, and diseased samples, to train a Sinhala-supporting machine learning model. The final goal is to assist farmers in real-time identification of pests and diseases, improving crop yield and reducing losses.

@@ -5,7 +5,7 @@ from datetime import datetime
 from app.database import get_db
 from app.models.yield_weather.farm import (
     Farm, Plot, PlantingRecord, FarmActivity,
-    FarmCreate, FarmRead, PlotCreate, PlotRead,
+    FarmCreate, FarmRead, PlotCreate, PlotUpdate, PlotRead,
     PlantingRecordCreate, PlantingRecordUpdate, PlantingRecordRead
 )
 
@@ -45,14 +45,17 @@ async def update_farm(farm_id: int, farm_data: FarmCreate, db: Session = Depends
     if not farm:
         raise HTTPException(status_code=404, detail="Farm not found")
     
+    # Get current plot count
+    plots_query = db.exec(select(Plot).where(Plot.farm_id == farm_id))
+    actual_plots_count = len(list(plots_query))
+    
     # Update farm fields
     for field, value in farm_data.dict().items():
         setattr(farm, field, value)
     
-    # Automatically calculate the correct number of plots
-    plots_query = db.exec(select(Plot).where(Plot.farm_id == farm_id))
-    actual_plots_count = len(list(plots_query))
-    farm.num_plots = actual_plots_count
+    # Keep the num_plots value from the frontend request
+    # This allows the frontend to manage plot count changes properly
+    # The actual plot creation/deletion should be handled separately
     
     farm.updated_at = datetime.utcnow()
     
@@ -130,6 +133,24 @@ async def get_plot(plot_id: int, db: Session = Depends(get_db)):
     return plot
 
 
+@router.put("/plots/{plot_id}", response_model=PlotRead)
+async def update_plot(plot_id: int, plot_data: PlotUpdate, db: Session = Depends(get_db)):
+    """Update plot details (name, area, crop_type)"""
+    plot = db.get(Plot, plot_id)
+    if not plot:
+        raise HTTPException(status_code=404, detail="Plot not found")
+    
+    # Update plot fields
+    for field, value in plot_data.dict(exclude_unset=True).items():
+        setattr(plot, field, value)
+    
+    plot.updated_at = datetime.utcnow()
+    db.add(plot)
+    db.commit()
+    db.refresh(plot)
+    return plot
+
+
 @router.put("/plots/{plot_id}/status")
 async def update_plot_status(
     plot_id: int, 
@@ -156,12 +177,24 @@ async def update_plot_status(
 
 @router.delete("/plots/{plot_id}")
 async def delete_plot(plot_id: int, db: Session = Depends(get_db)):
-    """Delete a plot"""
+    """Delete a plot and all its associated records"""
     plot = db.get(Plot, plot_id)
     if not plot:
         raise HTTPException(status_code=404, detail="Plot not found")
     
     farm_id = plot.farm_id
+    
+    # Delete all related PlantingRecords first
+    planting_records = db.exec(select(PlantingRecord).where(PlantingRecord.plot_id == plot_id)).all()
+    for record in planting_records:
+        db.delete(record)
+    
+    # Delete all related FarmActivities where plot_id matches
+    farm_activities = db.exec(select(FarmActivity).where(FarmActivity.plot_id == plot_id)).all()
+    for activity in farm_activities:
+        db.delete(activity)
+    
+    # Now delete the plot
     db.delete(plot)
     db.commit()
     

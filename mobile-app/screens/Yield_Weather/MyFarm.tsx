@@ -130,7 +130,7 @@ const MyFarm = () => {
     const plots: Plot[] = [];
     const areaPerPlot = totalArea / numberOfPlots;
     const plotNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
-    const statuses: Array<'planted' | 'growing' | 'mature'> = ['planted', 'growing', 'mature'];
+    const statuses: Array<'PLANTED' | 'GROWING' | 'MATURE'> = ['PLANTED', 'GROWING', 'MATURE'];
     
     for (let i = 0; i < numberOfPlots; i++) {
       const plotName = plotNames[i] || `${Math.floor(i / 20) + 1}${plotNames[i % 20]}`;
@@ -156,7 +156,26 @@ const MyFarm = () => {
         'Update Plots',
         `This will change the number of plots from ${plots.length} to ${plotsValue} and regenerate all plot data. Continue?`,
         [
-          { text: 'Cancel', style: 'cancel', onPress: () => setLoading(false) },
+          { 
+            text: 'Cancel', 
+            style: 'cancel', 
+            onPress: async () => {
+              // If user cancels, we need to revert the farm's num_plots back to the original value
+              try {
+                const isBackendAvailable = await farmAPI.testConnection();
+                if (isBackendAvailable && farmData.id) {
+                  const revertData = { ...farmData, num_plots: plots.length };
+                  await farmAPI.updateFarm(farmData.id, revertData);
+                }
+                setLoading(false);
+                setEditModalVisible(false);
+              } catch (error) {
+                console.error('Error reverting farm data:', error);
+                setLoading(false);
+                setEditModalVisible(false);
+              }
+            }
+          },
           {
             text: 'Continue',
             onPress: async () => {
@@ -197,6 +216,8 @@ const MyFarm = () => {
         
         if (plotsValue !== plots.length) {
           if (isBackendAvailable) {
+            // Delete existing plots first, then create new ones
+            await farmAPI.deleteAllFarmPlots(farmData.id!);
             const plotsData = generatePlotsData(plotsValue, areaValue);
             const newPlots = await farmAPI.createMultiplePlots(farmData.id!, plotsData);
             setPlots(newPlots);
@@ -206,11 +227,24 @@ const MyFarm = () => {
           }
         } else if (areaValue !== farm?.total_area && plots.length > 0) {
           // If only area changed, update existing plots' areas
-          const updatedPlots = plots.map(plot => ({
-            ...plot,
-            area: parseFloat((areaValue / plots.length).toFixed(1))
-          }));
-          setPlots(updatedPlots);
+          if (isBackendAvailable) {
+            // Update each plot's area in the backend
+            const updatedPlots = [];
+            for (const plot of plots) {
+              const updatedPlot = await farmAPI.updatePlot(plot.id!, {
+                area: parseFloat((areaValue / plots.length).toFixed(1))
+              });
+              updatedPlots.push(updatedPlot);
+            }
+            setPlots(updatedPlots);
+          } else {
+            // Update locally for offline mode
+            const updatedPlots = plots.map(plot => ({
+              ...plot,
+              area: parseFloat((areaValue / plots.length).toFixed(1))
+            }));
+            setPlots(updatedPlots);
+          }
         }
         
         setFarm(farmData);
@@ -651,7 +685,7 @@ const MyFarm = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FAFBFC',
   },
   scrollView: {
     flex: 1,
@@ -688,10 +722,15 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   farmHeader: {
     marginBottom: 16,
@@ -789,13 +828,19 @@ const styles = StyleSheet.create({
   },
   plotCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    marginBottom: 16,
   },
   plotHeader: {
     flexDirection: 'row',

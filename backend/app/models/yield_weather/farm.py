@@ -124,6 +124,13 @@ class PlotCreate(BaseModel):
     planting_date: Optional[datetime] = None
 
 
+class PlotUpdate(BaseModel):
+    name: Optional[str] = None
+    area: Optional[float] = None
+    crop_type: Optional[str] = None
+    planting_date: Optional[datetime] = None
+
+
 class PlotRead(BaseModel):
     model_config = {"from_attributes": True}
     
@@ -168,3 +175,119 @@ class PlantingRecordRead(BaseModel):
     planted_date: datetime
     created_at: datetime
     plot_name: Optional[str] = None  # Will be populated via join
+
+
+# Yield-related models
+class YieldDataset(SQLModel, table=True):
+    """Database model for yield dataset (training data for ML model)"""
+    __tablename__ = "yield_dataset"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    location: str = Field(max_length=255)  # Geographic location
+    variety: str = Field(max_length=255)   # Cinnamon variety (Ceylon, Cassia, etc.)
+    area: float                           # Area in hectares
+    yield_amount: float                   # Yield in kg
+    soil_type: Optional[str] = Field(default=None, max_length=100)
+    rainfall: Optional[float] = Field(default=None)  # Annual rainfall in mm
+    temperature: Optional[float] = Field(default=None)  # Average temperature in Celsius
+    age_years: Optional[int] = Field(default=None)      # Age of cinnamon trees in years
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class UserYieldRecord(SQLModel, table=True):
+    """Database model for user's actual yield records"""
+    __tablename__ = "user_yield_records"
+    
+    yield_id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int  # Remove foreign key constraint until users table is implemented
+    plot_id: int = Field(foreign_key="plots.id")
+    yield_amount: float  # Actual yield in kg
+    yield_date: datetime  # Date when yield was harvested
+    notes: Optional[str] = Field(default=None, max_length=500)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Relationships
+    plot: Plot = Relationship()
+
+
+class YieldPrediction(SQLModel, table=True):
+    """Database model to store ML predictions (optional, for caching)"""
+    __tablename__ = "yield_predictions"
+    
+    prediction_id: Optional[int] = Field(default=None, primary_key=True)
+    plot_id: int = Field(foreign_key="plots.id")
+    predicted_yield: float  # Predicted yield in kg
+    confidence_score: Optional[float] = Field(default=None)  # Model confidence (0-1)
+    model_version: str = Field(max_length=100, default="v1.0")
+    prediction_date: datetime = Field(default_factory=datetime.utcnow)
+    features_used: Optional[str] = Field(default=None, max_length=1000)  # JSON string of features
+    
+    # Relationships
+    plot: Plot = Relationship()
+
+
+# Pydantic models for Yield API
+class YieldDatasetCreate(BaseModel):
+    location: str
+    variety: str
+    area: float
+    yield_amount: float
+    soil_type: Optional[str] = None
+    rainfall: Optional[float] = None
+    temperature: Optional[float] = None
+    age_years: Optional[int] = None
+
+
+class YieldDatasetRead(BaseModel):
+    model_config = {"from_attributes": True}
+    
+    id: int
+    location: str
+    variety: str
+    area: float
+    yield_amount: float
+    soil_type: Optional[str]
+    rainfall: Optional[float]
+    temperature: Optional[float]
+    age_years: Optional[int]
+    created_at: datetime
+
+
+class UserYieldRecordCreate(BaseModel):
+    user_id: int
+    plot_id: int
+    yield_amount: float
+    yield_date: datetime
+    notes: Optional[str] = None
+
+
+class UserYieldRecordUpdate(BaseModel):
+    yield_amount: Optional[float] = None
+    yield_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class UserYieldRecordRead(BaseModel):
+    model_config = {"from_attributes": True}
+    
+    yield_id: int
+    user_id: int
+    plot_id: int
+    yield_amount: float
+    yield_date: datetime
+    notes: Optional[str]
+    created_at: datetime
+    plot_name: Optional[str] = None  # Will be populated via join
+
+
+class YieldPredictionRead(BaseModel):
+    model_config = {"from_attributes": True}
+    
+    prediction_id: int
+    plot_id: int
+    predicted_yield: float
+    confidence_score: Optional[float]
+    model_version: str
+    prediction_date: datetime
+    plot_name: Optional[str] = None

@@ -5,12 +5,16 @@ import { createStackNavigator } from '@react-navigation/stack';
 import YieldWeatherHome from '../screens/Yield_Weather/YieldWeatherHome';
 import MyFarmScreen from '../screens/Yield_Weather/MyFarm';
 import MyPlantingRecordsScreen from '../screens/Yield_Weather/MyPlantingRecords';
+import FarmAssistanceScreen from '../screens/Yield_Weather/FarmAssistance';
+import MyYieldScreen from '../screens/Yield_Weather/MyYield';
 
 // Define the navigation parameter types for the Yield Weather stack
 export type YieldWeatherStackParamList = {
   YieldWeatherHome: undefined;
   MyFarm: undefined;
   MyPlantingRecords: undefined;
+  FarmAssistance: undefined;
+  MyYield: undefined;
 };
 
 const Stack = createStackNavigator<YieldWeatherStackParamList>();
@@ -52,6 +56,22 @@ const YieldWeatherNavigator = () => {
         component={MyPlantingRecordsScreen}
         options={{ 
           title: 'My Planting Records',
+          headerShown: true 
+        }}
+      />
+      <Stack.Screen 
+        name="FarmAssistance" 
+        component={FarmAssistanceScreen}
+        options={{ 
+          title: 'Farm Assistance',
+          headerShown: true 
+        }}
+      />
+      <Stack.Screen 
+        name="MyYield" 
+        component={MyYieldScreen}
+        options={{ 
+          title: 'My Yield',
           headerShown: true 
         }}
       />

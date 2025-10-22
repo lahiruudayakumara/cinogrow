@@ -21,7 +21,7 @@ export interface Plot {
   farm_id: number;
   name: string;
   area: number;
-  status: 'preparing' | 'planted' | 'growing' | 'mature' | 'harvesting' | 'harvested' | 'resting';
+  status: 'PREPARING' | 'PLANTED' | 'GROWING' | 'MATURE' | 'HARVESTING' | 'HARVESTED' | 'RESTING';
   crop_type?: string;
   planting_date?: string;
   expected_harvest_date?: string;
@@ -132,6 +132,16 @@ class FarmAPI {
     return this.request(`/plots/${plotId}`);
   }
 
+  async updatePlot(plotId: number, plotData: Partial<Plot>): Promise<Plot> {
+    return this.request(`/plots/${plotId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(plotData),
+    });
+  }
+
   async updatePlotStatus(plotId: number, status: string, progress_percentage?: number): Promise<{ message: string; plot: Plot }> {
     const params = new URLSearchParams({ status });
     if (progress_percentage !== undefined) {
@@ -157,7 +167,7 @@ class FarmAPI {
         farm_id: farmId,
         name: plotData.name,
         area: plotData.area,
-        status: 'preparing' as const,
+        status: 'PREPARING' as const,
         crop_type: plotData.crop_type || 'Cinnamon',
         progress_percentage: 0,
       });

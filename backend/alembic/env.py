@@ -7,8 +7,11 @@ from alembic import context
 # Add the app directory to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from app.models.weather import WeatherRecord
-from app.models.farm import Farm, Plot, FarmActivity
+from app.models.yield_weather import (
+    Farm, Plot, FarmActivity, PlantingRecord, 
+    YieldDataset, UserYieldRecord, YieldPrediction,
+    WeatherRecord, ActivityHistory
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -651,7 +651,7 @@ const MyPlantingRecords = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FAFBFC',
   },
   scrollView: {
     flex: 1,
@@ -705,10 +705,15 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   recordHeader: {
     flexDirection: 'row',

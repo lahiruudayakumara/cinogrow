@@ -6,18 +6,18 @@ const getApiUrls = () => {
   if (__DEV__) {
     if (Platform.OS === 'android') {
       return [
-        'http://10.0.2.2:8000/api/v1',        // Android emulator special IP
-        'http://192.168.8.130:8000/api/v1',   // Your actual Wi-Fi IP
-        'http://127.0.0.1:8000/api/v1'        // Localhost fallback
+        'http://10.0.2.2:8001/api/v1',        // Android emulator special IP
+        'http://192.168.53.65:8001/api/v1',   // Your actual Wi-Fi IP
+        'http://127.0.0.1:8001/api/v1'        // Localhost fallback
       ];
     } else if (Platform.OS === 'ios') {
       return [
-        'http://192.168.8.130:8000/api/v1',   // Your actual Wi-Fi IP
-        'http://127.0.0.1:8000/api/v1',       // Localhost fallback
-        'http://10.0.2.2:8000/api/v1'         // iOS simulator fallback
+        'http://192.168.53.65:8001/api/v1',   // Your actual Wi-Fi IP
+        'http://127.0.0.1:8001/api/v1',       // Localhost fallback
+        'http://10.0.2.2:8001/api/v1'         // iOS simulator fallback
       ];
     } else {
-      return ['http://127.0.0.1:8000/api/v1'];
+      return ['http://127.0.0.1:8001/api/v1'];
     }
   } else {
     return ['https://your-production-domain.com/api/v1'];

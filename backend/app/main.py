@@ -8,7 +8,7 @@ load_dotenv()
 
 # Import database and routers
 from app.database import create_db_and_tables
-from app.routers.yield_weather import weather, farm
+from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
 
 app = FastAPI(
     title="Cinogrow Backend",
@@ -32,6 +32,8 @@ def on_startup():
 # Include routers
 app.include_router(weather.router, prefix="/api/v1")
 app.include_router(farm.router, prefix="/api/v1")
+app.include_router(farm_assistance.router, prefix="/api/v1")
+app.include_router(yield_prediction.router, prefix="/api/v1")
 
 @app.get("/")
 async def root():

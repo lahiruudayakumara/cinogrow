@@ -12,6 +12,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+import { Ionicons } from '@expo/vector-icons';
 
 type UploadLeafScreenNavigationProp = StackNavigationProp<
     FertilizerStackParamList,
@@ -145,11 +146,7 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                {/* Header */}
-                <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-                    <Text style={styles.backArrow}>←</Text>
-                    <Text style={styles.headerTitle}>Upload Leaf Sample</Text>
-                </TouchableOpacity>
+                
 
                 {/* Guidelines Card */}
                 <View style={styles.guidelinesCard}>
@@ -166,25 +163,30 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                 </View>
 
                 {/* Upload Area */}
-                <TouchableOpacity style={styles.uploadArea} onPress={handleChooseFile}>
+                <TouchableOpacity
+                    style={[styles.uploadArea, selectedImage && styles.uploadAreaActive]}
+                    onPress={handleChooseFile}
+                >
                     {selectedImage ? (
-                        <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+                        <>
+                            {/* Display the selected image */}
+                            <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+
+                            {/* Change Photo Button */}
+                            <TouchableOpacity style={styles.changePhotoButton} onPress={handleChooseFile}>
+                                <Ionicons name="camera-reverse-outline" size={16} color="white" />
+                                <Text style={styles.changePhotoText}>Change/Retake Photo</Text>
+                            </TouchableOpacity>
+                        </>
                     ) : (
                         <>
-                            <View style={styles.uploadIconContainer}>
-                                <CameraIcon />
-                            </View>
-                            <Text style={styles.uploadTitle}>Upload Leaf Photo</Text>
+                            {/* Default State: Show placeholder text and a modern upload icon */}
+                            <Ionicons name="cloud-upload-outline" size={60} color="#487954ff" style={styles.uploadIcon} />
+                            <Text style={styles.uploadTitle}>Tap to Upload Leaf Photo</Text>
                             <Text style={styles.uploadSubtitle}>
-                                Tap here to select photo from camera or gallery
+                                Camera or Gallery - A clear, focused image works best.
                             </Text>
                         </>
-                    )}
-
-                    {selectedImage && (
-                        <TouchableOpacity style={styles.changePhotoButton} onPress={handleChooseFile}>
-                            <Text style={styles.changePhotoText}>Change Photo</Text>
-                        </TouchableOpacity>
                     )}
                 </TouchableOpacity>
 
@@ -288,9 +290,18 @@ const styles = StyleSheet.create({
         minHeight: 200,
         justifyContent: 'center',
     },
+    uploadAreaActive: {
+        borderColor: '#FF9800', // Highlight border when image is selected
+        borderStyle: 'solid',
+        backgroundColor: '#FFF3E0', // Slightly different background
+    },
     uploadIconContainer: {
         marginBottom: 20,
         opacity: 0.5,
+    },
+    uploadIcon: {
+        marginBottom: 20,
+        opacity: 0.8,
     },
     uploadTitle: {
         fontSize: 20,

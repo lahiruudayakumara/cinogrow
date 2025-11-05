@@ -20,7 +20,7 @@ function Greeting() {
       onPress={() => setLiked(v => !v)}
     >
       <Text style={styles.greetingTitle}>Hey farmer 🌱</Text>
-      <Text style={styles.greetingText}>Ready to grow something amazing today?</Text>
+      <Text style={styles.greetingText}>Your next batch of golden cinnamon oil awaits!</Text>
     </TouchableOpacity>
 
   );

@@ -1,8 +1,0 @@
-node_modules
-.expo
-.expo-shared
-.vscode
-npm-debug.log
-.DS_Store
-.git
-.build

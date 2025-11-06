@@ -7,3 +7,8 @@ passlib[bcrypt]
 python-jose
 scikit-learn
 pillow
+httpx
+python-multipart
+psycopg2-binary
+sqlalchemy
+alembic

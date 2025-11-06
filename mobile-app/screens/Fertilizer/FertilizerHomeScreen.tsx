@@ -6,7 +6,9 @@ import {
     StyleSheet,
     ScrollView,
     SafeAreaView,
+    Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -61,6 +63,9 @@ interface RecommendationItem {
 const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) => {
     const [leafImage, setLeafImage] = useState<string | null>(null);
     const [soilImage, setSoilImage] = useState<string | null>(null);
+    
+    // Get safe area insets to handle overlap with tab bar
+    const insets = useSafeAreaInsets();
 
     // Update state when returning from other screens
     useEffect(() => {
@@ -191,7 +196,16 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                style={styles.scrollView} 
+                contentContainerStyle={{
+                    paddingBottom: Platform.select({
+                        ios: 100 + insets.bottom, // Extra padding for iOS tab bar + safe area
+                        default: 80 + insets.bottom, // Extra padding for Android tab bar + safe area
+                    }),
+                }}
+                showsVerticalScrollIndicator={false}
+            >
                 {/* Header */}
                 <Text style={styles.header}>Fertilizer Recommendations</Text>
 

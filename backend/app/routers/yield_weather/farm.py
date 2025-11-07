@@ -4,10 +4,11 @@ from typing import List
 from datetime import datetime
 from app.database import get_db
 from app.models.yield_weather.farm import (
-    Farm, Plot, PlantingRecord, FarmActivity,
+    Farm, Plot, PlantingRecord, FarmActivity, UserYieldRecord, YieldPrediction,
     FarmCreate, FarmRead, PlotCreate, PlotUpdate, PlotRead,
     PlantingRecordCreate, PlantingRecordUpdate, PlantingRecordRead
 )
+from app.models.yield_weather.farm_assistance import ActivityHistory
 
 router = APIRouter(tags=["yield-weather-farms"])
 
@@ -184,17 +185,34 @@ async def delete_plot(plot_id: int, db: Session = Depends(get_db)):
     
     farm_id = plot.farm_id
     
-    # Delete all related PlantingRecords first
+    # Delete all related records in the correct order (child tables first)
+    
+    # 1. Delete ActivityHistory records
+    activity_histories = db.exec(select(ActivityHistory).where(ActivityHistory.plot_id == plot_id)).all()
+    for history in activity_histories:
+        db.delete(history)
+    
+    # 2. Delete YieldPrediction records
+    yield_predictions = db.exec(select(YieldPrediction).where(YieldPrediction.plot_id == plot_id)).all()
+    for prediction in yield_predictions:
+        db.delete(prediction)
+    
+    # 3. Delete UserYieldRecord records
+    user_yield_records = db.exec(select(UserYieldRecord).where(UserYieldRecord.plot_id == plot_id)).all()
+    for yield_record in user_yield_records:
+        db.delete(yield_record)
+    
+    # 4. Delete PlantingRecords
     planting_records = db.exec(select(PlantingRecord).where(PlantingRecord.plot_id == plot_id)).all()
     for record in planting_records:
         db.delete(record)
     
-    # Delete all related FarmActivities where plot_id matches
+    # 5. Delete FarmActivities where plot_id matches
     farm_activities = db.exec(select(FarmActivity).where(FarmActivity.plot_id == plot_id)).all()
     for activity in farm_activities:
         db.delete(activity)
     
-    # Now delete the plot
+    # 6. Finally delete the plot itself
     db.delete(plot)
     db.commit()
     

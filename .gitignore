@@ -25,7 +25,7 @@ web-build/
 expo-env.d.ts
 *.orig.*
 
-# Native
+# Native files (iOS/Android)
 *.jks
 *.p8
 *.p12
@@ -47,6 +47,7 @@ Thumbs.db
 # Logs
 *.log
 logs/
+*.diff
 
 # Database
 *.sqlite3

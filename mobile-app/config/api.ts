@@ -1,28 +1,36 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
+// Get environment variables with fallbacks
+const getEnvVar = (key: string, fallback: string): string => {
+  return process.env[key] || Constants.expoConfig?.extra?.[key] || fallback;
+};
+
+// Environment configuration - Single source from .env file
+const API_HOST = getEnvVar('API_BASE_HOST', '192.168.8.130');
+const API_PORT = getEnvVar('API_PORT', '8000');
+
+const ENV_CONFIG = {
+  API_BASE_HOST: API_HOST,
+  API_PORT: API_PORT,
+  API_BASE_URL: `http://${API_HOST}:${API_PORT}/api/v1`,
+  PROD_API_BASE_URL: getEnvVar('PROD_API_BASE_URL', 'https://your-production-api.com/api/v1'),
+  API_TIMEOUT: parseInt(getEnvVar('API_TIMEOUT', '10000')),
+  PROD_API_TIMEOUT: parseInt(getEnvVar('PROD_API_TIMEOUT', '15000')),
+  HEALTH_ENDPOINT: `http://${API_HOST}:${API_PORT}/health`,
+};
+
 // Detect the environment and platform
 const getApiBaseUrl = (): string => {
   // Check if running in Expo Go or development build
   const isExpoGo = Constants.appOwnership === 'expo';
   
   if (__DEV__) {
-    // Development environment
-    if (Platform.OS === 'android') {
-      // Android emulator uses 10.0.2.2 to access localhost
-      // Physical Android device would use your computer's IP
-      return isExpoGo ? 'http://192.168.53.65:8001/api/v1' : 'http://10.0.2.2:8001/api/v1';
-    } else if (Platform.OS === 'ios') {
-      // iOS simulator can use localhost
-      // Physical iOS device would use your computer's IP  
-      return isExpoGo ? 'http://192.168.53.65:8001/api/v1' : 'http://localhost:8001/api/v1';
-    } else {
-      // Web or other platforms
-      return 'http://192.168.53.65:8001/api/v1';
-    }
+    // Development environment - Use environment variable
+    return ENV_CONFIG.API_BASE_URL;
   } else {
     // Production environment
-    return 'https://your-production-api.com/api/v1';
+    return ENV_CONFIG.PROD_API_BASE_URL;
   }
 };
 
@@ -30,11 +38,11 @@ const getApiBaseUrl = (): string => {
 export const API_CONFIG = {
   development: {
     baseUrl: getApiBaseUrl(),
-    timeout: 10000,
+    timeout: ENV_CONFIG.API_TIMEOUT,
   },
   production: {
-    baseUrl: 'https://your-production-api.com/api/v1',
-    timeout: 15000,
+    baseUrl: ENV_CONFIG.PROD_API_BASE_URL,
+    timeout: ENV_CONFIG.PROD_API_TIMEOUT,
   },
 };
 
@@ -51,8 +59,11 @@ export default {
   
   // Additional URLs for fallback connectivity testing
   FALLBACK_URLS: [
-    'http://192.168.53.65:8001/api/v1',  // Your computer's IP
-    'http://10.0.2.2:8001/api/v1',       // Android emulator
-    'http://localhost:8001/api/v1',      // Local/iOS simulator  
+    ENV_CONFIG.API_BASE_URL,             // Environment configured IP
+    'http://10.0.2.2:8000/api/v1',       // Android emulator
+    'http://localhost:8000/api/v1',      // Local/iOS simulator  
   ],
+  
+  // Export environment configuration for use in other files
+  ENV: ENV_CONFIG,
 };

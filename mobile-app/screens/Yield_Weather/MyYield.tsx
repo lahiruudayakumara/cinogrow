@@ -81,19 +81,30 @@ const MyYieldScreen = () => {
       for (const plot of allPlots) {
         if (plot.id && plot.area) {
           try {
-            // Try to get AI prediction (fallback to client-side calculation)
-            const predictedAmount = await yieldAPI.calculateFallbackPrediction(
+            // Try comprehensive prediction (ML first, then historical data, then mock)
+            const predictionResult = await yieldAPI.predictYield(
               plot.area,
               'Sri Lanka', // Default location
-              'Ceylon Cinnamon' // Default variety
+              'Ceylon Cinnamon', // Default variety
+              plot.id, // Plot ID for ML model
+              2500, // Default rainfall
+              26, // Default temperature
+              5 // Default age years
             );
+            
+            console.log(`🎯 Prediction for ${plot.name}:`, {
+              yield: predictionResult.predicted_yield,
+              source: predictionResult.prediction_source,
+              method: predictionResult.method_used,
+              confidence: predictionResult.confidence_score
+            });
             
             predictions.push({
               plot_id: plot.id,
               plot_name: plot.name,
               plot_area: plot.area,
-              predicted_yield: predictedAmount,
-              prediction_source: 'dataset_match'
+              predicted_yield: predictionResult.predicted_yield,
+              prediction_source: predictionResult.prediction_source as 'dataset_match' | 'ai_model' | 'average'
             });
           } catch (predictionError) {
             console.warn(`Failed to predict yield for plot ${plot.id}:`, predictionError);

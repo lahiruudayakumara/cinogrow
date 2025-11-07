@@ -25,38 +25,7 @@ import locationService from '../../services/locationService';
 import LocationInputModal from '../../components/LocationInputModal';
 import APIDebugger from '../../services/apiDebugger';
 
-// Farm Assistance API imports
-let farmAssistanceAPI: any;
-try {
-  farmAssistanceAPI = require('../../services/yield_weather/farmAssistanceAPI');
-} catch (importError) {
-  console.warn('⚠️ Failed to import farmAssistanceAPI, using fallback:', importError);
-  
-  // Fallback type definitions
-  interface ActivityRecord {
-    id: number;
-    user_id: number;
-    plot_id: number;
-    activity_name: string;
-    activity_date: string;
-    trigger_condition: string;
-    weather_snapshot: {
-      temperature: number;
-      humidity: number;
-      rainfall: number;
-      wind_speed: number;
-      weather_description: string;
-    };
-  }
 
-  // Fallback API
-  farmAssistanceAPI = {
-    getActivityHistory: async (): Promise<ActivityRecord[]> => {
-      console.log('📝 Using fallback activity history');
-      return [];
-    }
-  };
-}
 
 type NavigationProp = StackNavigationProp<YieldWeatherStackParamList>;
 
@@ -69,7 +38,6 @@ const YieldWeatherHome = () => {
   const [error, setError] = useState<string | null>(null);
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [lastDataLoad, setLastDataLoad] = useState<number>(0);
-  const [activityHistory, setActivityHistory] = useState<any[]>([]);
   const [farmStats, setFarmStats] = useState({ totalArea: 0, activePlots: 0, plotsReadyToHarvest: 0 });
   const [farmStatsLoading, setFarmStatsLoading] = useState(true);
   
@@ -142,17 +110,7 @@ const YieldWeatherHome = () => {
     }
   };
 
-  const loadActivityHistory = async () => {
-    try {
-      const history = await farmAssistanceAPI.getActivityHistory();
-      // Get the 3 most recent activities
-      const recentActivities = history.slice(0, 3);
-      setActivityHistory(recentActivities);
-    } catch (error) {
-      console.warn('Failed to load activity history:', error);
-      setActivityHistory([]);
-    }
-  };
+
 
   const loadFarmStats = async () => {
     try {
@@ -231,14 +189,12 @@ const YieldWeatherHome = () => {
 
   const onRefresh = async () => {
     loadWeatherData(true);
-    loadActivityHistory();
     loadFarmStats();
   };
 
   useEffect(() => {
     // Skip connectivity test on initial load for faster startup
     loadWeatherData(false, true);
-    loadActivityHistory();
     loadFarmStats();
   }, []);
 
@@ -442,45 +398,7 @@ const YieldWeatherHome = () => {
           </View>
         </View>
 
-        {/* Recent Activity History */}
-        <View style={styles.activitySection}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          {activityHistory.length > 0 ? (
-            <View style={styles.activityContainer}>
-              {activityHistory.map((activity, index) => (
-                <View key={activity.id || index} style={[
-                  styles.activityItem,
-                  index === activityHistory.length - 1 ? { borderBottomWidth: 0 } : {}
-                ]}>
-                  <View style={styles.activityIcon}>
-                    <Ionicons 
-                      name={activity.activity_name === 'Irrigation' ? 'water' : 
-                            activity.activity_name.includes('Fertilizer') ? 'leaf' : 
-                            activity.activity_name.includes('Harvest') ? 'cut' : 'checkmark-circle'} 
-                      size={20} 
-                      color="#10B981" 
-                    />
-                  </View>
-                  <View style={styles.activityContent}>
-                    <Text style={styles.activityName}>{activity.activity_name}</Text>
-                    <Text style={styles.activityDate}>
-                      {new Date(activity.activity_date).toLocaleDateString()} • Plot {activity.plot_id}
-                    </Text>
-                    <Text style={styles.activityTrigger} numberOfLines={1}>
-                      {activity.trigger_condition}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.noActivityContainer}>
-              <Ionicons name="calendar-outline" size={32} color="#9CA3AF" />
-              <Text style={styles.noActivityText}>No recent activities</Text>
-              <Text style={styles.noActivitySubtext}>Complete activities in Farm Assistance to see them here</Text>
-            </View>
-          )}
-        </View>
+
 
 
       </ScrollView>
@@ -829,82 +747,7 @@ const styles = StyleSheet.create({
     top: 16,
     right: 16,
   },
-  // Activity History Styles
-  activitySection: {
-    marginTop: 24,
-    marginBottom: 20,
-  },
 
-  activityContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#DCFCE7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  activityDate: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 4,
-  },
-  activityTrigger: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  noActivityContainer: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 32,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderStyle: 'dashed',
-  },
-  noActivityText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#6B7280',
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  noActivitySubtext: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-  },
 
 });
 

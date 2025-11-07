@@ -38,7 +38,7 @@ export interface Activity {
   activity_date: string;
   cost?: number;
   created_at?: string;
-  plot_name?: string; // For display purposes
+  plot_name?: string; 
 }
 
 export interface DashboardStats {
@@ -53,8 +53,8 @@ class FarmAPI {
   private async request(endpoint: string, options: RequestInit = {}) {
     try {
       const url = `${API_BASE_URL}${endpoint}`;
-      console.log(`📡 Making API request to: ${url}`);
-      console.log(`🔧 Using base URL: ${API_BASE_URL}`);
+      console.log(` Making API request to: ${url}`);
+      console.log(` Using base URL: ${API_BASE_URL}`);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -65,23 +65,23 @@ class FarmAPI {
         ...options,
       });
 
-      console.log(`📡 Response status: ${response.status}`);
+      console.log(` Response status: ${response.status}`);
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error(`❌ HTTP Error ${response.status}: ${errorData}`);
+        console.error(` HTTP Error ${response.status}: ${errorData}`);
         throw new Error(`HTTP ${response.status}: ${errorData}`);
       }
 
       const data = await response.json();
-      console.log(`✅ API response received:`, data);
+      console.log(` API response received:`, data);
       return data;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes('Network request failed')) {
-        console.error('❌ Network connectivity issue:', error);
+        console.error(' Network connectivity issue:', error);
         throw new Error('Network connection failed. Please check your internet connection and ensure the backend server is running and accessible.');
       } else {
-        console.error('❌ API request failed:', error);
+        console.error(' API request failed:', error);
         throw error;
       }
     }
@@ -200,7 +200,7 @@ class FarmAPI {
       const baseUrl = API_BASE_URL.replace('/api/v1', '');
       const healthUrl = `${baseUrl}/health`;
       
-      console.log(`🔍 Testing backend connection to: ${healthUrl}`);
+      console.log(` Testing backend connection to: ${healthUrl}`);
       
       const response = await fetch(healthUrl, {
         method: 'GET',
@@ -210,17 +210,17 @@ class FarmAPI {
         // Add timeout for mobile networks
       });
       
-      console.log(`📡 Response status: ${response.status}`);
+      console.log(` Response status: ${response.status}`);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log(`✅ Backend connection successful:`, data);
+      console.log(` Backend connection successful:`, data);
       return true;
     } catch (error) {
-      console.error('❌ Backend connection failed:', error);
+      console.error(' Backend connection failed:', error);
       throw new Error('Backend connection failed. Please check if the server is running.');
     }
   }

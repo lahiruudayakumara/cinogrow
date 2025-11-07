@@ -6,6 +6,7 @@ sqlmodel
 passlib[bcrypt]
 python-jose
 scikit-learn
+pandas
 pillow
 httpx
 python-multipart

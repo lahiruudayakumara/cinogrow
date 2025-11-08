@@ -19,18 +19,16 @@ export default function OilYieldPredictorSecond() {
   const [recommendation, setRecommendation] = useState<string | null>(null);
 
   const handlePredict = () => {
-    // Simple demo calculation (replace with ML/API output later)
-    const massNum = parseFloat(mass);
-    if (!massNum || !cinnamonType || !plantPart) return;
+    // Removed local prediction math. Predictions must come from an external model/API.
+    if (!cinnamonType || !plantPart || !mass) {
+      setPredictedYield(null);
+      setRecommendation(null);
+      return;
+    }
 
-    const yieldPercent = plantPart === 'Bark' ? 1.6 : plantPart === 'Leaf' ? 1.3 : 1.1;
-    const oilMl = (massNum * yieldPercent * 10).toFixed(1);
-    setPredictedYield(`${oilMl} ml (${yieldPercent}% yield)`);
-    setRecommendation(
-      yieldPercent > 1.3
-        ? 'Excellent yield! Keep consistent drying conditions.'
-        : 'Consider improving drying or distillation duration.'
-    );
+    // Provide a placeholder message instead of calculating values locally
+    setPredictedYield('Prediction requires model/API (local math removed)');
+    setRecommendation('Connect to the prediction service or provide model output to obtain actual yield.');
   };
 
   return (

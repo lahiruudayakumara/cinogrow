@@ -6,7 +6,7 @@ import pandas as pd
 import json
 from io import StringIO
 
-from app.database import get_db
+from app.database import get_session
 from app.models.yield_weather import (
     YieldDataset, UserYieldRecord, YieldPrediction, Plot,
     YieldDatasetCreate, YieldDatasetRead,
@@ -19,7 +19,7 @@ router = APIRouter(tags=["yield-prediction"])
 
 # Yield Dataset endpoints
 @router.post("/yield-dataset", response_model=YieldDatasetRead)
-async def create_yield_dataset_record(record_data: YieldDatasetCreate, db: Session = Depends(get_db)):
+async def create_yield_dataset_record(record_data: YieldDatasetCreate, db: Session = Depends(get_session)):
     """Create a new yield dataset record"""
     record = YieldDataset(**record_data.dict())
     db.add(record)
@@ -33,7 +33,7 @@ async def get_yield_dataset(
     location: Optional[str] = None,
     variety: Optional[str] = None,
     limit: Optional[int] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_session)
 ):
     """Get yield dataset records with optional filtering"""
     query = select(YieldDataset)
@@ -52,7 +52,7 @@ async def get_yield_dataset(
 
 
 @router.post("/yield-dataset/bulk-upload")
-async def bulk_upload_yield_dataset(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def bulk_upload_yield_dataset(file: UploadFile = File(...), db: Session = Depends(get_session)):
     """Upload yield dataset from CSV file"""
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="File must be a CSV")
@@ -106,7 +106,7 @@ async def bulk_upload_yield_dataset(file: UploadFile = File(...), db: Session = 
 
 # User Yield Records endpoints
 @router.post("/yield-records", response_model=UserYieldRecordRead)
-async def create_user_yield_record(record_data: UserYieldRecordCreate, db: Session = Depends(get_db)):
+async def create_user_yield_record(record_data: UserYieldRecordCreate, db: Session = Depends(get_session)):
     """Create a new user yield record"""
     # Check if plot exists
     plot = db.get(Plot, record_data.plot_id)
@@ -128,7 +128,7 @@ async def create_user_yield_record(record_data: UserYieldRecordCreate, db: Sessi
 async def get_user_yield_records(
     user_id: Optional[int] = None,
     plot_id: Optional[int] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_session)
 ):
     """Get user yield records with optional filtering"""
     query = select(UserYieldRecord, Plot).join(Plot)
@@ -152,7 +152,7 @@ async def get_user_yield_records(
 
 
 @router.get("/users/{user_id}/yield-records", response_model=List[UserYieldRecordRead])
-async def get_user_yield_records_by_user_id(user_id: int, db: Session = Depends(get_db)):
+async def get_user_yield_records_by_user_id(user_id: int, db: Session = Depends(get_session)):
     """Get all yield records for a specific user"""
     results = db.exec(
         select(UserYieldRecord, Plot)
@@ -175,7 +175,7 @@ async def get_user_yield_records_by_user_id(user_id: int, db: Session = Depends(
 async def update_user_yield_record(
     yield_id: int,
     record_update: UserYieldRecordUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_session)
 ):
     """Update a user yield record"""
     record = db.get(UserYieldRecord, yield_id)
@@ -201,7 +201,7 @@ async def update_user_yield_record(
 
 
 @router.delete("/yield-records/{yield_id}")
-async def delete_user_yield_record(yield_id: int, db: Session = Depends(get_db)):
+async def delete_user_yield_record(yield_id: int, db: Session = Depends(get_session)):
     """Delete a user yield record"""
     record = db.get(UserYieldRecord, yield_id)
     if not record:
@@ -217,7 +217,7 @@ async def delete_user_yield_record(yield_id: int, db: Session = Depends(get_db))
 async def get_predicted_yields(
     user_id: int,
     location: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_session)
 ):
     """Get predicted yields for user's plots using ML model"""
     from app.services.yield_prediction import YieldPredictionService
@@ -268,7 +268,7 @@ async def get_predicted_yields(
 
 
 @router.get("/yield-predictions/{plot_id}", response_model=YieldPredictionRead)
-async def get_yield_prediction_for_plot(plot_id: int, db: Session = Depends(get_db)):
+async def get_yield_prediction_for_plot(plot_id: int, db: Session = Depends(get_session)):
     """Get the latest yield prediction for a specific plot"""
     prediction = db.exec(
         select(YieldPrediction, Plot)
@@ -288,7 +288,7 @@ async def get_yield_prediction_for_plot(plot_id: int, db: Session = Depends(get_
 
 # ML Model Management endpoints
 @router.post("/ml/train-model")
-async def train_yield_model(retrain: bool = False, db: Session = Depends(get_db)):
+async def train_yield_model(retrain: bool = False, db: Session = Depends(get_session)):
     """Train the yield prediction ML model"""
     from app.services.yield_prediction import YieldPredictionService
     
@@ -301,7 +301,7 @@ async def train_yield_model(retrain: bool = False, db: Session = Depends(get_db)
 
 
 @router.get("/ml/model-info")
-async def get_model_info(db: Session = Depends(get_db)):
+async def get_model_info(db: Session = Depends(get_session)):
     """Get information about the current ML model"""
     from app.services.yield_prediction import YieldPredictionService
     
@@ -318,7 +318,7 @@ async def predict_yield_single(
     rainfall: Optional[float] = None,
     temperature: Optional[float] = None,
     age_years: Optional[int] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_session)
 ):
     """Make a single yield prediction using the ML model"""
     from app.services.yield_prediction import YieldPredictionService
@@ -343,7 +343,7 @@ async def predict_yield_single(
 
 
 @router.get("/ml/dataset-stats")
-async def get_dataset_statistics(db: Session = Depends(get_db)):
+async def get_dataset_statistics(db: Session = Depends(get_session)):
     """Get statistics about the yield dataset"""
     records = db.exec(select(YieldDataset)).all()
     

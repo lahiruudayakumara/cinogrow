@@ -15,8 +15,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/lahiruudayakumara/cinogrow.git
-cd cinogrow
+git clone https://github.com/your-username/fullstack-project.git
+cd fullstack-project
 
 # Start all services
 docker-compose up --build
@@ -190,16 +190,12 @@ cinogrow/
 ├── backend/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── v1/
-│   │   │   │   ├── auth.py
-│   │   │   │   ├── user.py
-│   │   │   │   ├── ml_inference.py
-│   │   │   │   └── __init__.py
+│   │   │   ├── auth.py
+│   │   │   ├── user.py
 │   │   │   └── __init__.py
 │   │   ├── core/
 │   │   │   ├── config.py
 │   │   │   ├── security.py
-│   │   │   ├── logger.py
 │   │   │   └── __init__.py
 │   │   ├── db/
 │   │   │   ├── base.py
@@ -208,38 +204,19 @@ cinogrow/
 │   │   │   └── __init__.py
 │   │   ├── models/
 │   │   │   ├── user.py
-│   │   │   ├── prediction.py
-│   │   │   └── __init__.py
-│   │   ├── schemas/
-│   │   │   ├── user.py
-│   │   │   ├── prediction.py
 │   │   │   └── __init__.py
 │   │   ├── services/
 │   │   │   ├── auth_service.py
 │   │   │   ├── user_service.py
-│   │   │   ├── ml_service.py
 │   │   │   └── __init__.py
 │   │   ├── ml/
-│   │   │   ├── models/
-│   │   │   │   ├── sinhala_text_model/
-│   │   │   │   │   ├── config.json
-│   │   │   │   │   ├── tokenizer.json
-│   │   │   │   │   └── model.bin
-│   │   │   │   └── vision_model/
-│   │   │   │       ├── model.pt
-│   │   │   │       ├── labels.txt
-│   │   │   │       └── config.yaml
-│   │   │   ├── inference_text.py
-│   │   │   ├── inference_vision.py
-│   │   │   ├── preprocess.py
-│   │   │   ├── utils.py
+│   │   │   ├── model.py
+│   │   │   ├── inference.py
 │   │   │   └── __init__.py
-│   │   ├── main.py
-│   │   ├── __init__.py
-│   │   └── tasks/
-│   │       ├── background_tasks.py
-│   │       ├── scheduler.py
-│   │       └── __init__.py
+│   │   ├── schemas/
+│   │   │   ├── user.py
+│   │   │   └── __init__.py
+│   │   └── main.py
 │   ├── alembic/
 │   ├── alembic.ini
 │   ├── requirements.txt
@@ -249,25 +226,22 @@ cinogrow/
 ├── mobile-app/
 │   ├── assets/
 │   ├── components/
+│   │   ├── Button.tsx
+│   │   ├── Header.tsx
+│   │   └── Input.tsx
 │   ├── screens/
-│   ├── services/
+│   │   ├── LoginScreen.tsx
+│   │   ├── RegisterScreen.tsx
+│   │   └── HomeScreen.tsx
 │   ├── navigation/
+│   │   ├── AppNavigator.tsx
+│   │   └── index.tsx
+│   ├── services/
+│   │   ├── api.ts
+│   │   └── auth.ts
 │   ├── App.tsx
 │   ├── app.json
 │   └── package.json
-├── research/
-│   ├── notebooks/
-│   │   ├── train_sinhala_model.ipynb
-│   │   ├── evaluate_model.ipynb
-│   │   └── dataset_exploration.ipynb
-│   ├── datasets/
-│   │   ├── raw/
-│   │   ├── processed/
-│   │   └── labels.csv
-│   ├── experiments/
-│   │   ├── logs/
-│   │   └── checkpoints/
-│   └── README.md
 ├── docker-compose.yml
 ├── .gitignore
 └── README.md

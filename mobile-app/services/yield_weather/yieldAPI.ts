@@ -107,6 +107,126 @@ class YieldAPI {
     return this.request(`/users/${userId}/predicted-yields${queryString}`);
   }
 
+  // ML Model Predictions
+  async predictYieldML(
+    location: string,
+    variety: string,
+    area: number,
+    plotId?: number,
+    rainfall?: number,
+    temperature?: number,
+    ageYears?: number
+  ): Promise<{
+    predicted_yield: number;
+    confidence_score: number;
+    prediction_source: string;
+    model_version: string;
+  }> {
+    // Build query parameters for the ML API
+    const params = new URLSearchParams();
+    params.append('location', location);
+    params.append('variety', variety);
+    params.append('area', area.toString());
+    
+    if (plotId) params.append('plot_id', plotId.toString());
+    if (rainfall) params.append('rainfall', rainfall.toString());
+    if (temperature) params.append('temperature', temperature.toString());
+    if (ageYears) params.append('age_years', ageYears.toString());
+
+    const queryString = params.toString();
+    return this.request(`/ml/predict-single?${queryString}`, {
+      method: 'POST',
+    });
+  }
+
+  async getModelInfo(): Promise<any> {
+    return this.request('/ml/model-info');
+  }
+
+  async trainModel(retrain: boolean = false): Promise<any> {
+    return this.request(`/ml/train-model?retrain=${retrain}`, {
+      method: 'POST',
+    });
+  }
+
+  // Comprehensive prediction method (tries ML first, then fallback)
+  async predictYield(
+    plotArea: number,
+    location: string = 'Sri Lanka',
+    variety: string = 'Ceylon Cinnamon',
+    plotId?: number,
+    rainfall?: number,
+    temperature?: number,
+    ageYears?: number
+  ): Promise<{
+    predicted_yield: number;
+    confidence_score: number;
+    prediction_source: 'ml_model' | 'historical_data' | 'mock_data';
+    method_used: string;
+  }> {
+    console.log('🤖 Starting comprehensive yield prediction for:', { plotArea, location, variety });
+    
+    // Step 1: Try ML Model first
+    try {
+      console.log('🔬 Attempting ML model prediction...');
+      const mlResult = await this.predictYieldML(
+        location,
+        variety,
+        plotArea,
+        plotId,
+        rainfall,
+        temperature,
+        ageYears
+      );
+      
+      console.log('📊 ML API Response:', mlResult);
+      
+      // Check if ML actually worked or fell back
+      if (mlResult.prediction_source === 'ml_model') {
+        console.log('✅ ML Model prediction successful!');
+        return {
+          predicted_yield: mlResult.predicted_yield,
+          confidence_score: mlResult.confidence_score,
+          prediction_source: 'ml_model',
+          method_used: `ML Model (${mlResult.model_version})`
+        };
+      } else {
+        console.warn('⚠️ ML API returned fallback result, trying historical data...');
+        throw new Error('ML API used fallback');
+      }
+      
+    } catch (mlError) {
+      console.warn('⚠️ ML model prediction failed:', mlError);
+      console.log('📊 Falling back to historical data method...');
+      
+      // Step 2: Fallback to historical data
+      try {
+        const fallbackResult = await this.calculateFallbackPrediction(plotArea, location, variety);
+        
+        return {
+          predicted_yield: fallbackResult,
+          confidence_score: 0.75, // Good confidence for historical data
+          prediction_source: 'historical_data',
+          method_used: 'Historical Data Average'
+        };
+        
+      } catch (fallbackError) {
+        console.warn('⚠️ Historical data prediction failed:', fallbackError);
+        console.log('🎯 Using final mock data fallback...');
+        
+        // Step 3: Final fallback to mock data
+        const mockResult = this.calculateWithMockData(plotArea, location, variety);
+        
+        return {
+          predicted_yield: mockResult,
+          confidence_score: 0.5, // Lower confidence for mock data
+          prediction_source: 'mock_data',
+          method_used: 'Mock Data (Default Values)'
+        };
+      }
+    }
+  }
+
   // Dataset operations (for admin/testing)
   async getYieldDataset(): Promise<YieldDatasetRecord[]> {
     return this.request('/yield-dataset');
@@ -122,6 +242,12 @@ class YieldAPI {
   // Fallback prediction logic (client-side)
   async calculateFallbackPrediction(plotArea: number, location?: string, variety?: string): Promise<number> {
     try {
+      // Validate input parameters
+      if (!plotArea || plotArea <= 0 || !isFinite(plotArea)) {
+        console.warn('Invalid plot area provided to fallback prediction, using mock data');
+        return this.calculateWithMockData(plotArea || 1, location, variety);
+      }
+      
       // Try to get dataset records for prediction
       const dataset = await this.getYieldDataset();
       
@@ -145,13 +271,57 @@ class YieldAPI {
         matchingRecords = dataset;
       }
       
+      // If still no records or empty dataset, use mock data
+      if (!matchingRecords || matchingRecords.length === 0) {
+        console.warn('No yield records available, using mock data for fallback prediction');
+        return this.calculateWithMockData(plotArea, location, variety);
+      }
+      
+      // Filter out invalid records (area must be positive)
+      // Handle both 'yield' and 'yield_amount' field names for backend compatibility
+      const validRecords = matchingRecords.filter(record => {
+        if (!record) return false;
+        
+        const yieldValue = (record as any).yield_amount || record.yield;
+        const areaValue = record.area;
+        
+        return typeof yieldValue === 'number' && 
+               typeof areaValue === 'number' && 
+               areaValue > 0 && 
+               !isNaN(yieldValue) && 
+               !isNaN(areaValue) &&
+               yieldValue > 0;
+      });
+      
+      if (validRecords.length === 0) {
+        console.warn('No valid yield records found, using mock data for fallback prediction');
+        return this.calculateWithMockData(plotArea, location, variety);
+      }
+      
       // Calculate yield per hectare average
-      const yieldPerHectare = matchingRecords.reduce((sum, record) => {
-        return sum + (record.yield / record.area);
-      }, 0) / matchingRecords.length;
+      const totalYieldPerHectare = validRecords.reduce((sum, record) => {
+        // Handle both 'yield' and 'yield_amount' field names
+        const yieldValue = (record as any).yield_amount || record.yield;
+        const yieldPerHa = yieldValue / record.area;
+        return sum + yieldPerHa;
+      }, 0);
+      
+      const yieldPerHectare = totalYieldPerHectare / validRecords.length;
+      
+      // Validate the calculated yield per hectare
+      if (!isFinite(yieldPerHectare) || isNaN(yieldPerHectare) || yieldPerHectare <= 0) {
+        console.warn('Invalid yield per hectare calculated, using mock data for fallback prediction');
+        return this.calculateWithMockData(plotArea, location, variety);
+      }
       
       // Apply to plot area (assuming area is in hectares)
       const predictedYield = yieldPerHectare * plotArea;
+      
+      // Validate final prediction
+      if (!isFinite(predictedYield) || isNaN(predictedYield) || predictedYield <= 0) {
+        console.warn('Invalid prediction calculated, using mock data for fallback prediction');
+        return this.calculateWithMockData(plotArea, location, variety);
+      }
       
       console.log(`🎯 Fallback prediction: ${predictedYield} kg for ${plotArea} ha`);
       return Math.round(predictedYield);
@@ -189,10 +359,32 @@ class YieldAPI {
       );
     }
 
-    // Calculate yield per hectare average
-    const yieldPerHectare = matchingRecords.reduce((sum, record) => {
-      return sum + (record.yield / record.area);
-    }, 0) / matchingRecords.length;
+    // Ensure we have valid records
+    if (!matchingRecords || matchingRecords.length === 0) {
+      matchingRecords = mockDataset; // Use all mock data if no matches
+    }
+    
+    // Validate plot area
+    if (!plotArea || plotArea <= 0 || !isFinite(plotArea)) {
+      console.warn('Invalid plot area provided, using default 1 hectare');
+      plotArea = 1;
+    }
+    
+    // Calculate yield per hectare average with validation
+    let totalYieldPerHa = 0;
+    let validRecordCount = 0;
+    
+    for (const record of matchingRecords) {
+      if (record.area > 0 && record.yield > 0 && isFinite(record.yield) && isFinite(record.area)) {
+        totalYieldPerHa += (record.yield / record.area);
+        validRecordCount++;
+      }
+    }
+    
+    // Fallback to default yield if no valid records
+    const yieldPerHectare = validRecordCount > 0 
+      ? totalYieldPerHa / validRecordCount 
+      : 2500; // Default: 2500 kg/ha for cinnamon
     
     // Apply to plot area with some variation
     const baseYield = yieldPerHectare * plotArea;
@@ -200,8 +392,13 @@ class YieldAPI {
     const variation = 0.05 + (Math.random() * 0.05);
     const predictedYield = baseYield * (1 + variation);
     
-    console.log(`🎯 Mock prediction: ${predictedYield} kg for ${plotArea} ha (${yieldPerHectare} kg/ha average)`);
-    return Math.round(predictedYield);
+    // Final validation
+    const finalYield = isFinite(predictedYield) && predictedYield > 0 
+      ? Math.round(predictedYield) 
+      : Math.round(2500 * plotArea); // Absolute fallback
+    
+    console.log(`🎯 Mock prediction: ${finalYield} kg for ${plotArea} ha (${yieldPerHectare.toFixed(1)} kg/ha average)`);
+    return finalYield;
   }
 
   // Test connection to backend

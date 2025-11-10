@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   backend:
     build:
@@ -28,16 +26,22 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  # expo:
-  #   build: ./mobile-app
-  #   ports:
-  #     - "19000:19000"
-  #     - "19001:19001"
-  #     - "19002:19002"
-  #   volumes:
-  #     - ./mobile-app:/app
-  #   environment:
-  #     - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+  expo:
+    build: ./mobile-app
+    container_name: expo-mobile-app
+    ports:
+      - "8081:8081"
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    volumes:
+      - ./mobile-app:/app
+      - /app/node_modules
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - REACT_NATIVE_PACKAGER_HOSTNAME=0.0.0.0
+    depends_on:
+      - backend
 
 volumes:
   pgdata:

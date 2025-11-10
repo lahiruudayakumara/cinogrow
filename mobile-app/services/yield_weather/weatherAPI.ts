@@ -1,26 +1,30 @@
 // Weather API service for Cinogrow mobile app
 import { Platform } from 'react-native';
+import apiConfig from '../../config/api';
 
 // Multiple fallback URLs for better connectivity
 const getApiUrls = () => {
   if (__DEV__) {
     if (Platform.OS === 'android') {
       return [
-        'http://10.0.2.2:8001/api/v1',        // Android emulator special IP
-        'http://192.168.53.65:8001/api/v1',   // Your actual Wi-Fi IP
-        'http://127.0.0.1:8001/api/v1'        // Localhost fallback
+        apiConfig.ENV.API_BASE_URL,           // Environment configured IP (PRIMARY)
+        'http://10.0.2.2:8000/api/v1',       // Android emulator special IP
+        'http://127.0.0.1:8000/api/v1'       // Localhost fallback
       ];
     } else if (Platform.OS === 'ios') {
       return [
-        'http://192.168.53.65:8001/api/v1',   // Your actual Wi-Fi IP
-        'http://127.0.0.1:8001/api/v1',       // Localhost fallback
-        'http://10.0.2.2:8001/api/v1'         // iOS simulator fallback
+        apiConfig.ENV.API_BASE_URL,          // Environment configured IP (PRIMARY)
+        'http://127.0.0.1:8000/api/v1',      // Localhost fallback
+        'http://10.0.2.2:8000/api/v1'        // iOS simulator fallback
       ];
     } else {
-      return ['http://127.0.0.1:8001/api/v1'];
+      return [
+        apiConfig.ENV.API_BASE_URL,          // Environment configured IP (PRIMARY)
+        'http://127.0.0.1:8000/api/v1'       // Localhost fallback
+      ];
     }
   } else {
-    return ['https://your-production-domain.com/api/v1'];
+    return [apiConfig.ENV.PROD_API_BASE_URL];
   }
 };
 

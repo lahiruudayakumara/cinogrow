@@ -13,7 +13,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
-import { Ionicons } from '@expo/vector-icons';
 
 type UploadSoilScreenNavigationProp = StackNavigationProp<
     FertilizerStackParamList,
@@ -152,7 +151,11 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-               
+                {/* Header */}
+                <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+                    <Text style={styles.backArrow}>←</Text>
+                    <Text style={styles.headerTitle}>Upload Leaf Sample</Text>
+                </TouchableOpacity>
 
                 {/* Guidelines Card */}
                 <View style={styles.guidelinesCard}>
@@ -168,27 +171,26 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
                     </View>
                 </View>
 
-                {/* Upload Area (Main Focus) */}
-                <TouchableOpacity
-                    style={[styles.uploadArea, selectedImage && styles.uploadAreaActive]}
-                    onPress={handleChooseFile}
-                >
+                {/* Upload Area */}
+                <TouchableOpacity style={styles.uploadArea} onPress={handleChooseFile}>
                     {selectedImage ? (
-                        <>
-                            <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-                            <TouchableOpacity style={styles.changePhotoButton} onPress={handleChooseFile}>
-                                <Ionicons name="camera-reverse-outline" size={16} color="white" />
-                                <Text style={styles.changePhotoText}>Change/Retake Photo</Text>
-                            </TouchableOpacity>
-                        </>
+                        <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
                     ) : (
                         <>
-                            <Ionicons name="cloud-upload-outline" size={60} color="#795548" style={styles.uploadIcon} />
-                            <Text style={styles.uploadTitle}>Tap to Upload Soil Photo</Text>
+                            <View style={styles.uploadIconContainer}>
+                                <CameraIcon />
+                            </View>
+                            <Text style={styles.uploadTitle}>Upload Soil Photo</Text>
                             <Text style={styles.uploadSubtitle}>
-                                Camera or Gallery - We recommend taking a new photo.
+                                Tap here to select photo from camera or gallery
                             </Text>
                         </>
+                    )}
+
+                    {selectedImage && (
+                        <TouchableOpacity style={styles.changePhotoButton} onPress={handleChooseFile}>
+                            <Text style={styles.changePhotoText}>Change Photo</Text>
+                        </TouchableOpacity>
                     )}
                 </TouchableOpacity>
 
@@ -291,15 +293,6 @@ const styles = StyleSheet.create({
         marginBottom: 30,
         minHeight: 200,
         justifyContent: 'center',
-    },
-    uploadAreaActive: {
-        borderColor: '#FF9800',
-        borderStyle: 'solid',
-        backgroundColor: '#FFF3E0',
-    },
-    uploadIcon: {
-        marginBottom: 20,
-        opacity: 0.5,
     },
     uploadIconContainer: {
         marginBottom: 20,

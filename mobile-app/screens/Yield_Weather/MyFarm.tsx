@@ -128,17 +128,32 @@ const MyFarm = () => {
 
   const generatePlots = (farmId: number, numberOfPlots: number, totalArea: number): Plot[] => {
     const plots: Plot[] = [];
-    const areaPerPlot = totalArea / numberOfPlots;
     const plotNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
     const statuses: Array<'PLANTED' | 'GROWING' | 'MATURE'> = ['PLANTED', 'GROWING', 'MATURE'];
     
+    // Calculate area distribution: equal for all except last plot gets remaining area
+    let remainingArea = totalArea;
+    const standardPlotArea = numberOfPlots > 1 ? Math.floor((totalArea / numberOfPlots) * 10) / 10 : totalArea;
+    
     for (let i = 0; i < numberOfPlots; i++) {
       const plotName = plotNames[i] || `${Math.floor(i / 20) + 1}${plotNames[i % 20]}`;
+      
+      // For the last plot, assign the exact remaining area; for others, use standard area
+      let plotArea: number;
+      if (i === numberOfPlots - 1) {
+        // Last plot gets exactly the remaining area
+        plotArea = parseFloat(remainingArea.toFixed(1));
+      } else {
+        // Other plots get the standard area
+        plotArea = standardPlotArea;
+        remainingArea -= plotArea;
+      }
+      
       plots.push({
         id: Date.now() + i,
         farm_id: farmId,
         name: `Plot ${plotName}`,
-        area: parseFloat(areaPerPlot.toFixed(1)),
+        area: plotArea,
         status: statuses[i % statuses.length],
         crop_type: 'Cinnamon',
         planting_date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -261,13 +276,28 @@ const MyFarm = () => {
 
   const generatePlotsData = (numberOfPlots: number, totalArea: number) => {
     const plotNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
-    const areaPerPlot = totalArea / numberOfPlots;
+    
+    // Calculate area distribution: equal for all except last plot gets remaining area
+    let remainingArea = totalArea;
+    const standardPlotArea = numberOfPlots > 1 ? Math.floor((totalArea / numberOfPlots) * 10) / 10 : totalArea;
     
     return Array.from({ length: numberOfPlots }, (_, i) => {
       const plotName = plotNames[i] || `${Math.floor(i / 20) + 1}${plotNames[i % 20]}`;
+      
+      // For the last plot, assign the exact remaining area; for others, use standard area
+      let plotArea: number;
+      if (i === numberOfPlots - 1) {
+        // Last plot gets exactly the remaining area
+        plotArea = parseFloat(remainingArea.toFixed(1));
+      } else {
+        // Other plots get the standard area
+        plotArea = standardPlotArea;
+        remainingArea -= plotArea;
+      }
+      
       return {
         name: `Plot ${plotName}`,
-        area: parseFloat(areaPerPlot.toFixed(1)),
+        area: plotArea,
         crop_type: 'Cinnamon'
       };
     });
@@ -668,9 +698,12 @@ const MyFarm = () => {
                 maxLength={2}
               />
               <Text style={styles.fieldNote}>
-                The farm area will be divided equally among all plots
-                {farmArea && numPlots && !isNaN(parseFloat(farmArea)) && !isNaN(parseInt(numPlots)) && parseInt(numPlots) > 0 ? 
-                  ` (${(parseFloat(farmArea) / parseInt(numPlots)).toFixed(1)} ha per plot)` : ''}
+                The last plot will get the remaining area after distributing equal areas to other plots
+                {farmArea && numPlots && !isNaN(parseFloat(farmArea)) && !isNaN(parseInt(numPlots)) && parseInt(numPlots) > 0 ? (
+                  parseInt(numPlots) === 1 ? 
+                    ` (${parseFloat(farmArea).toFixed(1)} ha for single plot)` :
+                    ` (${(parseFloat(farmArea) / parseInt(numPlots)).toFixed(1)} ha each, last plot gets remainder)`
+                ) : ''}
               </Text>
             </View>
 

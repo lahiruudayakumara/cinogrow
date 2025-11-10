@@ -209,7 +209,7 @@ class YieldPredictionService:
             # Make prediction
             prediction = self.model.predict(X_scaled)[0]
             
-            # Calculate confidence (simplified)
+            # Calculate confidence 
             confidence = min(0.95, max(0.5, 1.0 - (abs(prediction - (area * 2500)) / (area * 2500))))
             
             # Store prediction in database

@@ -1,14 +1,15 @@
 import { Platform } from 'react-native';
+import apiConfig from '../config/api';
 
 // Simple connectivity test function
 export async function testAPIConnectivity() {
   const testUrls = [
-    'http://192.168.53.65:8001/health',                  // Your actual Wi-Fi IP - main health endpoint
-    'http://10.0.2.2:8001/health',                       // Android emulator - main health endpoint
-    'http://127.0.0.1:8001/health',                      // Localhost - main health endpoint
-    'http://localhost:8001/health',                      // Alternative localhost - main health endpoint
-    'http://192.168.53.65:8001/api/v1/farms',            // Test farms endpoint
-    'http://10.0.2.2:8001/api/v1/farms'                  // Test farms endpoint - Android
+    apiConfig.ENV.HEALTH_ENDPOINT,                       // Environment configured health endpoint
+    'http://10.0.2.2:8000/health',                       // Android emulator - main health endpoint
+    'http://127.0.0.1:8000/health',                      // Localhost - main health endpoint
+    'http://localhost:8000/health',                      // Alternative localhost - main health endpoint
+    `${apiConfig.ENV.API_BASE_URL.replace('/api/v1', '')}/api/v1/farms`, // Test farms endpoint
+    'http://10.0.2.2:8000/api/v1/farms'                  // Test farms endpoint - Android
   ];
 
   console.log('🔍 Starting connectivity test...');

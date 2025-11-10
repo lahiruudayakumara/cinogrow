@@ -1,11 +1,91 @@
+# Environment variables - NEVER commit these files
 .env
-.DS_Store
+.env.*
+!.env.example
+
+# Dependencies
 node_modules/
+__pycache__/
+
+# Python
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.so
+venv/
+.venv/
+env/
+ENV/
+
+# Expo/React Native
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+*.orig.*
+
+# Native files (iOS/Android)
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
-*.diff  
-*.log
 
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Logs
+*.log
+logs/
+*.diff
+
+# Database
+*.sqlite3
+*.db
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Docker
+*.pid
+*.pid.lock
+docker-compose.override.yml
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.nyc_output/
+
+# Model/ML files
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.onnx
+
+# Uploads and temporary data
+uploads/
+tmp/
+temp/
+
+# Debug files
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# TypeScript
+*.tsbuildinfo

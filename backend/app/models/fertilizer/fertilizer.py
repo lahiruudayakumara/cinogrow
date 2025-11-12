@@ -49,7 +49,7 @@ class ScheduleFrequency(str, Enum):
 
 class FertilizerType(SQLModel, table=True):
     """Database model for fertilizer types"""
-    _tablename_ = "fertilizer_types"
+    __tablename__ = "fertilizer_types"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(max_length=255, index=True)
@@ -79,7 +79,7 @@ class FertilizerType(SQLModel, table=True):
 
 class FertilizerApplication(SQLModel, table=True):
     """Database model for fertilizer applications"""
-    _tablename_ = "fertilizer_applications"
+    __tablename__ = "fertilizer_applications"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     farm_id: int = Field(foreign_key="farms.id")
@@ -124,7 +124,7 @@ class FertilizerApplication(SQLModel, table=True):
 
 class FertilizerSchedule(SQLModel, table=True):
     """Database model for fertilizer application schedules"""
-    _tablename_ = "fertilizer_schedules"
+    __tablename__ = "fertilizer_schedules"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     farm_id: int = Field(foreign_key="farms.id")
@@ -171,7 +171,7 @@ class FertilizerSchedule(SQLModel, table=True):
 
 class FertilizerRecommendation(SQLModel, table=True):
     """Database model for AI/ML fertilizer recommendations"""
-    _tablename_ = "fertilizer_recommendations"
+    __tablename__ = "fertilizer_recommendations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     farm_id: int = Field(foreign_key="farms.id")

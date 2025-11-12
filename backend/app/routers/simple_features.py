@@ -13,7 +13,7 @@ async def analyze_features_simple(
     """
     Simple working endpoint for feature analysis using real trained model
     """
-    logger = logging.getLogger(_name_)
+    logger = logging.getLogger(__name__)
     
     try:
         logger.info("🔄 Feature analysis endpoint called")

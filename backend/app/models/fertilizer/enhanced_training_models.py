@@ -79,7 +79,7 @@ class FeedbackType(str, Enum):
 
 class ImageAnnotation(SQLModel, table=True):
     """Image annotations for training data"""
-    _tablename_ = "image_annotations"
+    __tablename__ = "image_annotations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     
@@ -119,7 +119,7 @@ class ImageAnnotation(SQLModel, table=True):
 
 class TrainingDataset(SQLModel, table=True):
     """Training datasets for model development"""
-    _tablename_ = "training_datasets"
+    __tablename__ = "training_datasets"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     
@@ -216,7 +216,7 @@ class ModelTrainingRun(SQLModel, table=True):
 
 class UserFeedback(SQLModel, table=True):
     """User feedback on model predictions and recommendations"""
-    _tablename_ = "user_feedback"
+    __tablename__ = "user_feedback"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     
@@ -256,7 +256,7 @@ class UserFeedback(SQLModel, table=True):
 
 class ContinuousLearningConfig(SQLModel, table=True):
     """Configuration for continuous learning system"""
-    _tablename_ = "continuous_learning_config"
+    __tablename__ = "continuous_learning_config"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     
@@ -455,4 +455,4 @@ def should_trigger_retraining(
         "current_accuracy": current_accuracy,
         "feedback_count": feedback_count,
         "drift_score": drift_score
-    }
+    }

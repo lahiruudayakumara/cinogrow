@@ -11,7 +11,7 @@ load_dotenv()
 # Import database and routers
 from app.database import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
-from app.routers.fertilizer.fertilizer_detection import router as fertilizer_router
+from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router
 # from app.routers.fertilizer.ml_metadata_api import router as ml_metadata_router
 
 # Create FastAPI app

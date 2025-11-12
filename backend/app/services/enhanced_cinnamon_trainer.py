@@ -56,13 +56,13 @@ from app.services.cinnamon_deficiency_detector import CinnamonLeafDeficiencyDete
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 
 class EnhancedFeatureExtractor:
     """Advanced feature extraction for cinnamon leaf analysis"""
     
-    def _init_(self):
+    def __init__(self):
         self.target_size = (224, 224)
         
         # Color space transformations for analysis
@@ -384,7 +384,7 @@ class EnhancedFeatureExtractor:
 class AdvancedCinnamonTrainer:
     """Advanced ML training system for cinnamon leaf deficiency detection"""
     
-    def _init_(self, base_path: str = "backend/uploads/ml_training_data"):
+    def __init__(self, base_path: str = "backend/uploads/ml_training_data"):
         self.base_path = Path(base_path)
         self.models_path = Path("backend/models")
         
@@ -845,7 +845,7 @@ class AdvancedCinnamonTrainer:
 
 
 # Example usage
-if _name_ == "_main_":
+if __name__ == "__main__":
     trainer = AdvancedCinnamonTrainer()
     results = trainer.run_complete_training_pipeline()
     

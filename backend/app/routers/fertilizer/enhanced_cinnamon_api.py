@@ -47,7 +47,7 @@ from app.services.intelligent_fertilizer_recommender import (
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/fertilizer/cinnamon/enhanced",

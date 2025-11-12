@@ -50,7 +50,7 @@ async def health_check():
     """Health check endpoint for real fertilizer detection service"""
     try:
         import logging
-        logger = logging.getLogger(_name_)
+        logger = logging.getLogger(__name__)
         
         logger.info("🩺 Health check requested for fertilizer detection service")
         
@@ -87,7 +87,7 @@ async def health_check():
         
     except Exception as e:
         import logging
-        logger = logging.getLogger(_name_)
+        logger = logging.getLogger(__name__)
         
         error_data = {
             "success": False,
@@ -98,7 +98,7 @@ async def health_check():
             "version": "1.0",
             "timestamp": datetime.utcnow().isoformat(),
             "error_details": {
-                "error_type": type(e)._name_,
+                "error_type": type(e).__name__,
                 "error_message": str(e)
             }
         }
@@ -198,7 +198,7 @@ async def analyze_features_compatibility(
     Compatibility endpoint for feature analysis - handles metadata format from mobile app
     """
     import logging
-    logger = logging.getLogger(_name_)
+    logger = logging.getLogger(__name__)
     
     logger.info("🔄 Feature analysis compatibility endpoint called")
     logger.info(f"📋 Received metadata: {metadata}")
@@ -255,7 +255,7 @@ async def _analyze_leaf_features_core(
     Core feature analysis logic shared between endpoints
     """
     import logging
-    logger = logging.getLogger(_name_)
+    logger = logging.getLogger(__name__)
     
     logger.info("🍃 Feature-based leaf analysis request received")
     logger.info(f"📊 Color distribution: {color_distribution}")
@@ -477,7 +477,7 @@ async def analyze_leaf_with_real_model(
     Returns deficiency prediction with fertilizer recommendations.
     """
     import logging
-    logger = logging.getLogger(_name_)
+    logger = logging.getLogger(__name__)
     
     logger.info("🔬 Leaf analysis request received")
     logger.info(f"📂 File name: {leaf_image.filename}")
@@ -597,7 +597,7 @@ async def analyze_leaf_with_real_model(
                 
     except Exception as e:
         logger.error(f"❌ Analysis failed: {str(e)}")
-        logger.error(f"❌ Error type: {type(e)._name_}")
+        logger.error(f"❌ Error type: {type(e).__name__}")
         
         # Clean up on error
         if 'image_path' in locals() and os.path.exists(image_path):
@@ -681,7 +681,7 @@ async def get_detailed_recommendations(
         session_id: Optional session tracking ID
     """
     import logging
-    logger = logging.getLogger(_name_)
+    logger = logging.getLogger(__name__)
     
     try:
         logger.info(f"🔄 Getting recommendations for: {deficiency_type}, severity: {severity}")
@@ -938,5 +938,5 @@ async def analyze_leaf_legacy(
         plot_id=plot_id,
         user_id=user_id,
         save_to_db=True,
-        db=db
-    )
+        db=db
+    )

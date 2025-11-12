@@ -14,7 +14,7 @@ from pathlib import Path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 
 class DeficiencyType(Enum):
@@ -108,7 +108,7 @@ class IntelligentFertilizerRecommendationEngine:
     cost optimization, local availability, and farmer preferences
     """
     
-    def _init_(self):
+    def __init__(self):
         self.data_path = Path("backend/data/fertilizer_recommendations")
         self.data_path.mkdir(parents=True, exist_ok=True)
         
@@ -1101,7 +1101,7 @@ MONITORING GUIDELINES:
 
 
 # Example usage
-if _name_ == "_main_":
+if __name__ == "__main__":
     # Initialize recommendation engine
     engine = IntelligentFertilizerRecommendationEngine()
     

@@ -33,7 +33,7 @@ from app.services.cinnamon_deficiency_detector import CinnamonLeafDeficiencyDete
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 
 class CinnamonDatasetTrainer:
@@ -42,7 +42,7 @@ class CinnamonDatasetTrainer:
     Handles dataset download from Google Drive, preprocessing, and model training
     """
     
-    def _init_(self, base_path: str = "backend/uploads/ml_training_data"):
+    def __init__(self, base_path: str = "backend/uploads/ml_training_data"):
         self.base_path = Path(base_path)
         self.detector = CinnamonLeafDeficiencyDetector()
         self.models_path = Path("backend/models")
@@ -491,8 +491,8 @@ class EnhancedCinnamonDetector(CinnamonLeafDeficiencyDetector):
     Provides ensemble prediction for improved accuracy
     """
     
-    def _init_(self, model_file: str, base_detector: CinnamonLeafDeficiencyDetector):
-        super()._init_()
+    def __init__(self, model_file: str, base_detector: CinnamonLeafDeficiencyDetector):
+        super().__init__()
         self.base_detector = base_detector
         self.ml_model = joblib.load(model_file)
         
@@ -596,7 +596,7 @@ class EnhancedCinnamonDetector(CinnamonLeafDeficiencyDetector):
 
 
 # Example usage
-if _name_ == "_main_":
+if __name__ == "__main__":
     # Initialize trainer
     trainer = CinnamonDatasetTrainer()
     

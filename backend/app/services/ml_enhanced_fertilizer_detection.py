@@ -11,7 +11,7 @@ import joblib
 from app.services.cinnamon_deficiency_detector import CinnamonLeafDeficiencyDetector
 from app.services.cinnamon_dataset_trainer import EnhancedCinnamonDetector, CinnamonDatasetTrainer
 
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 
 class MLEnhancedFertilizerDetectionService:
@@ -20,7 +20,7 @@ class MLEnhancedFertilizerDetectionService:
     Provides accurate deficiency detection and fertilizer recommendations
     """
     
-    def _init_(self, db_session, models_path: str = "backend/models"):
+    def __init__(self, db_session, models_path: str = "backend/models"):
         self.db = db_session
         self.models_path = Path(models_path)
         self.base_detector = CinnamonLeafDeficiencyDetector()
@@ -435,5 +435,5 @@ def test_ml_enhanced_service():
     print("✅ Service test completed")
 
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     test_ml_enhanced_service()

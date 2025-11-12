@@ -9,12 +9,12 @@ from typing import Dict, List, Any
 import logging
 from pathlib import Path
 
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 class RealTrainedFeatureService:
     """Service using the real trained model from your images"""
     
-    def _init_(self, model_dir: str = "models/fertilizer"):
+    def __init__(self, model_dir: str = "models/fertilizer"):
         self.model_dir = Path(model_dir)
         self.model = None
         self.label_encoder = None
@@ -155,7 +155,7 @@ def get_real_trained_service():
     return RealTrainedFeatureService()
 
 # Test the service
-if _name_ == "_main_":
+if __name__ == "__main__":
     try:
         service = get_real_trained_service()
         

@@ -12,7 +12,7 @@ import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 
 class CinnamonLeafDeficiencyDetector:
@@ -22,7 +22,7 @@ class CinnamonLeafDeficiencyDetector:
     Implements rule-based classification as specified
     """
     
-    def _init_(self):
+    def __init__(self):
         self.model_version = "v2.0_rule_based"
         self.confidence_threshold = 0.75
         
@@ -545,7 +545,7 @@ class CinnamonLeafDeficiencyDetector:
 
 
 # Example usage for testing
-if _name_ == "_main_":
+if __name__ == "__main__":
     # Initialize detector
     detector = CinnamonLeafDeficiencyDetector()
     

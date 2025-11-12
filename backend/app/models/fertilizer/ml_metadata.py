@@ -94,7 +94,7 @@ class MLAnalysisSession(SQLModel, table=True):
     Analysis session tracking for ML data collection
     Each session represents a complete fertilizer analysis workflow
     """
-    _tablename_ = "ml_analysis_sessions"
+    __tablename__ = "ml_analysis_sessions"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     session_id: str = Field(unique=True, index=True, description="Unique session identifier")
@@ -119,7 +119,7 @@ class MLImageAnalysis(SQLModel, table=True):
     Individual image analysis record for ML training data
     Stores comprehensive metadata for each analyzed image
     """
-    _tablename_ = "ml_image_analyses"
+    __tablename__ = "ml_image_analyses"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     analysis_id: str = Field(unique=True, index=True, description="Unique analysis identifier")
@@ -158,7 +158,7 @@ class MLTrainingDataset(SQLModel, table=True):
     Training dataset management for ML models
     Groups approved analyses into training sets
     """
-    _tablename_ = "ml_training_datasets"
+    __tablename__ = "ml_training_datasets"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     dataset_id: str = Field(unique=True, index=True, description="Unique dataset identifier")
@@ -186,7 +186,7 @@ class MLModelVersion(SQLModel, table=True):
     """
     Track ML model versions and their performance
     """
-    _tablename_ = "ml_model_versions"
+    __tablename__ = "ml_model_versions"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     model_id: str = Field(unique=True, index=True, description="Unique model identifier")

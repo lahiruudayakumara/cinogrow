@@ -20,7 +20,7 @@ import joblib
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 def main():
     print("Real Fertilizer Deficiency Detection Training")
@@ -66,7 +66,7 @@ def main():
             logger.warning(f"Class directory not found: {class_path}")
             continue
             
-        image_files = list(class_path.glob(".jpg")) + list(class_path.glob(".jpeg")) + list(class_path.glob("*.png"))
+        image_files = list(class_path.glob("*.jpg")) + list(class_path.glob("*.jpeg")) + list(class_path.glob("*.png"))
         
         print(f"{class_name}: {len(image_files)} images")
         
@@ -117,10 +117,25 @@ def main():
 
     features = []
 
+    def color_proportion(img_rgb, lower, upper):
+        """Calculate proportion of pixels within a color range in HSV."""
+        img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2HSV)
+        mask = cv2.inRange(img_hsv, lower, upper)
+        return np.sum(mask > 0) / mask.size
+
+    # Define HSV color ranges for yellow, brown/orange, green
+    yellow_lower = np.array([20, 100, 100])
+    yellow_upper = np.array([35, 255, 255])
+    brown_lower = np.array([10, 100, 20])
+    brown_upper = np.array([20, 255, 200])
+    orange_lower = np.array([10, 150, 150])
+    orange_upper = np.array([25, 255, 255])
+    green_lower = np.array([35, 50, 50])
+    green_upper = np.array([85, 255, 255])
+
     for i, img in enumerate(images):
-        # Convert to uint8 for feature extraction
         img_uint8 = (img * 255).astype(np.uint8)
-        
+
         # Color statistics
         color_features = []
         for channel in range(3):  # RGB channels
@@ -132,27 +147,35 @@ def main():
                 np.max(channel_data),
                 np.median(channel_data)
             ])
-        
+
+        # Proportion of yellow, brown/orange, green pixels
+        yellow_prop = color_proportion(img_uint8, yellow_lower, yellow_upper)
+        brown_prop = color_proportion(img_uint8, brown_lower, brown_upper)
+        orange_prop = color_proportion(img_uint8, orange_lower, orange_upper)
+        green_prop = color_proportion(img_uint8, green_lower, green_upper)
+        color_specific_features = [yellow_prop, brown_prop, orange_prop, green_prop]
+
         # Convert to grayscale for texture features
         gray = cv2.cvtColor(img_uint8, cv2.COLOR_RGB2GRAY)
-        
+
         # Simple texture measures
         texture_features = [
             np.var(gray),  # Variance
             cv2.Laplacian(gray, cv2.CV_64F).var(),  # Edge variance
         ]
-        
+
         # Histogram features
         hist = cv2.calcHist([gray], [0], None, [16], [0, 256])
         hist_features = hist.flatten() / np.sum(hist)  # Normalize
-        
+
         # Combine all features
         img_features = np.concatenate([
             color_features,
+            color_specific_features,
             texture_features,
             hist_features
         ])
-        
+
         features.append(img_features)
 
     features_array = np.array(features)
@@ -356,5 +379,5 @@ def main():
         
         print(f"Sample prediction: {predicted_class} (Confidence: {confidence:.1f}%)")
 
-if _name_ == "_main_":
-    main()
+if __name__ == "__main__":
+    main()

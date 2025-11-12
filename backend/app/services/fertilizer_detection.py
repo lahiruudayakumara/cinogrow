@@ -18,7 +18,7 @@ from app.models.fertilizer.deficiency_detection import (
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 
 class FertilizerDetectionService:
@@ -27,7 +27,7 @@ class FertilizerDetectionService:
     Based on the specifications provided for cinnamon-specific nutrient deficiencies
     """
     
-    def _init_(self, db: Session):
+    def __init__(self, db: Session):
         self.db = db
         self.model = None
         self.confidence_threshold = 0.75
@@ -437,4 +437,4 @@ class FertilizerDetectionService:
         self.db.commit()
         self.db.refresh(recommendation)
         
-        return recommendation
+        return recommendation

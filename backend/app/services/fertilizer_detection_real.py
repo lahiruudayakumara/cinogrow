@@ -15,12 +15,12 @@ import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 class FertilizerDetectionService:
     """Production service for fertilizer deficiency detection"""
     
-    def _init_(self):
+    def __init__(self):
         self.model = None
         self.scaler = None
         self.recommendations = None
@@ -240,7 +240,7 @@ async def get_recommendations_only(deficiency_type: str):
     service = get_fertilizer_service()
     return service.get_recommendations(deficiency_type)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     # Test the service
     print("Testing Fertilizer Detection Service...")
     

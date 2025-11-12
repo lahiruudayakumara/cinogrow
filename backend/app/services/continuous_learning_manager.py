@@ -33,7 +33,7 @@ from app.services.enhanced_cinnamon_trainer import AdvancedCinnamonTrainer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 
 class ContinuousLearningManager:
@@ -42,7 +42,7 @@ class ContinuousLearningManager:
     Handles feedback processing, model retraining, and adaptive updates
     """
     
-    def _init_(self):
+    def __init__(self):
         self.trainer = AdvancedCinnamonTrainer()
         self.feedback_queue = []
         self.performance_threshold = 0.85
@@ -693,7 +693,7 @@ def schedule_continuous_learning():
 
 
 # Example usage
-if _name_ == "_main_":
+if __name__ == "__main__":
     # Initialize continuous learning manager
     learning_manager = ContinuousLearningManager()
     

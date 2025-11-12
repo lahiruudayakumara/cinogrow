@@ -25,7 +25,7 @@ from app.services.cinnamon_dataset_trainer import CinnamonDatasetTrainer, Enhanc
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/fertilizer/cinnamon",

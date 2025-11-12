@@ -1,13 +1,16 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
 from pathlib import Path
+from dotenv import load_dotenv
+import os
 
-# Import database
+# Load environment variables FIRST before importing anything else
+load_dotenv()
+
+# Import database and routers
 from app.database import create_db_and_tables
-
-# Import routers
+from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
 from app.routers.fertilizer.fertilizer_detection import router as fertilizer_router
 # from app.routers.fertilizer.ml_metadata_api import router as ml_metadata_router
 
@@ -33,14 +36,18 @@ Path('uploads/fertilizer_analysis').mkdir(parents=True, exist_ok=True)
 # Mount static files
 app.mount('/uploads', StaticFiles(directory='uploads'), name='uploads')
 
-# Include routers
-app.include_router(fertilizer_router, prefix='/api/v1/fertilizer')
-# app.include_router(ml_metadata_router, prefix='/api/v1')
-
 # Create database tables on startup
 @app.on_event('startup')
 async def startup_event():
     create_db_and_tables()
+
+# Include routers
+app.include_router(fertilizer_router, prefix='/api/v1/fertilizer')
+# app.include_router(ml_metadata_router, prefix='/api/v1')
+app.include_router(weather.router, prefix="/api/v1")
+app.include_router(farm.router, prefix="/api/v1")
+app.include_router(farm_assistance.router, prefix="/api/v1")
+app.include_router(yield_prediction.router, prefix="/api/v1")
 
 @app.get('/')
 async def root():
@@ -53,5 +60,6 @@ async def root():
 async def health_check():
     return {
         'status': 'healthy',
-        'message': 'Cinogrow Backend API is running'
+        'message': 'Cinogrow Backend API is running',
+        'version': '1.0.0'
     }

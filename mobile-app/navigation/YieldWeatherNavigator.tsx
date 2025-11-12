@@ -2,19 +2,19 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // Import screens
-import YieldWeatherHome from '../screens/Yeild_weather/YieldWeatherHome';
-import FarmDetailsScreen from '../screens/Yeild_weather/farm-details';
-import PastYieldFormScreen from '../screens/Yeild_weather/past-yield-form';
-import YieldPredictionScreen from '../screens/Yeild_weather/yield-prediction';
-import FarmAssistanceScreen from '../screens/Yeild_weather/farm-assistance';
+import YieldWeatherHome from '../screens/Yield_Weather/YieldWeatherHome';
+import MyFarmScreen from '../screens/Yield_Weather/MyFarm';
+import MyPlantingRecordsScreen from '../screens/Yield_Weather/MyPlantingRecords';
+import FarmAssistanceScreen from '../screens/Yield_Weather/FarmAssistance';
+import MyYieldScreen from '../screens/Yield_Weather/MyYield';
 
 // Define the navigation parameter types for the Yield Weather stack
 export type YieldWeatherStackParamList = {
   YieldWeatherHome: undefined;
-  FarmDetails: undefined;
-  PastYieldForm: undefined;
-  YieldPrediction: undefined;
+  MyFarm: undefined;
+  MyPlantingRecords: undefined;
   FarmAssistance: undefined;
+  MyYield: undefined;
 };
 
 const Stack = createStackNavigator<YieldWeatherStackParamList>();
@@ -44,26 +44,18 @@ const YieldWeatherNavigator = () => {
         }}
       />
       <Stack.Screen 
-        name="FarmDetails" 
-        component={FarmDetailsScreen}
+        name="MyFarm" 
+        component={MyFarmScreen}
         options={{ 
-          title: 'Farm Details',
+          title: 'My Farm',
           headerShown: true 
         }}
       />
       <Stack.Screen 
-        name="PastYieldForm" 
-        component={PastYieldFormScreen}
+        name="MyPlantingRecords" 
+        component={MyPlantingRecordsScreen}
         options={{ 
-          title: 'Past Yield Data',
-          headerShown: true 
-        }}
-      />
-      <Stack.Screen 
-        name="YieldPrediction" 
-        component={YieldPredictionScreen}
-        options={{ 
-          title: 'Yield Prediction',
+          title: 'My Planting Records',
           headerShown: true 
         }}
       />
@@ -71,7 +63,15 @@ const YieldWeatherNavigator = () => {
         name="FarmAssistance" 
         component={FarmAssistanceScreen}
         options={{ 
-          title: 'Farm Assistant',
+          title: 'Farm Assistance',
+          headerShown: true 
+        }}
+      />
+      <Stack.Screen 
+        name="MyYield" 
+        component={MyYieldScreen}
+        options={{ 
+          title: 'My Yield',
           headerShown: true 
         }}
       />

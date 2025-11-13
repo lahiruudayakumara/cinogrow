@@ -1,5 +1,11 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
+import { TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+// Import types
+import { FertilizerAnalysisResponse } from '../services/fertilizerAPI';
+import { LeafAnalysisMetadata } from '../services/imageAnalysisService';
 
 // Import screens
 import FertilizerHomeScreen from '../screens/Fertilizer/FertilizerHomeScreen';
@@ -18,10 +24,13 @@ export type FertilizerStackParamList = {
         imageType: 'leaf' | 'soil';
         leafImage?: string;
         soilImage?: string;
+        leafMetadata?: LeafAnalysisMetadata;
     };
     FertilizerResult: {
         leafImage?: string;
         soilImage?: string;
+        analysisType?: 'leaf-only' | 'comprehensive';
+        mlAnalysis?: FertilizerAnalysisResponse; // Add ML analysis data
     };
 };
 
@@ -78,10 +87,18 @@ const FertilizerNavigator = () => {
             <Stack.Screen
                 name="FertilizerResult"
                 component={FertilizerResultScreen}
-                options={{
+                options={({ navigation }) => ({
                     title: 'Analysis Results',
-                    headerShown: true
-                }}
+                    headerShown: true,
+                    headerLeft: () => (
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('FertilizerHome', {})}
+                            style={{ marginLeft: 10, padding: 5 }}
+                        >
+                            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    ),
+                })}
             />
         </Stack.Navigator>
     );

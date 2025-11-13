@@ -19,4 +19,11 @@ passlib[bcrypt]
 python-jose
 
 # --- Optional (Images, utilities) ---
+scikit-learn
+pandas
 pillow
+httpx
+python-multipart
+psycopg2-binary
+sqlalchemy
+alembic

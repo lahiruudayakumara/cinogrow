@@ -19,6 +19,8 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import type { YieldWeatherStackParamList } from '../../navigation/YieldWeatherNavigator';
 import { plantingRecordsAPI, PlantingRecord, Plot } from '../../services/yield_weather/plantingRecordsAPI';
 import DatePicker from '../../components/ui/DatePicker';
+import { CinnamonVarietyPicker } from '../../components/CinnamonVarietyPicker';
+import { DEFAULT_CINNAMON_VARIETY } from '../../constants/CinnamonVarieties';
 
 type NavigationProp = StackNavigationProp<YieldWeatherStackParamList>;
 
@@ -128,7 +130,7 @@ const MyPlantingRecords = () => {
   const clearForm = () => {
     setSelectedPlot(null);
     setPlotArea('');
-    setVariety('');
+    setVariety(DEFAULT_CINNAMON_VARIETY);
     setSeedlingCount('');
     setPlantedDate(null);
   };
@@ -575,16 +577,14 @@ const MyPlantingRecords = () => {
             </View>
 
             {/* Cinnamon Variety */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Cinnamon Variety *</Text>
-              <TextInput
-                style={styles.input}
-                value={variety}
-                onChangeText={setVariety}
-                placeholder="e.g., Ceylon Cinnamon (Alba)"
-                placeholderTextColor="#9CA3AF"
-              />
-            </View>
+            {/* Cinnamon Variety */}
+            <CinnamonVarietyPicker
+              value={variety}
+              onValueChange={setVariety}
+              label="Cinnamon Variety *"
+              showDescription={true}
+              style={styles.formGroup}
+            />
 
             {/* Seedling Count */}
             <View style={styles.formGroup}>

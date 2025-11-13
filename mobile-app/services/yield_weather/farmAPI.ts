@@ -1,6 +1,7 @@
 // Farm API Service
 import { Alert } from 'react-native';
 import apiConfig from '../../config/api';
+import { DEFAULT_CINNAMON_VARIETY } from '../../constants/CinnamonVarieties';
 
 const API_BASE_URL = apiConfig.API_BASE_URL;
 
@@ -142,6 +143,16 @@ class FarmAPI {
     });
   }
 
+  async updateFarmPlotAreas(farmId: number, plotsData: Partial<Plot>[]): Promise<{ message: string; plots: Plot[] }> {
+    return this.request(`/farms/${farmId}/plots/areas`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(plotsData),
+    });
+  }
+
   async updatePlotStatus(plotId: number, status: string, progress_percentage?: number): Promise<{ message: string; plot: Plot }> {
     const params = new URLSearchParams({ status });
     if (progress_percentage !== undefined) {
@@ -168,7 +179,7 @@ class FarmAPI {
         name: plotData.name,
         area: plotData.area,
         status: 'PREPARING' as const,
-        crop_type: plotData.crop_type || 'Cinnamon',
+        crop_type: plotData.crop_type || DEFAULT_CINNAMON_VARIETY,
         progress_percentage: 0,
       });
       plots.push(plot);

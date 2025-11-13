@@ -1,4 +1,5 @@
-﻿from fastapi import FastAPI
+# app/main.py
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -22,13 +23,24 @@ app = FastAPI(
 )
 
 # Configure CORS
+
+# Import your oil yield router
+from app.oil_yield.router import router as oil_yield_router
+
+app = FastAPI(title="Cinogrow Backend")
+
+# Enable CORS for frontend requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
+    allow_origins=["*"],  # You can replace "*" with your frontend URL for production
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+# Include the oil yield router
+app.include_router(oil_yield_router)
 
 # Create upload directories if they don't exist
 Path('uploads/fertilizer_analysis').mkdir(parents=True, exist_ok=True)

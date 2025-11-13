@@ -5,7 +5,7 @@ services:
     container_name: fastapi-backend
     ports:
       - "8000:8000"
-    env_file:
+    env_file: 
       - ./backend/.env
     depends_on:
       - db
@@ -45,3 +45,4 @@ services:
 
 volumes:
   pgdata:
+  expo_node_modules:

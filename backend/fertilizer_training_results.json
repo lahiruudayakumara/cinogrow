@@ -1,0 +1,12 @@
+{
+  "training_date": "2025-11-08T16:39:15.116568",
+  "success": false,
+  "model_info": {},
+  "dataset_info": {
+    "has_real_data": false,
+    "classes_found": [],
+    "total_images": 0,
+    "class_counts": {}
+  },
+  "error": "shape mismatch: objects cannot be broadcast to a single shape.  Mismatch is between arg 0 with shape (50,) and arg 1 with shape (3,)."
+}

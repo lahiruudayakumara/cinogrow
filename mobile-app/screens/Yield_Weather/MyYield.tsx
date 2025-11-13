@@ -85,7 +85,7 @@ const MyYieldScreen = () => {
             const predictionResult = await yieldAPI.predictYield(
               plot.area,
               'Sri Lanka', // Default location
-              'Ceylon Cinnamon', // Default variety
+              plot.crop_type || 'Ceylon Cinnamon', // Use plot's actual variety
               plot.id, // Plot ID for ML model
               2500, // Default rainfall
               26, // Default temperature
@@ -99,6 +99,14 @@ const MyYieldScreen = () => {
               confidence: predictionResult.confidence_score
             });
             
+            // Skip plots that are not planted
+            if (predictionResult.prediction_source === 'not_planted' || 
+                predictionResult.requires_planting || 
+                predictionResult.predicted_yield === null) {
+              console.log(`⏭️ Skipping ${plot.name} - not planted yet`);
+              continue; // Skip adding this plot to predictions
+            }
+            
             predictions.push({
               plot_id: plot.id,
               plot_name: plot.name,
@@ -108,7 +116,7 @@ const MyYieldScreen = () => {
             });
           } catch (predictionError) {
             console.warn(`Failed to predict yield for plot ${plot.id}:`, predictionError);
-            // Add with default prediction
+            // Add with default prediction only if it's not a "not planted" error
             predictions.push({
               plot_id: plot.id,
               plot_name: plot.name,
@@ -279,8 +287,10 @@ const MyYieldScreen = () => {
           ) : (
             <View style={styles.emptyContainer}>
               <Ionicons name="leaf-outline" size={32} color="#9CA3AF" />
-              <Text style={styles.emptyText}>No plots available</Text>
-              <Text style={styles.emptySubtext}>Add plots in My Farm to see predictions</Text>
+              <Text style={styles.emptyText}>No yield predictions available</Text>
+              <Text style={styles.emptySubtext}>
+                Predictions are shown only for planted plots. Add planting records to see yield forecasts.
+              </Text>
             </View>
           )}
         </View>

@@ -216,11 +216,10 @@ async def delete_user_yield_record(yield_id: int, db: Session = Depends(get_sess
 @router.get("/users/{user_id}/predicted-yields")
 async def get_predicted_yields(
     user_id: int,
-    location: Optional[str] = None,
     db: Session = Depends(get_session)
 ):
-    """Get predicted yields for user's plots using ML model"""
-    from app.services.yield_prediction import YieldPredictionService
+    """Get predicted yields for user's plots using ML model - uses actual farm location and planted variety"""
+    from app.services.yield_prediction_enhanced import YieldPredictionService
     
     # Get user's plots
     plots_query = select(Plot).join(UserYieldRecord).where(UserYieldRecord.user_id == user_id).distinct()
@@ -237,10 +236,8 @@ async def get_predicted_yields(
     predictions = []
     for plot in plots:
         try:
-            predicted_yield = await prediction_service.predict_yield(
+            predicted_yield = prediction_service.predict_yield(
                 plot_id=plot.id,
-                location=location or "Sri Lanka",
-                variety="Ceylon Cinnamon",  # Default variety
                 area=plot.area
             )
             
@@ -290,7 +287,7 @@ async def get_yield_prediction_for_plot(plot_id: int, db: Session = Depends(get_
 @router.post("/ml/train-model")
 async def train_yield_model(retrain: bool = False, db: Session = Depends(get_session)):
     """Train the yield prediction ML model"""
-    from app.services.yield_prediction import YieldPredictionService
+    from app.services.yield_prediction_enhanced import YieldPredictionService
     
     try:
         prediction_service = YieldPredictionService(db)
@@ -303,7 +300,7 @@ async def train_yield_model(retrain: bool = False, db: Session = Depends(get_ses
 @router.get("/ml/model-info")
 async def get_model_info(db: Session = Depends(get_session)):
     """Get information about the current ML model"""
-    from app.services.yield_prediction import YieldPredictionService
+    from app.services.yield_prediction_enhanced import YieldPredictionService
     
     prediction_service = YieldPredictionService(db)
     return prediction_service.get_model_info()
@@ -311,31 +308,26 @@ async def get_model_info(db: Session = Depends(get_session)):
 
 @router.post("/ml/predict-single")
 async def predict_yield_single(
-    location: str,
-    variety: str,
-    area: float,
-    plot_id: Optional[int] = None,
+    plot_id: int,
+    area: Optional[float] = None,
     rainfall: Optional[float] = None,
     temperature: Optional[float] = None,
     age_years: Optional[int] = None,
+    soil_type: Optional[str] = None,
     db: Session = Depends(get_session)
 ):
-    """Make a single yield prediction using the ML model"""
-    from app.services.yield_prediction import YieldPredictionService
-    
-    # Use a temporary plot_id if not provided
-    temp_plot_id = plot_id or 0
+    """Make a single yield prediction using the ML model - fetches location and variety from plot data"""
+    from app.services.yield_prediction_enhanced import YieldPredictionService
     
     try:
         prediction_service = YieldPredictionService(db)
         result = prediction_service.predict_yield(
-            plot_id=temp_plot_id,
-            location=location,
-            variety=variety,
+            plot_id=plot_id,
             area=area,
             rainfall=rainfall,
             temperature=temperature,
-            age_years=age_years
+            age_years=age_years,
+            soil_type=soil_type
         )
         return result
     except Exception as e:

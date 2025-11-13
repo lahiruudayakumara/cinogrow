@@ -152,6 +152,51 @@ async def update_plot(plot_id: int, plot_data: PlotUpdate, db: Session = Depends
     return plot
 
 
+@router.put("/farms/{farm_id}/plots/areas")
+async def update_plot_areas(farm_id: int, plots_data: List[PlotUpdate], db: Session = Depends(get_db)):
+    """Update multiple plot areas with validation"""
+    # Get farm to validate total area
+    farm = db.get(Farm, farm_id)
+    if not farm:
+        raise HTTPException(status_code=404, detail="Farm not found")
+    
+    # Calculate total area from all plots
+    total_area = sum(plot_data.area for plot_data in plots_data if plot_data.area)
+    
+    # Validate total area doesn't exceed farm area
+    if total_area > farm.total_area:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Total plot area ({total_area} ha) exceeds farm area ({farm.total_area} ha)"
+        )
+    
+    # Update all plots
+    updated_plots = []
+    for plot_data in plots_data:
+        if plot_data.name:  # Use name to find plot if no ID
+            plot = db.exec(
+                select(Plot).where(Plot.farm_id == farm_id, Plot.name == plot_data.name)
+            ).first()
+        else:
+            continue
+            
+        if plot:
+            # Update existing plot
+            if plot_data.area:
+                plot.area = plot_data.area
+            plot.updated_at = datetime.utcnow()
+            db.add(plot)
+            updated_plots.append(plot)
+    
+    db.commit()
+    
+    # Refresh all updated plots
+    for plot in updated_plots:
+        db.refresh(plot)
+    
+    return {"message": "Plot areas updated successfully", "plots": updated_plots}
+
+
 @router.put("/plots/{plot_id}/status")
 async def update_plot_status(
     plot_id: int, 

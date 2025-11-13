@@ -7,7 +7,7 @@ const getEnvVar = (key: string, fallback: string): string => {
 };
 
 // Environment configuration - Single source from .env file
-const API_HOST = getEnvVar('API_BASE_HOST', '192.168.8.130');
+const API_HOST = getEnvVar('API_BASE_HOST', '192.168.1.2');
 const API_PORT = getEnvVar('API_PORT', '8000');
 
 const ENV_CONFIG = {
@@ -53,9 +53,41 @@ const getCurrentEnvironment = (): 'development' | 'production' => {
 
 export const currentConfig = API_CONFIG[getCurrentEnvironment()];
 
+// API Version (if needed)
+const API_VERSION = 'v1';
+
+// Timeout for API requests (in milliseconds)
+const REQUEST_TIMEOUT = 30000;
+
+// Headers that should be included in every request
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+};
+
+// Feature flags for API-dependent features
+const FEATURES = {
+  USE_ML_ANALYSIS: true,
+  ENABLE_SOIL_ANALYSIS: true,
+  ENABLE_CONTINUOUS_LEARNING: true,
+};
+
+// Endpoints configuration (for easy reference)
+const ENDPOINTS = {
+  AUTH: '/auth',
+  FERTILIZER: '/fertilizer',
+  ML_METADATA: '/ml-metadata',
+  ANALYSIS: '/analysis',
+};
+
 export default {
   API_BASE_URL: currentConfig.baseUrl,
   TIMEOUT: currentConfig.timeout,
+  API_VERSION,
+  REQUEST_TIMEOUT,
+  DEFAULT_HEADERS,
+  FEATURES,
+  ENDPOINTS,
   
   // Additional URLs for fallback connectivity testing
   FALLBACK_URLS: [

@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from dotenv import load_dotenv
 import os
 
@@ -9,40 +11,55 @@ load_dotenv()
 # Import database and routers
 from app.database import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
+from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router
+# from app.routers.fertilizer.ml_metadata_api import router as ml_metadata_router
 
+# Create FastAPI app
 app = FastAPI(
-    title="Cinogrow Backend",
-    description="Backend API for Cinogrow farming application",
-    version="1.0.0"
+    title='Cinogrow Backend',
+    description='Backend API for Cinogrow farming application',
+    version='1.0.0'
 )
 
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=['*'],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
+# Create upload directories if they don't exist
+Path('uploads/fertilizer_analysis').mkdir(parents=True, exist_ok=True)
+
+# Mount static files
+app.mount('/uploads', StaticFiles(directory='uploads'), name='uploads')
+
 # Create database tables on startup
-@app.on_event("startup")
-def on_startup():
+@app.on_event('startup')
+async def startup_event():
     create_db_and_tables()
 
 # Include routers
+app.include_router(fertilizer_router, prefix='/api/v1/fertilizer')
+# app.include_router(ml_metadata_router, prefix='/api/v1')
 app.include_router(weather.router, prefix="/api/v1")
 app.include_router(farm.router, prefix="/api/v1")
 app.include_router(farm_assistance.router, prefix="/api/v1")
 app.include_router(yield_prediction.router, prefix="/api/v1")
 
-@app.get("/")
+@app.get('/')
 async def root():
-    return {"message": "Welcome to Cinogrow Backend API"}
+    return {
+        'message': 'Welcome to Cinogrow Backend API',
+        'version': '1.0.0'
+    }
 
-@app.get("/health")
+@app.get('/health')
 async def health_check():
     return {
-        "status": "healthy",
-        "message": "Cinogrow Backend API is running",
-        "version": "1.0.0"
+        'status': 'healthy',
+        'message': 'Cinogrow Backend API is running',
+        'version': '1.0.0'
     }

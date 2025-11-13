@@ -8,10 +8,18 @@ import {
     Alert,
     ScrollView,
     SafeAreaView,
+    Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+import { imageAnalysisService } from '../../services/imageAnalysisService';
+import { metadataStorageService } from '../../services/metadataStorageService';
+import { LeafAnalysisMetadata } from '../../services/imageAnalysisService';
+import MetadataProgress from '../../components/MetadataProgress';
 
 type UploadLeafScreenNavigationProp = StackNavigationProp<
     FertilizerStackParamList,
@@ -24,10 +32,9 @@ interface UploadLeafScreenProps {
 
 const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-    const handleGoBack = () => {
-        navigation.goBack();
-    };
+    const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
+    const [metadataStage, setMetadataStage] = useState<'analyzing' | 'extracting' | 'storing' | 'complete'>('analyzing');
+    const insets = useSafeAreaInsets();
 
     const requestCameraPermission = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -74,14 +81,60 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
             if (!hasPermission) return;
 
             const result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [1, 1],
                 quality: 0.8,
             });
 
             if (!result.canceled && result.assets[0]) {
-                setSelectedImage(result.assets[0].uri);
+                const imageUri = result.assets[0].uri;
+                setSelectedImage(imageUri);
+
+                // Extract metadata for ML analysis
+                let extractedMetadata: LeafAnalysisMetadata | null = null;
+                try {
+                    setIsExtractingMetadata(true);
+                    setMetadataStage('analyzing');
+
+                    // Create new analysis session
+                    const sessionId = await metadataStorageService.createSession();
+
+                    setMetadataStage('extracting');
+
+                    // Extract leaf-specific metadata
+                    const leafMetadata = await imageAnalysisService.extractImageMetadata(
+                        imageUri,
+                        'leaf',
+                        'camera'
+                    ) as LeafAnalysisMetadata;
+
+                    extractedMetadata = leafMetadata;
+
+                    setMetadataStage('storing');
+
+                    // Store metadata for future ML training
+                    await metadataStorageService.storeLeafMetadata(sessionId, leafMetadata);
+
+                    setMetadataStage('complete');
+
+                    // Brief delay to show completion
+                    setTimeout(() => {
+                        setIsExtractingMetadata(false);
+                    }, 500);
+                } catch (metadataError) {
+                    console.log('Metadata extraction failed:', metadataError);
+                    setIsExtractingMetadata(false);
+                    // Continue with navigation even if metadata fails
+                }
+
+                // Auto-navigate to PhotoPreview
+                navigation.navigate('FertilizerPhotoPreview', {
+                    imageUri: imageUri,
+                    imageType: 'leaf',
+                    leafImage: imageUri,
+                    leafMetadata: extractedMetadata || undefined,
+                });
             }
         } catch (error) {
             console.error('Error taking photo:', error);
@@ -95,14 +148,60 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
             if (!hasPermission) return;
 
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [1, 1],
                 quality: 0.8,
             });
 
             if (!result.canceled && result.assets[0]) {
-                setSelectedImage(result.assets[0].uri);
+                const imageUri = result.assets[0].uri;
+                setSelectedImage(imageUri);
+
+                // Extract metadata for ML analysis
+                let extractedMetadata: LeafAnalysisMetadata | null = null;
+                try {
+                    setIsExtractingMetadata(true);
+                    setMetadataStage('analyzing');
+
+                    // Create new analysis session
+                    const sessionId = await metadataStorageService.createSession();
+
+                    setMetadataStage('extracting');
+
+                    // Extract leaf-specific metadata
+                    const leafMetadata = await imageAnalysisService.extractImageMetadata(
+                        imageUri,
+                        'leaf',
+                        'library'
+                    ) as LeafAnalysisMetadata;
+
+                    extractedMetadata = leafMetadata;
+
+                    setMetadataStage('storing');
+
+                    // Store metadata for future ML training
+                    await metadataStorageService.storeLeafMetadata(sessionId, leafMetadata);
+
+                    setMetadataStage('complete');
+
+                    // Brief delay to show completion
+                    setTimeout(() => {
+                        setIsExtractingMetadata(false);
+                    }, 500);
+                } catch (metadataError) {
+                    console.log('Metadata extraction failed:', metadataError);
+                    setIsExtractingMetadata(false);
+                    // Continue with navigation even if metadata fails
+                }
+
+                // Auto-navigate to PhotoPreview
+                navigation.navigate('FertilizerPhotoPreview', {
+                    imageUri: imageUri,
+                    imageType: 'leaf',
+                    leafImage: imageUri,
+                    leafMetadata: extractedMetadata || undefined,
+                });
             }
         } catch (error) {
             console.error('Error picking image:', error);
@@ -124,79 +223,127 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
         });
     };
 
-    const CameraIcon = () => (
-        <View style={styles.cameraIcon}>
-            <View style={styles.cameraBody}>
-                <View style={styles.cameraLens} />
-            </View>
+    const renderGuidelineItem = (iconName: keyof typeof Ionicons.glyphMap, text: string) => (
+        <View style={styles.guidelineItem}>
+            <Ionicons name={iconName} size={16} color="#4CAF50" style={styles.guidelineIcon} />
+            <Text style={styles.guidelineText}>{text}</Text>
         </View>
     );
 
-    const ImageIcon = () => (
-        <View style={styles.imageIcon}>
-            <View style={styles.imageFrame}>
-                <View style={styles.imageMountain1} />
-                <View style={styles.imageMountain2} />
-                <View style={styles.imageSun} />
-            </View>
-        </View>
+    const renderActionButton = (
+        iconName: keyof typeof Ionicons.glyphMap,
+        title: string,
+        subtitle: string,
+        onPress: () => void,
+        gradientColors: [string, string]
+    ) => (
+        <TouchableOpacity
+            style={styles.actionButton}
+            onPress={onPress}
+            activeOpacity={0.8}
+        >
+            <LinearGradient
+                colors={gradientColors}
+                style={styles.actionButtonGradient}
+            >
+                <View style={styles.actionIconContainer}>
+                    <Ionicons name={iconName} size={24} color="#FFFFFF" />
+                </View>
+                <View style={styles.actionTextContainer}>
+                    <Text style={styles.actionTitle}>{title}</Text>
+                    <Text style={styles.actionSubtitle}>{subtitle}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.8)" />
+            </LinearGradient>
+        </TouchableOpacity>
     );
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={{
+                    paddingBottom: Platform.select({
+                        ios: 100 + insets.bottom,
+                        default: 80 + insets.bottom,
+                    }),
+                }}
+                showsVerticalScrollIndicator={false}
+            >
                 {/* Header */}
-                <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-                    <Text style={styles.backArrow}>←</Text>
+                <View style={styles.header}>
                     <Text style={styles.headerTitle}>Upload Leaf Sample</Text>
-                </TouchableOpacity>
+                    <Text style={styles.headerSubtitle}>
+                        Step 1: Take a clear photo of your cinnamon leaf for instant fertilizer recommendations
+                    </Text>
+                </View>
 
                 {/* Guidelines Card */}
                 <View style={styles.guidelinesCard}>
                     <View style={styles.guidelinesHeader}>
-                        <CameraIcon />
-                        <Text style={styles.guidelinesTitle}>Leaf Sample Guidelines</Text>
+                        <View style={styles.guidelinesIconContainer}>
+                            <Ionicons name="information-circle" size={24} color="#4CAF50" />
+                        </View>
+                        <Text style={styles.guidelinesTitle}>Photography Guidelines</Text>
                     </View>
+
                     <View style={styles.guidelinesList}>
-                        <Text style={styles.guidelineItem}>• Make sure the leaf is flat and well-lit</Text>
-                        <Text style={styles.guidelineItem}>• Use natural daylight when possible</Text>
-                        <Text style={styles.guidelineItem}>• Include the entire leaf in the frame</Text>
-                        <Text style={styles.guidelineItem}>• Avoid shadows and reflections</Text>
+                        {renderGuidelineItem('sunny', 'Use natural daylight when possible')}
+                        {renderGuidelineItem('leaf-outline', 'Include the entire leaf in frame')}
+                        {renderGuidelineItem('eye-outline', 'Ensure the leaf is flat and well-lit')}
+                        {renderGuidelineItem('ban-outline', 'Avoid shadows and reflections')}
                     </View>
                 </View>
 
-                {/* Upload Area */}
-                <TouchableOpacity style={styles.uploadArea} onPress={handleChooseFile}>
-                    {selectedImage ? (
-                        <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-                    ) : (
-                        <>
-                            <View style={styles.uploadIconContainer}>
-                                <CameraIcon />
+                {/* Upload Section */}
+                <View style={styles.uploadSection}>
+                    <Text style={styles.sectionTitle}>Select Image Source</Text>
+
+                    <View style={styles.actionButtonsContainer}>
+                        {renderActionButton(
+                            'camera',
+                            'Take Photo',
+                            'Use your camera to capture a leaf',
+                            openCamera,
+                            ['#4CAF50', '#45A049']
+                        )}
+
+                        {renderActionButton(
+                            'images',
+                            'Photo Library',
+                            'Choose from your gallery',
+                            openImageLibrary,
+                            ['#2196F3', '#1976D2']
+                        )}
+                    </View>
+                </View>
+
+                {/* Image Preview */}
+                {selectedImage && (
+                    <View style={styles.previewSection}>
+                        <Text style={styles.sectionTitle}>Image Preview</Text>
+                        <View style={styles.imagePreviewCard}>
+                            <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+                            <View style={styles.imageActions}>
+                                <TouchableOpacity
+                                    style={styles.changeImageButton}
+                                    onPress={handleChooseFile}
+                                >
+                                    <Ionicons name="refresh" size={16} color="#4CAF50" />
+                                    <Text style={styles.changeImageText}>Change Image</Text>
+                                </TouchableOpacity>
                             </View>
-                            <Text style={styles.uploadTitle}>Upload Leaf Photo</Text>
-                            <Text style={styles.uploadSubtitle}>
-                                Tap here to select photo from camera or gallery
-                            </Text>
-                        </>
-                    )}
-
-                    {selectedImage && (
-                        <TouchableOpacity style={styles.changePhotoButton} onPress={handleChooseFile}>
-                            <Text style={styles.changePhotoText}>Change Photo</Text>
-                        </TouchableOpacity>
-                    )}
-                </TouchableOpacity>
-
-                {/* Upload Button */}
-                <TouchableOpacity
-                    style={[styles.uploadButton, !selectedImage && styles.uploadButtonDisabled]}
-                    onPress={handleUploadLeafSample}
-                    disabled={!selectedImage}
-                >
-                    <Text style={styles.uploadButtonText}>Upload Leaf Sample →</Text>
-                </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
             </ScrollView>
+
+            {/* Metadata Extraction Progress */}
+            <MetadataProgress
+                isVisible={isExtractingMetadata}
+                stage={metadataStage}
+                sampleType="leaf"
+            />
         </SafeAreaView>
     );
 };
@@ -204,224 +351,161 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#F8F9FA',
     },
-    scrollContent: {
-        flexGrow: 1,
-        padding: 20,
+    scrollView: {
+        flex: 1,
+        paddingHorizontal: 20,
     },
-    backButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 30,
-    },
-    backArrow: {
-        fontSize: 24,
-        color: '#4CAF50',
-        marginRight: 10,
+    header: {
+        marginTop: 20,
+        marginBottom: 32,
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: '#4CAF50',
+        fontSize: 28,
+        fontWeight: '800',
+        color: '#111827',
+        marginBottom: 8,
+        letterSpacing: -0.5,
+    },
+    headerSubtitle: {
+        fontSize: 16,
+        color: '#6B7280',
+        lineHeight: 22,
     },
     guidelinesCard: {
-        backgroundColor: '#e8f5e8',
-        borderRadius: 20,
-        padding: 20,
-        marginBottom: 30,
-        borderWidth: 2,
-        borderColor: '#4CAF50',
+        backgroundColor: '#F0FDF4',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 24,
+        borderLeftWidth: 3,
+        borderLeftColor: '#4CAF50',
     },
     guidelinesHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 15,
+        marginBottom: 16,
+    },
+    guidelinesIconContainer: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#DCFCE7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
     },
     guidelinesTitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '600',
-        color: '#2e7d32',
-        marginLeft: 15,
+        color: '#166534',
     },
     guidelinesList: {
-        marginLeft: 60,
+        gap: 12,
     },
     guidelineItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    guidelineIcon: {
+        marginRight: 12,
+        width: 20,
+    },
+    guidelineText: {
+        fontSize: 13,
+        color: '#166534',
+        fontWeight: '500',
+        flex: 1,
+        lineHeight: 18,
+    },
+    uploadSection: {
+        marginBottom: 32,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 16,
+        marginLeft: 4,
+    },
+    actionButtonsContainer: {
+        gap: 16,
+    },
+    actionButton: {
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    actionButtonGradient: {
+        borderRadius: 16,
+        padding: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    actionIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 16,
+    },
+    actionTextContainer: {
+        flex: 1,
+    },
+    actionTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginBottom: 4,
+    },
+    actionSubtitle: {
         fontSize: 14,
-        color: '#2e7d32',
-        marginBottom: 5,
-        lineHeight: 20,
+        color: 'rgba(255,255,255,0.8)',
     },
-    cameraIcon: {
-        width: 40,
-        height: 40,
-        backgroundColor: '#4CAF50',
-        borderRadius: 20,
-        justifyContent: 'center',
+    previewSection: {
+        marginBottom: 32,
+    },
+    imagePreviewCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
         alignItems: 'center',
-    },
-    cameraBody: {
-        width: 24,
-        height: 18,
-        backgroundColor: 'white',
-        borderRadius: 4,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    cameraLens: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        borderWidth: 2,
-        borderColor: '#4CAF50',
-    },
-    uploadArea: {
-        borderWidth: 2,
-        borderColor: '#4CAF50',
-        borderStyle: 'dashed',
-        borderRadius: 15,
-        padding: 40,
-        alignItems: 'center',
-        backgroundColor: 'white',
-        marginBottom: 30,
-        minHeight: 200,
-        justifyContent: 'center',
-    },
-    uploadIconContainer: {
-        marginBottom: 20,
-        opacity: 0.5,
-    },
-    uploadTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 10,
-    },
-    uploadSubtitle: {
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'center',
-        marginBottom: 25,
-        lineHeight: 20,
     },
     selectedImage: {
         width: 200,
         height: 200,
-        borderRadius: 10,
-        marginBottom: 20,
+        borderRadius: 12,
+        marginBottom: 16,
         resizeMode: 'cover',
     },
-    chooseFileButton: {
-        backgroundColor: '#4CAF50',
+    imageActions: {
         flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 25,
-    },
-    chooseFileText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-        marginLeft: 10,
-    },
-    imageIcon: {
-        marginRight: 5,
-    },
-    imageFrame: {
-        width: 20,
-        height: 16,
-        backgroundColor: 'white',
-        borderRadius: 3,
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    imageMountain1: {
-        position: 'absolute',
-        bottom: 0,
-        left: 2,
-        width: 6,
-        height: 6,
-        backgroundColor: '#4CAF50',
-        transform: [{ rotate: '45deg' }],
-    },
-    imageMountain2: {
-        position: 'absolute',
-        bottom: 0,
-        right: 4,
-        width: 4,
-        height: 4,
-        backgroundColor: '#4CAF50',
-        transform: [{ rotate: '45deg' }],
-    },
-    imageSun: {
-        position: 'absolute',
-        top: 2,
-        right: 2,
-        width: 3,
-        height: 3,
-        backgroundColor: '#FFD700',
-        borderRadius: 1.5,
-    },
-    uploadButton: {
-        backgroundColor: '#4CAF50',
-        paddingVertical: 16,
-        borderRadius: 25,
-        alignItems: 'center',
-        marginTop: 'auto',
-    },
-    uploadButtonDisabled: {
-        backgroundColor: '#a5d6a7',
-        opacity: 0.6,
-    },
-    uploadButtonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 15,
-        width: '100%',
-    },
-    cameraButton: {
-        backgroundColor: '#4CAF50',
-        flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 25,
-        flex: 1,
     },
-    galleryButton: {
-        backgroundColor: '#2196F3',
+    changeImageButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 25,
-        flex: 1,
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: '600',
-        marginLeft: 8,
-    },
-    changePhotoButton: {
-        backgroundColor: '#FF9800',
-        paddingVertical: 8,
+        backgroundColor: '#F3F4F6',
         paddingHorizontal: 16,
+        paddingVertical: 8,
         borderRadius: 20,
-        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        gap: 6,
     },
-    changePhotoText: {
-        color: 'white',
-        fontSize: 12,
+    changeImageText: {
+        fontSize: 14,
+        color: '#4CAF50',
         fontWeight: '600',
     },
 });

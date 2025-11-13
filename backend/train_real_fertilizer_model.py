@@ -24,6 +24,11 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
+# Database imports
+from sqlmodel import Session, create_engine, SQLModel
+from app.models.fertilizer import MLTrainingRun, FertilizerRecommendationDB, generate_training_id
+from app.database import engine
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,6 +42,17 @@ class RealFertilizerTrainer:
         self.dataset_path = Path(dataset_path)
         self.models_path = Path("models/fertilizer_real")
         self.models_path.mkdir(parents=True, exist_ok=True)
+        
+        # Database setup
+        try:
+            self.engine = engine
+            # Create tables if they don't exist
+            SQLModel.metadata.create_all(self.engine)
+            self.db_enabled = True
+            print("✅ Database connection established")
+        except Exception as e:
+            logger.warning(f"Database connection failed: {e}. Training will continue without database storage.")
+            self.db_enabled = False
         
         # Classes mapping
         self.classes = {
@@ -57,6 +73,7 @@ class RealFertilizerTrainer:
         print(f"📁 Dataset path: {self.dataset_path}")
         print(f"💾 Models path: {self.models_path}")
         print(f"🏷  Classes: {self.class_names}")
+        print(f"💾 Database storage: {'Enabled' if self.db_enabled else 'Disabled'}")
         
     def load_images(self) -> Tuple[np.ndarray, np.ndarray, List[str]]:
         """
@@ -247,6 +264,24 @@ class RealFertilizerTrainer:
         print(f"💾 Model saved: {model_path}")
         print(f"💾 Scaler saved: {scaler_path}")
         
+        # Save to database
+        if self.db_enabled:
+            self._save_to_database(
+                model_name="fertilizer_rf_real",
+                model_type="RandomForest",
+                model_path=str(model_path),
+                scaler_path=str(scaler_path),
+                training_results={
+                    'accuracy': accuracy,
+                    'training_time': training_time,
+                    'classification_report': report,
+                    'confusion_matrix': confusion_matrix(y_test, y_pred).tolist()
+                },
+                train_size=len(X_train),
+                test_size=len(X_test),
+                class_distribution={name: int(np.sum(labels == idx)) for name, idx in self.classes.items()}
+            )
+        
         return {
             'model_path': str(model_path),
             'scaler_path': str(scaler_path),
@@ -367,6 +402,31 @@ class RealFertilizerTrainer:
         print("\n📊 Classification Report:")
         print(report)
         
+        # Save to database
+        if self.db_enabled:
+            self._save_to_database(
+                model_name="fertilizer_cnn_real",
+                model_type="CNN",
+                model_path=str(model_path),
+                training_results={
+                    'accuracy': test_accuracy,
+                    'loss': test_loss,
+                    'training_time': training_time,
+                    'classification_report': report,
+                    'confusion_matrix': confusion_matrix(y_test_classes, y_pred_classes).tolist(),
+                    'history': {
+                        'accuracy': history.history['accuracy'],
+                        'val_accuracy': history.history['val_accuracy'],
+                        'loss': history.history['loss'],
+                        'val_loss': history.history['val_loss']
+                    }
+                },
+                train_size=len(X_train),
+                test_size=len(X_test),
+                class_distribution={name: int(np.sum(labels == idx)) for name, idx in self.classes.items()},
+                epochs_completed=len(history.history['accuracy'])
+            )
+        
         return {
             'model_path': str(model_path),
             'accuracy': test_accuracy,
@@ -479,7 +539,117 @@ class RealFertilizerTrainer:
             
         print(f"💾 Fertilizer recommendations saved: {recommendations_path}")
         
+        # Save to database
+        if self.db_enabled:
+            self._save_recommendations_to_db(recommendations)
+        
         return recommendations
+    
+    def _save_to_database(self, model_name: str, model_type: str, model_path: str, 
+                         training_results: Dict[str, Any], train_size: int, test_size: int,
+                         class_distribution: Dict[str, int], scaler_path: str = None, 
+                         epochs_completed: int = None):
+        """
+        Save training results to database
+        """
+        try:
+            with Session(self.engine) as session:
+                training_id = generate_training_id()
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                
+                # Extract metrics
+                accuracy = training_results.get('accuracy', 0.0)
+                loss = training_results.get('loss')
+                training_time = training_results.get('training_time', 0.0)
+                
+                # Create training run record
+                training_run = MLTrainingRun(
+                    training_id=training_id,
+                    model_name=model_name,
+                    model_type=model_type,
+                    model_version=timestamp,
+                    total_images=train_size + test_size,
+                    train_samples=train_size,
+                    test_samples=test_size,
+                    class_distribution=class_distribution,
+                    training_params={
+                        'img_size': list(self.img_size),
+                        'batch_size': self.batch_size,
+                        'model_type': model_type
+                    },
+                    accuracy=float(accuracy),
+                    loss=float(loss) if loss else None,
+                    classification_report=training_results.get('classification_report'),
+                    confusion_matrix=training_results.get('confusion_matrix', []),
+                    training_history=training_results.get('history'),
+                    model_file_path=model_path,
+                    scaler_file_path=scaler_path,
+                    training_duration_seconds=float(training_time),
+                    epochs_completed=epochs_completed,
+                    status='completed',
+                    is_active_model=True,
+                    dataset_source='uploads/fertilizer_analysis/real_dataset'
+                )
+                
+                # Mark other models as inactive
+                session.query(MLTrainingRun).filter(
+                    MLTrainingRun.model_name == model_name,
+                    MLTrainingRun.is_active_model == True
+                ).update({'is_active_model': False})
+                
+                session.add(training_run)
+                session.commit()
+                
+                print(f"✅ Training results saved to database (ID: {training_id})")
+        except Exception as e:
+            logger.error(f"Failed to save to database: {e}")
+            print(f"⚠️  Database save failed: {e}")
+    
+    def _save_recommendations_to_db(self, recommendations: Dict[str, Dict[str, Any]]):
+        """
+        Save fertilizer recommendations to database
+        """
+        try:
+            with Session(self.engine) as session:
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                
+                for deficiency_type, rec_data in recommendations.items():
+                    # Check if recommendation already exists
+                    existing = session.query(FertilizerRecommendationDB).filter(
+                        FertilizerRecommendationDB.deficiency_type == deficiency_type,
+                        FertilizerRecommendationDB.is_active == True
+                    ).first()
+                    
+                    if existing:
+                        # Update existing
+                        existing.status = rec_data.get('status', '')
+                        existing.symptoms = {'symptoms': rec_data.get('symptoms', [])}
+                        existing.recommended_fertilizers = {'recommendations': rec_data.get('recommendations', [])}
+                        existing.organic_alternatives = {'alternatives': rec_data.get('organic_alternatives', [])}
+                        existing.additional_tips = {'tips': rec_data.get('additional_tips', [])}
+                        existing.expected_recovery = rec_data.get('expected_recovery')
+                        existing.updated_at = datetime.utcnow()
+                        existing.version = timestamp
+                    else:
+                        # Create new
+                        recommendation = FertilizerRecommendationDB(
+                            deficiency_type=deficiency_type,
+                            status=rec_data.get('status', ''),
+                            symptoms={'symptoms': rec_data.get('symptoms', [])},
+                            recommended_fertilizers={'recommendations': rec_data.get('recommendations', [])},
+                            organic_alternatives={'alternatives': rec_data.get('organic_alternatives', [])},
+                            additional_tips={'tips': rec_data.get('additional_tips', [])},
+                            expected_recovery=rec_data.get('expected_recovery'),
+                            is_active=True,
+                            version=timestamp
+                        )
+                        session.add(recommendation)
+                
+                session.commit()
+                print("✅ Recommendations saved to database")
+        except Exception as e:
+            logger.error(f"Failed to save recommendations to database: {e}")
+            print(f"⚠️  Recommendations database save failed: {e}")
     
     def run_complete_training(self):
         """

@@ -71,6 +71,97 @@ class LocationService {
   }
 
   /**
+   * Get location with multiple fallback strategies
+   */
+  async getLocationWithFallback(): Promise<LocationResult> {
+    console.log('🌍 Starting location acquisition...');
+    
+    // First check if manual location is set
+    if (this.manualLocation) {
+      console.log('✅ Using manual coordinates');
+      return {
+        success: true,
+        coordinates: this.manualLocation
+      };
+    }
+
+    // If manual city is set, return it as a special case
+    if (this.manualLocationCity) {
+      console.log('✅ Using manual city:', this.manualLocationCity);
+      return {
+        success: true,
+        coordinates: undefined,
+        error: `manual_city:${this.manualLocationCity}`
+      };
+    }
+
+    console.log('🔍 Attempting GPS location...');
+    
+    // Try GPS with aggressive fallback
+    try {
+      // First try last known position (fastest)
+      try {
+        const lastKnown = await Location.getLastKnownPositionAsync();
+        if (lastKnown) {
+          console.log('✅ Using last known GPS position');
+          return {
+            success: true,
+            coordinates: {
+              latitude: lastKnown.coords.latitude,
+              longitude: lastKnown.coords.longitude
+            }
+          };
+        }
+      } catch (lastKnownError) {
+        console.log('⚠️ No last known position available');
+      }
+
+      // Check if location services are enabled
+      const isEnabled = await Location.hasServicesEnabledAsync();
+      if (!isEnabled) {
+        console.log('⚠️ Location services disabled');
+        return {
+          success: false,
+          error: 'Location services are disabled'
+        };
+      }
+
+      // Request permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('⚠️ Location permission denied');
+        return {
+          success: false,
+          error: 'Location permission denied'
+        };
+      }
+
+      // Try current position with timeout
+      console.log('🛰️ Getting fresh GPS position...');
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Low,
+        timeInterval: 10000,
+      });
+
+      console.log('✅ GPS position acquired successfully');
+      return {
+        success: true,
+        coordinates: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        }
+      };
+
+    } catch (error) {
+      console.log('❌ GPS location failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get GPS location'
+      };
+    }
+  }
+
+  /**
    * Get location - prioritizes manual location, then GPS, then default
    */
   async getCurrentLocation(): Promise<LocationResult> {
@@ -110,9 +201,27 @@ class LocationService {
         };
       }
 
-      // Get current location
+      // First try to get last known location for faster response
+      try {
+        const lastKnownLocation = await Location.getLastKnownPositionAsync();
+        if (lastKnownLocation) {
+          console.log('Using last known location');
+          return {
+            success: true,
+            coordinates: {
+              latitude: lastKnownLocation.coords.latitude,
+              longitude: lastKnownLocation.coords.longitude
+            }
+          };
+        }
+      } catch (lastKnownError) {
+        console.log('No last known location available, getting fresh location');
+      }
+
+      // Get current location with optimized settings
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.Low, // Faster acquisition
+        timeInterval: 10000, // 10 second timeout for GPS
       });
 
       return {
@@ -274,6 +383,49 @@ class LocationService {
       latitude: 6.9271,
       longitude: 79.8612
     };
+  }
+
+  /**
+   * Diagnostic method to check location service status
+   */
+  async getDiagnostics(): Promise<{
+    permissionStatus: string;
+    servicesEnabled: boolean;
+    hasLastKnown: boolean;
+    manualLocationSet: boolean;
+    error?: string;
+  }> {
+    try {
+      // Check permission status
+      const { status } = await Location.getForegroundPermissionsAsync();
+      
+      // Check if services are enabled
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      
+      // Check if last known position exists
+      let hasLastKnown = false;
+      try {
+        const lastKnown = await Location.getLastKnownPositionAsync();
+        hasLastKnown = !!lastKnown;
+      } catch {
+        hasLastKnown = false;
+      }
+
+      return {
+        permissionStatus: status,
+        servicesEnabled,
+        hasLastKnown,
+        manualLocationSet: this.hasManualLocation(),
+      };
+    } catch (error) {
+      return {
+        permissionStatus: 'unknown',
+        servicesEnabled: false,
+        hasLastKnown: false,
+        manualLocationSet: this.hasManualLocation(),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 }
 

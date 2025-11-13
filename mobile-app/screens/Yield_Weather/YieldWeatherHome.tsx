@@ -66,16 +66,34 @@ const YieldWeatherHome = () => {
       }
 
       // Get user location (manual or GPS) with timeout
-      const locationPromise = locationService.getCurrentLocation();
+      console.log('🌍 Starting location acquisition process...');
+      
+      // Run diagnostics first
+      try {
+        const diagnostics = await locationService.getDiagnostics();
+        console.log('📊 Location diagnostics:', {
+          permission: diagnostics.permissionStatus,
+          servicesEnabled: diagnostics.servicesEnabled,
+          hasLastKnown: diagnostics.hasLastKnown,
+          manualSet: diagnostics.manualLocationSet,
+          error: diagnostics.error
+        });
+      } catch (diagError) {
+        console.log('⚠️ Could not run location diagnostics:', diagError);
+      }
+
+      const locationPromise = locationService.getLocationWithFallback();
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Location timeout')), 3000); // 3 second timeout
+        setTimeout(() => reject(new Error('Location timeout')), 15000); // 15 second timeout
       });
 
       let locationResult;
       try {
         locationResult = await Promise.race([locationPromise, timeoutPromise]);
+        console.log('✅ Location result:', locationResult);
       } catch (timeoutError) {
-        console.log('Location request timed out, using default location');
+        console.log('⏰ Location request timed out, using default location');
+        console.log('Using default location due to: timeout');
         locationResult = { success: false, error: 'timeout' };
       }
       

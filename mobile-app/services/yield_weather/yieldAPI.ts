@@ -1,6 +1,7 @@
 // Yield API Service
 import { Alert } from 'react-native';
 import apiConfig from '../../config/api';
+import { DEFAULT_CINNAMON_VARIETY } from '../../constants/CinnamonVarieties';
 
 const API_BASE_URL = apiConfig.API_BASE_URL;
 
@@ -117,10 +118,13 @@ class YieldAPI {
     temperature?: number,
     ageYears?: number
   ): Promise<{
-    predicted_yield: number;
+    predicted_yield: number | null;
     confidence_score: number;
     prediction_source: string;
-    model_version: string;
+    model_version?: string;
+    error?: string;
+    message?: string;
+    requires_planting?: boolean;
   }> {
     // Build query parameters for the ML API
     const params = new URLSearchParams();
@@ -153,16 +157,19 @@ class YieldAPI {
   async predictYield(
     plotArea: number,
     location: string = 'Sri Lanka',
-    variety: string = 'Ceylon Cinnamon',
+    variety: string = DEFAULT_CINNAMON_VARIETY,
     plotId?: number,
     rainfall?: number,
     temperature?: number,
     ageYears?: number
   ): Promise<{
-    predicted_yield: number;
+    predicted_yield: number | null;
     confidence_score: number;
-    prediction_source: 'ml_model' | 'historical_data' | 'mock_data';
+    prediction_source: 'ml_model' | 'historical_data' | 'mock_data' | 'not_planted';
     method_used: string;
+    error?: string;
+    message?: string;
+    requires_planting?: boolean;
   }> {
     console.log('🤖 Starting comprehensive yield prediction for:', { plotArea, location, variety });
     
@@ -181,14 +188,28 @@ class YieldAPI {
       
       console.log('📊 ML API Response:', mlResult);
       
+      // Check if plot is not planted
+      if (mlResult.error === 'Plot not planted' || mlResult.requires_planting) {
+        console.log('🚫 Plot not planted - cannot predict yield');
+        return {
+          predicted_yield: null,
+          confidence_score: 0.0,
+          prediction_source: 'not_planted',
+          method_used: 'Validation Check',
+          error: mlResult.error || 'Plot not planted',
+          message: mlResult.message || 'Cannot predict yield for a plot that hasn\'t been planted yet',
+          requires_planting: true
+        };
+      }
+      
       // Check if ML actually worked or fell back
-      if (mlResult.prediction_source === 'ml_model') {
+      if (mlResult.prediction_source === 'ml_model' || mlResult.prediction_source === 'enhanced_ml_model') {
         console.log('✅ ML Model prediction successful!');
         return {
           predicted_yield: mlResult.predicted_yield,
           confidence_score: mlResult.confidence_score,
           prediction_source: 'ml_model',
-          method_used: `ML Model (${mlResult.model_version})`
+          method_used: `ML Model (${mlResult.model_version || 'v2.0'})`
         };
       } else {
         console.warn('⚠️ ML API returned fallback result, trying historical data...');

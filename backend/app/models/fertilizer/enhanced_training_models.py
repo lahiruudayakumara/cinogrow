@@ -20,7 +20,7 @@ class DeficiencyType(str, Enum):
     """Deficiency types for cinnamon plants"""
     NITROGEN_DEFICIENCY = "nitrogen_deficiency"
     PHOSPHORUS_DEFICIENCY = "phosphorus_deficiency" 
-    POTASSIUM_DEFICIENCY = "potassium_deficiency"
+    potasium_deficiency = "potassium_deficiency"
     MAGNESIUM_DEFICIENCY = "magnesium_deficiency"
     HEALTHY = "healthy"
     UNKNOWN = "unknown"

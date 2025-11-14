@@ -23,7 +23,7 @@ from .ml_metadata import (
 
 from .ml_training_results import (
     MLTrainingRun,
-    FertilizerRecommendation as FertilizerRecommendationDB,
+    FertilizerRecommendationDB,
     generate_training_id
 )
 

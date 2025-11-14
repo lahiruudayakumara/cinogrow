@@ -26,16 +26,17 @@ def main():
     print("Real Fertilizer Deficiency Detection Training")
     print("=" * 60)
 
-    # Dataset configuration
-    dataset_path = Path("uploads/fertilizer_analysis/real_dataset")
-    models_path = Path("models/fertilizer_real")
+    # Dataset configuration (robust to current working directory)
+    script_dir = Path(__file__).resolve().parent
+    dataset_path = script_dir / "uploads" / "fertilizer_analysis" / "real_dataset"
+    models_path = script_dir / "models" / "fertilizer_real"
     models_path.mkdir(parents=True, exist_ok=True)
 
     # Classes mapping
     classes = {
         'healthy': 0,
         'nitrogen_deficiency': 1, 
-        'phosphorus_deficiency': 2
+        'potasium_deficiency': 2
     }
 
     class_names = list(classes.keys())
@@ -219,13 +220,20 @@ def main():
     print(f"Training completed in {training_time:.2f} seconds")
     print(f"Accuracy: {accuracy:.4f}")
 
-    # Detailed classification report
+    # Detailed classification report (handle missing classes)
     print("\nClassification Report:")
-    report = classification_report(y_test, y_pred, target_names=class_names)
+    all_label_ids = list(classes.values())
+    report = classification_report(
+        y_test,
+        y_pred,
+        labels=all_label_ids,
+        target_names=class_names,
+        zero_division=0
+    )
     print(report)
 
-    # Confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
+    # Confusion matrix with full label set
+    cm = confusion_matrix(y_test, y_pred, labels=all_label_ids)
     print("\nConfusion Matrix:")
     print(cm)
 
@@ -294,36 +302,36 @@ def main():
             ],
             'expected_recovery': '2-4 weeks with proper treatment'
         },
-        'phosphorus_deficiency': {
-            'status': 'Phosphorus Deficiency Detected',
-            'symptoms': ['Purple/reddish leaves', 'Poor root development', 'Delayed flowering'],
+        'potassium_deficiency': {
+            'status': 'Potassium Deficiency Detected',
+            'symptoms': ['Brown edges on leaves', 'Leaf tip and margin burn', 'Weak stems and poor drought resistance'],
             'recommendations': [
                 {
-                    'fertilizer': 'Triple Superphosphate (0-46-0)',
-                    'application_rate': '2-3 g per plant',
+                    'fertilizer': 'Muriate of Potash (0-0-60)',
+                    'application_rate': '3-4 g per plant',
                     'frequency': 'Every 3 weeks for 9 weeks',
                     'timing': 'Morning application',
-                    'cost_estimate': '$6-9 per kg',
-                    'instructions': 'Mix with soil around root zone, water after application'
+                    'cost_estimate': '$4-7 per kg',
+                    'instructions': 'Mix with soil around root zone, water thoroughly after application'
                 },
                 {
-                    'fertilizer': 'Bone Meal (4-12-0)',
-                    'application_rate': '4-5 g per plant',
+                    'fertilizer': 'Sulfate of Potash (0-0-50)',
+                    'application_rate': '3-5 g per plant',
                     'frequency': 'Monthly for 3 months',
                     'timing': 'Any time of day',
-                    'cost_estimate': '$8-12 per kg',
-                    'instructions': 'Work into top 2-3 inches of soil around plant'
+                    'cost_estimate': '$6-10 per kg',
+                    'instructions': 'Apply granules around root zone and water well'
                 }
             ],
             'organic_alternatives': [
                 {
-                    'fertilizer': 'Rock Phosphate',
-                    'application_rate': '6-8 g per plant',
+                    'fertilizer': 'Wood Ash or Kelp Meal',
+                    'application_rate': '5-7 g per plant',
                     'frequency': 'Every 2 months',
                     'instructions': 'Mix thoroughly with compost before applying'
                 }
             ],
-            'expected_recovery': '3-6 weeks with proper treatment'
+            'expected_recovery': '2-4 weeks with proper treatment'
         }
     }
 

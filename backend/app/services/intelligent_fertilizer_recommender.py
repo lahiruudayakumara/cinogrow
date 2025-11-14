@@ -22,7 +22,7 @@ class DeficiencyType(Enum):
     HEALTHY = "healthy"
     NITROGEN_DEFICIENCY = "nitrogen_deficiency"
     PHOSPHORUS_DEFICIENCY = "phosphorus_deficiency"
-    POTASSIUM_DEFICIENCY = "potassium_deficiency"
+    potasium_deficiency = "potassium_deficiency"
     MAGNESIUM_DEFICIENCY = "magnesium_deficiency"
     CALCIUM_DEFICIENCY = "calcium_deficiency"
 
@@ -592,7 +592,7 @@ class IntelligentFertilizerRecommendationEngine:
                         organic_options.append(fertilizer)
                     elif deficiency_type == DeficiencyType.PHOSPHORUS_DEFICIENCY and fertilizer.nutrient_composition.get("P", 0) > 2:
                         organic_options.append(fertilizer)
-                    elif deficiency_type == DeficiencyType.POTASSIUM_DEFICIENCY and fertilizer.nutrient_composition.get("K", 0) > 5:
+                    elif deficiency_type == DeficiencyType.potasium_deficiency and fertilizer.nutrient_composition.get("K", 0) > 5:
                         organic_options.append(fertilizer)
         
         return organic_options

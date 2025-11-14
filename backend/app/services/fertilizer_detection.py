@@ -36,7 +36,7 @@ class FertilizerDetectionService:
         # Cinnamon-specific deficiency thresholds
         self.nutrient_thresholds = {
             "nitrogen": 2.0,  # < 2.0% indicates deficiency
-            "phosphorus": 0.15  # < 0.15% indicates deficiency
+            "potassium": 1.0  # < 1.0% indicates deficiency
         }
         
         # Visual signs mapping based on specifications
@@ -46,10 +46,10 @@ class FertilizerDetectionService:
                 "Reduced shoot growth",
                 "Thin, pale shoots"
             ],
-            DeficiencyType.PHOSPHORUS_DEFICIENCY: [
-                "Stunted growth",
-                "Purplish or darkening of older leaves", 
-                "Poor root development"
+            DeficiencyType.POTASSIUM_DEFICIENCY: [
+                "Brown edges on leaves",
+                "Leaf tip and margin burn", 
+                "Weak stems and poor drought resistance"
             ]
         }
         
@@ -69,17 +69,17 @@ class FertilizerDetectionService:
                     "timing": "At start and end of monsoon"
                 }
             },
-            DeficiencyType.PHOSPHORUS_DEFICIENCY: {
+            DeficiencyType.POTASSIUM_DEFICIENCY: {
                 "inorganic": {
-                    "type": "Triple Super Phosphate (TSP)",
-                    "dosage_per_plant": 75,  # grams
-                    "application_method": "Incorporate into soil during land preparation or early rains",
-                    "frequency": "Once per year"
+                    "type": "Muriate of Potash (KCl)",
+                    "dosage_per_plant": 100,  # grams
+                    "application_method": "Apply evenly around the root zone, avoid direct contact with stem",
+                    "frequency": "Every 3 months"
                 },
                 "organic": {
-                    "type": "Bone meal or rock phosphate",
-                    "application_rate": 1.5,  # kg per plant
-                    "timing": "Before heavy rains"
+                    "type": "Wood ash or Kelp meal",
+                    "application_rate": 2,  # kg per plant
+                    "timing": "During monsoon season"
                 }
             }
         }
@@ -136,7 +136,7 @@ class FertilizerDetectionService:
         # Simulate different scenarios
         mock_scenarios = [
             (DeficiencyType.NITROGEN_DEFICIENCY, 0.85, ["Yellowing of older leaves detected", "Reduced vigor observed"]),
-            (DeficiencyType.PHOSPHORUS_DEFICIENCY, 0.78, ["Purplish coloration detected", "Stunted growth patterns"]),
+            (DeficiencyType.POTASSIUM_DEFICIENCY, 0.78, ["Brown edges on leaves detected", "Leaf margin burn patterns"]),
             (DeficiencyType.HEALTHY, 0.92, ["No deficiency signs detected", "Normal leaf coloration"])
         ]
         
@@ -175,7 +175,7 @@ class FertilizerDetectionService:
             # Step 3: Check confidence threshold
             meets_threshold = confidence_score >= self.confidence_threshold
             expert_contact_required = not meets_threshold or deficiency_type in [
-                DeficiencyType.PHOSPHORUS_DEFICIENCY  # Critical deficiency
+                DeficiencyType.potasium_deficiency  # Critical deficiency
             ]
             
             # Step 4: Get visual signs
@@ -280,8 +280,8 @@ class FertilizerDetectionService:
             best_application_season="During monsoon season (May-September and December-February)",
             
             # Priority
-            priority_level=4 if deficiency_type == DeficiencyType.PHOSPHORUS_DEFICIENCY else 3,
-            action_required_within_days=14 if deficiency_type == DeficiencyType.PHOSPHORUS_DEFICIENCY else 30,
+            priority_level=4 if deficiency_type == DeficiencyType.potasium_deficiency else 3,
+            action_required_within_days=14 if deficiency_type == DeficiencyType.potasium_deficiency else 30,
             
             additional_notes=self.get_additional_notes(deficiency_type)
         )
@@ -297,9 +297,9 @@ class FertilizerDetectionService:
         if deficiency_type == DeficiencyType.NITROGEN_DEFICIENCY:
             return ("Apply fertilizer in a ring around the plant, 30cm from the trunk. "
                    "Water thoroughly after application. Avoid applying during dry periods.")
-        elif deficiency_type == DeficiencyType.PHOSPHORUS_DEFICIENCY:
-            return ("Incorporate fertilizer into soil to 15cm depth around root zone. "
-                   "Apply during land preparation or at the beginning of rainy season for best results.")
+        elif deficiency_type == DeficiencyType.POTASSIUM_DEFICIENCY:
+            return ("Apply fertilizer evenly around root zone, avoiding direct contact with stem. "
+                   "Water thoroughly after application for better nutrient uptake.")
         return "Follow standard application guidelines for cinnamon cultivation."
     
     def get_additional_notes(self, deficiency_type: DeficiencyType) -> str:
@@ -307,9 +307,9 @@ class FertilizerDetectionService:
         if deficiency_type == DeficiencyType.NITROGEN_DEFICIENCY:
             return ("Monitor leaf color improvement within 2-3 weeks. "
                    "Ensure adequate water availability for nutrient uptake.")
-        elif deficiency_type == DeficiencyType.PHOSPHORUS_DEFICIENCY:
-            return ("Phosphorus deficiency is critical for root development. "
-                   "Consider soil pH testing as phosphorus availability depends on soil pH.")
+        elif deficiency_type == DeficiencyType.POTASSIUM_DEFICIENCY:
+            return ("Potassium deficiency affects plant drought resistance and overall vigor. "
+                   "Monitor brown edges and apply mulch to improve soil moisture retention.")
         return "Continue regular monitoring of plant health."
     
     def log_analysis_attempt(

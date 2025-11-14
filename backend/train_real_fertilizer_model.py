@@ -58,7 +58,7 @@ class RealFertilizerTrainer:
         self.classes = {
             'healthy': 0,
             'nitrogen_deficiency': 1,
-            'phosphorus_deficiency': 2
+            'potasium_deficiency': 2
         }
         
         self.class_names = list(self.classes.keys())
@@ -499,36 +499,36 @@ class RealFertilizerTrainer:
                 ],
                 'expected_recovery': '2-4 weeks with proper treatment'
             },
-            'phosphorus_deficiency': {
-                'status': 'Phosphorus Deficiency Detected',
-                'symptoms': ['Purple/reddish leaves', 'Poor root development', 'Delayed flowering'],
+            'potassium_deficiency': {
+                'status': 'Potassium Deficiency Detected',
+                'symptoms': ['Brown edges on leaves', 'Leaf tip and margin burn', 'Weak stems and poor drought resistance'],
                 'recommendations': [
                     {
-                        'fertilizer': 'Triple Superphosphate (0-46-0)',
-                        'application_rate': '2-3 g per plant',
+                        'fertilizer': 'Muriate of Potash (0-0-60)',
+                        'application_rate': '3-4 g per plant',
                         'frequency': 'Every 3 weeks for 9 weeks',
                         'timing': 'Morning application',
-                        'cost_estimate': '$6-9 per kg',
-                        'instructions': 'Mix with soil around root zone, water after application'
+                        'cost_estimate': '$4-7 per kg',
+                        'instructions': 'Mix with soil around root zone, water thoroughly after application'
                     },
                     {
-                        'fertilizer': 'Bone Meal (4-12-0)',
-                        'application_rate': '4-5 g per plant',
+                        'fertilizer': 'Sulfate of Potash (0-0-50)',
+                        'application_rate': '3-5 g per plant',
                         'frequency': 'Monthly for 3 months',
                         'timing': 'Any time of day',
-                        'cost_estimate': '$8-12 per kg',
-                        'instructions': 'Work into top 2-3 inches of soil around plant'
+                        'cost_estimate': '$6-10 per kg',
+                        'instructions': 'Apply granules around root zone and water well'
                     }
                 ],
                 'organic_alternatives': [
                     {
-                        'fertilizer': 'Rock Phosphate',
-                        'application_rate': '6-8 g per plant',
+                        'fertilizer': 'Wood Ash or Kelp Meal',
+                        'application_rate': '5-7 g per plant',
                         'frequency': 'Every 2 months',
                         'instructions': 'Mix thoroughly with compost before applying'
                     }
                 ],
-                'expected_recovery': '3-6 weeks with proper treatment'
+                'expected_recovery': '2-4 weeks with proper treatment'
             }
         }
         

@@ -18,9 +18,7 @@ class DeficiencyType(str, Enum):
 
     NITROGEN_DEFICIENCY = "nitrogen_deficiency"
 
-    PHOSPHORUS_DEFICIENCY = "phosphorus_deficiency"
-
-    POTASSIUM_DEFICIENCY = "potassium_deficiency"
+    POTASIUM_DEFICIENCY = "potasium_deficiency"
 
     HEALTHY = "healthy"
 
@@ -90,7 +88,7 @@ class DeficiencyAnalysis(SQLModel, table=True):
 
     leaf_nitrogen_percentage: Optional[float] = Field(default=None)
 
-    leaf_phosphorus_percentage: Optional[float] = Field(default=None)
+    leaf_potassium_percentage: Optional[float] = Field(default=None)
 
     
 
@@ -328,7 +326,7 @@ class DeficiencyAnalysisUpdate(BaseModel):
 
     leaf_nitrogen_percentage: Optional[float] = None
 
-    leaf_phosphorus_percentage: Optional[float] = None
+    leaf_potassium_percentage: Optional[float] = None
 
     status: Optional[AnalysisStatus] = None
 
@@ -370,7 +368,7 @@ class DeficiencyAnalysisRead(BaseModel):
 
     leaf_nitrogen_percentage: Optional[float]
 
-    leaf_phosphorus_percentage: Optional[float]
+    leaf_potassium_percentage: Optional[float]
 
     model_version: str
 
@@ -434,7 +432,7 @@ class AnalysisResponse(BaseModel):
 
     nitrogen_percentage: Optional[float]
 
-    phosphorus_percentage: Optional[float]
+    potassium_percentage: Optional[float]
 
     expert_contact_required: bool
 

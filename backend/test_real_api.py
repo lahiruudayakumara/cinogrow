@@ -31,7 +31,7 @@ def test_api_endpoints():
     
     # Test 2: Recommendations endpoint
     print("\n2. Testing Recommendations Endpoint...")
-    deficiency_types = ['healthy', 'nitrogen_deficiency', 'phosphorus_deficiency']
+    deficiency_types = ['healthy', 'nitrogen_deficiency', 'potassium_deficiency']
     
     for deficiency in deficiency_types:
         try:

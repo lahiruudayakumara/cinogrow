@@ -10,7 +10,7 @@ const DETECTION_ENDPOINT = ${API_BASE_URL}/fertilizer-detection;
 
 export interface DeficiencyType {
   NITROGEN_DEFICIENCY: 'nitrogen_deficiency';
-  PHOSPHORUS_DEFICIENCY: 'phosphorus_deficiency';
+  POTASSIUM_DEFICIENCY: 'potassium_deficiency';
   POTASSIUM_DEFICIENCY: 'potassium_deficiency';
   HEALTHY: 'healthy';
 }
@@ -113,7 +113,7 @@ export interface CinnamonRecommendationReference {
     [key: string]: {
       visual_signs: string[];
       leaf_nitrogen_threshold?: string;
-      leaf_phosphorus_threshold?: string;
+      leaf_potassium_threshold?: string;
       recommended_fertilizer: {
         inorganic: {
           fertilizer_type: string;

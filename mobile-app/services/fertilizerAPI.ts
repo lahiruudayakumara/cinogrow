@@ -590,7 +590,7 @@ class FertilizerAPI {
     const nameMap: { [key: string]: string } = {
       'healthy': 'Healthy Plant',
       'nitrogen_deficiency': 'Nitrogen Deficiency',
-      'phosphorus_deficiency': 'Phosphorus Deficiency',
+      'potassium_deficiency': 'Potassium Deficiency',
       'potassium_deficiency': 'Potassium Deficiency',
       'magnesium_deficiency': 'Magnesium Deficiency',
       'calcium_deficiency': 'Calcium Deficiency',
@@ -624,8 +624,8 @@ class FertilizerAPI {
   private getDeficiencyDescription(deficiency: string, severity: string): string {
     const descriptions: { [key: string]: string } = {
       'nitrogen_deficiency': 'Yellowing of older leaves, reduced growth rate, and pale green coloration.',
-      'potassium_deficiency': 'Brown leaf margins, yellowing between veins, and reduced disease resistance.',
-      'phosphorus_deficiency': 'Purple or reddish leaf discoloration, stunted growth, and delayed maturity.',
+      'potassium_deficiency': 'Brown edges on leaves, leaf tip and margin burn, and reduced drought resistance.',
+      'potassium_deficiency': 'Brown edges on leaves, leaf tip and margin burn, and reduced drought resistance.',
       'magnesium_deficiency': 'Yellowing between leaf veins while veins remain green.',
       'calcium_deficiency': 'Brown spots on leaves, tip burn, and poor fruit development.',
       'iron_deficiency': 'Yellowing of young leaves while veins remain green.',

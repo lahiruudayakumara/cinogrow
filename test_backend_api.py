@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 # Backend URL
-BASE_URL = "http://192.168.1.2:8000/api/v1/fertilizer-detection"
+BASE_URL = "http://192.168.8.130:8000/api/v1/fertilizer-detection"
 
 def test_health():
     """Test the health endpoint"""

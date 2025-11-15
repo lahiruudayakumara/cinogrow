@@ -13,6 +13,7 @@ load_dotenv()
 from app.database import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
 from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router
+from app.oil_yield.router import router as oil_yield_router
 # from app.routers.fertilizer.ml_metadata_api import router as ml_metadata_router
 
 # Create FastAPI app
@@ -22,21 +23,13 @@ app = FastAPI(
     version='1.0.0'
 )
 
-# Configure CORS
-
-# Import your oil yield router
-from app.oil_yield.router import router as oil_yield_router
-
-app = FastAPI(title="Cinogrow Backend")
-
 # Enable CORS for frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
     allow_origins=["*"],  # You can replace "*" with your frontend URL for production
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include the oil yield router

@@ -1,9 +1,29 @@
+# --- Web Framework ---
 fastapi
 uvicorn[standard]
 python-dotenv
-pydantic
+
+# --- Data & ML ---
+numpy
+pandas
+scikit-learn
+xgboost
+joblib
+
+# --- Database & ORM ---
 sqlmodel
+psycopg2-binary
+
+# --- Security & Auth ---
 passlib[bcrypt]
 python-jose
+
+# --- Optional (Images, utilities) ---
 scikit-learn
+pandas
 pillow
+httpx
+python-multipart
+psycopg2-binary
+sqlalchemy
+alembic

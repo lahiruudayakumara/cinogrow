@@ -128,6 +128,28 @@ export default function OilScreen() {
                 <MaterialCommunityIcons name="chevron-right" size={26} color="#A0A0A0" />
               </BlurView>
             </TouchableOpacity>
+
+            {/* Oil Quality Guide (new) */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.card}
+              onPress={() => navigation.navigate('OilQualityGuide')}
+            >
+              <BlurView intensity={30} tint="light" style={styles.cardBlur}>
+                <View
+                  style={[styles.iconCircle, { backgroundColor: 'rgba(0, 122, 255, 0.08)' }]}
+                >
+                  <MaterialCommunityIcons name="clipboard-check" size={34} color="#007AFF" />
+                </View>
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>Oil Quality Guide</Text>
+                  <Text style={styles.cardSubtitle}>
+                    Assess and improve oil quality
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={26} color="#A0A0A0" />
+              </BlurView>
+            </TouchableOpacity>
           </View>
 
           {/* Footer */}

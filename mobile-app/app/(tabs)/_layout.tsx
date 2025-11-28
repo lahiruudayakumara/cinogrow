@@ -13,8 +13,10 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      initialRouteName="index"
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: '#2E7D32', // Green color for better visibility
+        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -25,6 +27,7 @@ export default function TabLayout() {
             height: 50 + insets.bottom, // Add safe area bottom inset
             paddingBottom: insets.bottom,
             paddingTop: 8,
+            backgroundColor: 'rgba(255, 255, 255, 0.9)', // Semi-transparent background for better contrast
           },
           default: {
             // Add specific Android styling if needed
@@ -32,31 +35,34 @@ export default function TabLayout() {
             height: 60 + insets.bottom, // Add safe area bottom inset for Android
             paddingBottom: Math.max(insets.bottom, 8), // Ensure minimum padding
             paddingTop: 8,
+            backgroundColor: '#fff', // White background for Android
           },
         }),
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '500',
+          fontWeight: '600', // Slightly bolder font
           marginBottom: Platform.OS === 'ios' ? 0 : 4,
         },
         tabBarItemStyle: {
           paddingVertical: 4,
         },
+        tabBarIndicatorStyle: {
+          backgroundColor: '#2E7D32',
+          height: 3,
+        },
       }}>
-
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Weather',
-          tabBarIcon: ({ color, size }) => <Ionicons name="partly-sunny" size={size || 24} color={color} />,
-        }}
-      />
 
       <Tabs.Screen
         name="fertilizer"
         options={{
           title: 'Fertilizer',
-          tabBarIcon: ({ color, size }) => <Ionicons name="leaf-outline" size={size || 24} color={color} />,
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons 
+              name={focused ? "leaf" : "leaf-outline"} 
+              size={size || 24} 
+              color={focused ? '#2E7D32' : color} 
+            />
+          ),
         }}
       />
 
@@ -64,7 +70,27 @@ export default function TabLayout() {
         name="oil"
         options={{
           title: 'Oil',
-          tabBarIcon: ({ color, size }) => <Ionicons name="flask-outline" size={size || 24} color={color} />,
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons 
+              name={focused ? "flask" : "flask-outline"} 
+              size={size || 24} 
+              color={focused ? '#2E7D32' : color} 
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Weather',
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons 
+              name={focused ? "partly-sunny" : "partly-sunny-outline"} 
+              size={size || 24} 
+              color={focused ? '#2E7D32' : color} 
+            />
+          ),
         }}
       />
 
@@ -72,7 +98,13 @@ export default function TabLayout() {
         name="pests"
         options={{
           title: 'Pests',
-          tabBarIcon: ({ color, size }) => <Ionicons name="bug-outline" size={size || 24} color={color} />,
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons 
+              name={focused ? "bug" : "bug-outline"} 
+              size={size || 24} 
+              color={focused ? '#2E7D32' : color} 
+            />
+          ),
         }}
       />
 
@@ -80,7 +112,13 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size || 24} color={color} />,
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons 
+              name={focused ? "person" : "person-outline"} 
+              size={size || 24} 
+              color={focused ? '#2E7D32' : color} 
+            />
+          ),
         }}
       />
     </Tabs>

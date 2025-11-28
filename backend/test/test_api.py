@@ -10,7 +10,7 @@ def test_farm_assistance_api():
     
     # Test different API URLs
     api_urls = [
-        "http://192.168.8.130:8000/api/v1",
+        "http://192.168.53.65:8000/api/v1",
         "http://127.0.0.1:8000/api/v1",  
         "http://localhost:8000/api/v1"
     ]

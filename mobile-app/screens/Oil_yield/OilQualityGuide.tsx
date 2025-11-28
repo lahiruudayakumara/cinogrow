@@ -6,25 +6,18 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 export default function OilQualityGuide() {
   const [color, setColor] = useState('');
   const [clarity, setClarity] = useState('');
-  const [density, setDensity] = useState('');
   const [aroma, setAroma] = useState('');
   const [score, setScore] = useState<number | null>(null);
   const [label, setLabel] = useState('');
   const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [predictedPrice, setPredictedPrice] = useState('');
 
   const calculateQuality = () => {
-    if (!color || !clarity || !density || !aroma) {
+    if (!color || !clarity || !aroma) {
       Alert.alert('Missing data', 'Please select or enter all fields to evaluate quality.');
       return;
     }
 
-    const d = parseFloat(density);
-    if (isNaN(d) || d <= 0) {
-      Alert.alert('Invalid density', 'Please enter a valid numeric density value.');
-      return;
-    }
-
-    // scoring weights (0-100 scale)
     const colorScoreMap: Record<string, number> = {
       'pale_yellow': 90,
       'amber': 75,
@@ -46,48 +39,46 @@ export default function OilQualityGuide() {
     const clarityScore = clarityScoreMap[clarity] ?? 60;
     const aromaScore = aromaScoreMap[aroma] ?? 60;
 
-    // density ideal window (example for cinnamon oil ~0.88-0.92 g/mL)
-    let densityScore = 60;
-    if (d >= 0.88 && d <= 0.92) densityScore = 95;
-    else if (d >= 0.85 && d < 0.88) densityScore = 75;
-    else if (d > 0.92 && d <= 0.95) densityScore = 70;
-    else densityScore = 45;
-
-    // weighted average
-    const finalScore = Math.round(
-      (colorScore * 0.25) + (clarityScore * 0.25) + (aromaScore * 0.25) + (densityScore * 0.25)
-    );
+    // weighted average across three attributes (equal weight)
+    const finalScore = Math.round((colorScore + clarityScore + aromaScore) / 3);
 
     let qualityLabel = '';
     const recs: string[] = [];
 
+    let priceRange = '';
+
     if (finalScore >= 85) {
       qualityLabel = 'Excellent';
       recs.push('Ready for commercial use', 'Store in dark, cool place to preserve aroma.');
+      priceRange = '$120 - $200 / L';
     } else if (finalScore >= 70) {
       qualityLabel = 'Good';
       recs.push('Consider mild purification', 'Monitor storage conditions.');
+      priceRange = '$70 - $120 / L';
     } else if (finalScore >= 50) {
       qualityLabel = 'Fair';
       recs.push('May require filtering or light refinement', 'Check raw materials and distillation parameters.');
+      priceRange = '$30 - $70 / L';
     } else {
       qualityLabel = 'Poor';
       recs.push('Perform quality control steps', 'Investigate distillation/drying issues, discard if contaminated.');
+      priceRange = '$5 - $30 / L';
     }
 
     setScore(finalScore);
     setLabel(qualityLabel);
     setRecommendations(recs);
+    setPredictedPrice(priceRange);
   };
 
   const clearForm = () => {
     setColor('');
     setClarity('');
-    setDensity('');
     setAroma('');
     setScore(null);
     setLabel('');
     setRecommendations([]);
+    setPredictedPrice('');
   };
 
   return (
@@ -117,15 +108,6 @@ export default function OilQualityGuide() {
             <Picker.Item label="Cloudy" value="cloudy" />
           </Picker>
         </View>
-
-        <Text style={styles.label}>Density (g/mL)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. 0.89"
-          keyboardType="decimal-pad"
-          value={density}
-          onChangeText={setDensity}
-        />
 
         <Text style={styles.label}>Aroma</Text>
         <View style={styles.pickerContainer}>
@@ -161,6 +143,9 @@ export default function OilQualityGuide() {
           {recommendations.map((r, i) => (
             <Text key={i} style={styles.recommendationText}>• {r}</Text>
           ))}
+
+          <Text style={[styles.recommendationsTitle, { marginTop: 10 }]}>Estimated Global Price</Text>
+          <Text style={styles.recommendationText}>{predictedPrice}</Text>
         </View>
       ) : null}
     </ScrollView>

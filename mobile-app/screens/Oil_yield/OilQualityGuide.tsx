@@ -7,13 +7,25 @@ export default function OilQualityGuide() {
   const [color, setColor] = useState('');
   const [clarity, setClarity] = useState('');
   const [aroma, setAroma] = useState('');
+  const [plantPart, setPlantPart] = useState(''); // added
   const [score, setScore] = useState<number | null>(null);
   const [label, setLabel] = useState('');
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [predictedPrice, setPredictedPrice] = useState('');
 
+  // friendly labels for display
+  const plantPartLabels: Record<string, string> = {
+    leaves: 'Leaves',
+    bark: 'Bark',
+    roots: 'Roots',
+    flowers: 'Flowers',
+    fruit: 'Fruit',
+    seeds: 'Seeds',
+    whole_plant: 'Whole plant',
+  };
+
   const calculateQuality = () => {
-    if (!color || !clarity || !aroma) {
+    if (!plantPart || !color || !clarity || !aroma) {
       Alert.alert('Missing data', 'Please select or enter all fields to evaluate quality.');
       return;
     }
@@ -72,6 +84,7 @@ export default function OilQualityGuide() {
   };
 
   const clearForm = () => {
+    setPlantPart(''); // clear new field
     setColor('');
     setClarity('');
     setAroma('');
@@ -119,6 +132,21 @@ export default function OilQualityGuide() {
           </Picker>
         </View>
 
+        {/* Plant Part selector */}
+        <Text style={styles.label}>Plant Part</Text>
+        <View style={styles.pickerContainer}>
+          <Picker selectedValue={plantPart} onValueChange={(v) => setPlantPart(v)} style={styles.picker}>
+            <Picker.Item label="Select plant part" value="" />
+            <Picker.Item label="Leaves" value="leaves" />
+            <Picker.Item label="Bark" value="bark" />
+            <Picker.Item label="Roots" value="roots" />
+            <Picker.Item label="Flowers" value="flowers" />
+            <Picker.Item label="Fruit" value="fruit" />
+            <Picker.Item label="Seeds" value="seeds" />
+            <Picker.Item label="Whole plant" value="whole_plant" />
+          </Picker>
+        </View>
+
         <View style={styles.actionsRow}>
           <TouchableOpacity style={styles.calculateButton} onPress={calculateQuality}>
             <MaterialCommunityIcons name="check-decagram" size={18} color="#fff" />
@@ -146,6 +174,12 @@ export default function OilQualityGuide() {
 
           <Text style={[styles.recommendationsTitle, { marginTop: 10 }]}>Estimated Global Price</Text>
           <Text style={styles.recommendationText}>{predictedPrice}</Text>
+
+          {/* In results card, show selected plant part */}
+          <Text style={[styles.recommendationsTitle, { marginTop: 10 }]}>Plant Part</Text>
+          <Text style={styles.recommendationText}>
+            {plantPart ? (plantPartLabels[plantPart] ?? plantPart) : '-'}
+          </Text>
         </View>
       ) : null}
     </ScrollView>

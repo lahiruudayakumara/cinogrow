@@ -112,7 +112,7 @@ curl "http://localhost:8000/api/v1/weather/current?latitude=6.9271&longitude=79.
 curl "http://localhost:8000/api/v1/weather/city?city=Colombo,LK"
 
 # Test network accessibility for mobile app
-curl http://192.168.53.65:8001/health
+curl http://192.168.8.130:8001/health
 ```
 
 ---
@@ -150,14 +150,14 @@ In your app's config or `.env` (or a config file), set:
 export const API_URL = "http://127.0.0.1:8000";
 ```
 
-> ⚠️ **For Android Emulator**: The mobile app automatically uses `http://10.0.2.2:8001` for Android emulators and `http://192.168.53.65:8001` for iOS simulators.
+> ⚠️ **For Android Emulator**: The mobile app automatically uses `http://10.0.2.2:8001` for Android emulators and `http://192.168.8.130:8001` for iOS simulators.
 
 > 🔧 **Troubleshooting Network Issues:**
 > 
 > If you get "Network request failed" errors:
 > 1. Make sure the backend is running on `0.0.0.0:8000` (not just `127.0.0.1`)
 > 2. Run: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
-> 3. Test backend accessibility: `curl http://192.168.53.65:8001/health`
+> 3. Test backend accessibility: `curl http://192.168.8.130:8001/health`
 > 4. Check your firewall settings
 > 5. For physical devices, use your computer's IP address instead of localhost
 

@@ -12,8 +12,8 @@ load_dotenv()
 # Import database and routers
 from app.database import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
-from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router
-from app.oil_yield.router import router as oil_yield_router
+# from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router  # Temporarily disabled due to missing model
+# from app.oil_yield.router import router as oil_yield_router  # Temporarily disabled due to missing model
 # from app.routers.fertilizer.ml_metadata_api import router as ml_metadata_router
 
 # Create FastAPI app
@@ -33,7 +33,7 @@ app.add_middleware(
 )
 
 # Include the oil yield router
-app.include_router(oil_yield_router)
+# app.include_router(oil_yield_router)  # Temporarily disabled due to missing model
 
 # Create upload directories if they don't exist
 Path('uploads/fertilizer_analysis').mkdir(parents=True, exist_ok=True)
@@ -47,7 +47,7 @@ async def startup_event():
     create_db_and_tables()
 
 # Include routers
-app.include_router(fertilizer_router, prefix='/api/v1/fertilizer')
+# app.include_router(fertilizer_router, prefix='/api/v1/fertilizer')  # Temporarily disabled due to missing model
 # app.include_router(ml_metadata_router, prefix='/api/v1')
 app.include_router(weather.router, prefix="/api/v1")
 app.include_router(farm.router, prefix="/api/v1")

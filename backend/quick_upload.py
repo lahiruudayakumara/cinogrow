@@ -9,18 +9,18 @@ def upload_and_train():
     csv_path = r'C:\Users\Udari\Desktop\cinnamon research\cinogrow\backend\yield_dataset_template.csv'
     with open(csv_path, 'rb') as f:
         response = requests.post(
-            'http://192.168.53.65:8001/api/v1/yield-dataset/bulk-upload',
+            'http://192.168.8.130:8001/api/v1/yield-dataset/bulk-upload',
             files={'file': f}
         )
     
     # 2. Train model
     print("\n🤖 Training model...")
-    response = requests.post('http://192.168.53.65:8001/api/v1/ml/train-model')
+    response = requests.post('http://192.168.8.130:8001/api/v1/ml/train-model')
     print(f"Training: {response.json()}")
     
     # 3. Test prediction
     print("\n🎯 Testing prediction...")
-    prediction_url = 'http://192.168.53.65:8001/api/v1/ml/predict-single'
+    prediction_url = 'http://192.168.8.130:8001/api/v1/ml/predict-single'
     test_params = {
         "location": "Matara",
         "variety": "Ceylon Cinnamon", 

@@ -3,7 +3,7 @@ echo Starting Cinogrow Backend Server on port 8001...
 echo.
 echo The server will be accessible at:
 echo - Local: http://localhost:8001
-echo - Network: http://192.168.53.65:8001
+echo - Network: http://192.168.8.130:8001
 echo.
 echo Press Ctrl+C to stop the server
 echo.

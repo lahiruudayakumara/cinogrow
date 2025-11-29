@@ -8,7 +8,7 @@ import time
 def test_enhanced_model_integration():
     """Test the enhanced model with your existing API"""
     
-    base_url = "http://192.168.53.65:8001/api/v1"
+    base_url = "http://192.168.8.130:8001/api/v1"
     
     print("🔧 Testing Enhanced Model Integration with Existing API")
     print("=" * 60)
@@ -178,7 +178,7 @@ def test_dataset_upload():
     print("\n📤 Testing CSV Dataset Upload...")
     
     csv_path = 'yield_dataset_template.csv'
-    base_url = "http://192.168.53.65:8001/api/v1"
+    base_url = "http://192.168.8.130:8001/api/v1"
     
     try:
         with open(csv_path, 'rb') as f:

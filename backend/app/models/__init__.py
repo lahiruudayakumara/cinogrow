@@ -14,6 +14,8 @@ from .fertilizer.fertilizer import (
     FertilizerRecommendation
 )
 
+from .user import User
+
 __all__ = [
     "Farm", 
     "Plot", 

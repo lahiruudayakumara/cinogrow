@@ -20,6 +20,24 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # Create enum types if they don't exist
+    op.execute("""
+        DO $$ 
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'deficiencytype') THEN
+                CREATE TYPE deficiencytype AS ENUM ('nitrogen_deficiency', 'phosphorus_deficiency', 'potassium_deficiency', 'healthy');
+            END IF;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ 
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'analysisstatus') THEN
+                CREATE TYPE analysisstatus AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
+            END IF;
+        END $$;
+    """)
+    
     # Create deficiency_analyses table
     op.create_table('deficiency_analyses',
         sa.Column('id', sa.Integer(), nullable=False),

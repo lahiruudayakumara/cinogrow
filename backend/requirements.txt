@@ -24,18 +24,9 @@ passlib[bcrypt]==1.7.4
 bcrypt==3.2.2
 python-jose[cryptography]
 
+# --- Email Validation ---
+pydantic[email]
+email-validator
+
 # --- Roboflow Integration ---
 inference-sdk
-pillow
-
-# --- Optional (Images, utilities) ---
-scikit-learn
-pandas
-httpx
-python-multipart
-psycopg2-binary
-sqlalchemy
-alembic
-
-# --- Pydantic with email support ---
-pydantic[email]

@@ -8,7 +8,7 @@ from typing import List, Optional
 from datetime import datetime
 import numpy as np
 
-from app.database import get_session
+from app.db.session import get_session
 from app.models.yield_weather.tree import (
     Tree, TreeMeasurement, TreeHarvestRecord,
     TreeCreate, TreeUpdate, TreeRead,

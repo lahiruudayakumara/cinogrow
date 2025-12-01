@@ -18,10 +18,13 @@ psycopg2-binary
 passlib[bcrypt]
 python-jose
 
+# --- Roboflow Integration ---
+inference-sdk
+pillow
+
 # --- Optional (Images, utilities) ---
 scikit-learn
 pandas
-pillow
 httpx
 python-multipart
 psycopg2-binary

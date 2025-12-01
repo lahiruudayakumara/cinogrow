@@ -13,17 +13,6 @@ from .fertilizer.fertilizer import (
     FertilizerSchedule,
     FertilizerRecommendation
 )
-from .fertilizer.ml_metadata import (
-    MLAnalysisSession,
-    MLImageAnalysis,
-    MLTrainingDataset,
-    MLModelVersion
-)
-from .fertilizer.deficiency_detection import (
-    DeficiencyAnalysis,
-    CinnamonFertilizerRecommendation,
-    ImageAnalysisLog
-)
 
 __all__ = [
     "Farm", 
@@ -43,14 +32,5 @@ __all__ = [
     "FertilizerType",
     "FertilizerApplication",
     "FertilizerSchedule",
-    "FertilizerRecommendation",
-    # ML Metadata models
-    "MLAnalysisSession",
-    "MLImageAnalysis",
-    "MLTrainingDataset",
-    "MLModelVersion",
-    # Deficiency detection models
-    "DeficiencyAnalysis",
-    "CinnamonFertilizerRecommendation",
-    "ImageAnalysisLog"
+    "FertilizerRecommendation"
 ]

@@ -12,8 +12,7 @@ load_dotenv()
 # Import database and routers
 from app.database import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
-from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router
-# from app.routers.fertilizer.ml_metadata_api import router as ml_metadata_router
+from app.routers.fertilizer.roboflow_simple import router as roboflow_simple_router
 
 # Import your oil yield router
 from app.oil_yield.router import router as oil_yield_router
@@ -49,8 +48,7 @@ async def startup_event():
     create_db_and_tables()
 
 # Include routers
-app.include_router(fertilizer_router, prefix='/api/v1/fertilizer')
-# app.include_router(ml_metadata_router, prefix='/api/v1')
+app.include_router(roboflow_simple_router, prefix='/api/v1')  # Roboflow deficiency detection
 app.include_router(weather.router, prefix="/api/v1")
 app.include_router(farm.router, prefix="/api/v1")
 app.include_router(farm_assistance.router, prefix="/api/v1")

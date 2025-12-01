@@ -9,14 +9,20 @@ pandas
 scikit-learn
 xgboost
 joblib
+pillow
+httpx
 
 # --- Database & ORM ---
+sqlalchemy
 sqlmodel
+alembic
 psycopg2-binary
+python-multipart
 
 # --- Security & Auth ---
-passlib[bcrypt]
-python-jose
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
+python-jose[cryptography]
 
 # --- Optional (Images, utilities) ---
 scikit-learn
@@ -27,3 +33,6 @@ python-multipart
 psycopg2-binary
 sqlalchemy
 alembic
+
+# --- Pydantic with email support ---
+pydantic[email]

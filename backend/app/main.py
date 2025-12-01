@@ -1,10 +1,13 @@
-# app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from dotenv import load_dotenv
+from datetime import datetime
+import platform
 import os
+from app.routers import auth
+from app.db import Base, engine
 
 # Load environment variables FIRST before importing anything else
 load_dotenv()
@@ -12,7 +15,7 @@ load_dotenv()
 # Import database and routers
 from app.database import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
-from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router
+# from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router
 # from app.routers.fertilizer.ml_metadata_api import router as ml_metadata_router
 
 # Create FastAPI app
@@ -25,7 +28,7 @@ app = FastAPI(
 # Configure CORS
 
 # Import your oil yield router
-from app.oil_yield.router import router as oil_yield_router
+# from app.oil_yield.router import router as oil_yield_router
 
 app = FastAPI(title="Cinogrow Backend")
 
@@ -33,14 +36,13 @@ app = FastAPI(title="Cinogrow Backend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
-    allow_origins=["*"],  # You can replace "*" with your frontend URL for production
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
 )
 
 # Include the oil yield router
-app.include_router(oil_yield_router)
+# app.include_router(oil_yield_router)
 
 # Create upload directories if they don't exist
 Path('uploads/fertilizer_analysis').mkdir(parents=True, exist_ok=True)
@@ -52,20 +54,26 @@ app.mount('/uploads', StaticFiles(directory='uploads'), name='uploads')
 @app.on_event('startup')
 async def startup_event():
     create_db_and_tables()
+    Base.metadata.create_all(bind=engine)
 
 # Include routers
-app.include_router(fertilizer_router, prefix='/api/v1/fertilizer')
+# app.include_router(fertilizer_router, prefix='/api/v1/fertilizer')
 # app.include_router(ml_metadata_router, prefix='/api/v1')
 app.include_router(weather.router, prefix="/api/v1")
 app.include_router(farm.router, prefix="/api/v1")
 app.include_router(farm_assistance.router, prefix="/api/v1")
 app.include_router(yield_prediction.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1")
 
 @app.get('/')
 async def root():
     return {
-        'message': 'Welcome to Cinogrow Backend API',
-        'version': '1.0.0'
+        "message": "Welcome to Cinogrow Backend API",
+        "version": "1.0.0",
+        "status": "running",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "python_version": platform.python_version(),
+        "environment": os.getenv("ENVIRONMENT", "development")
     }
 
 @app.get('/health')

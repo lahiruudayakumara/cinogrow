@@ -21,16 +21,17 @@ export default function TabLayout() {
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-            height: 50 + insets.bottom, // Add safe area bottom inset
-            paddingBottom: insets.bottom,
+            height: 50, // removed safe area bottom inset
+            paddingBottom: 10, // removed bottom padding
             paddingTop: 8,
+            marginBottom: 10,
+            paddingHorizontal: 20
           },
           default: {
             // Add specific Android styling if needed
             elevation: 4,
-            height: 60 + insets.bottom, // Add safe area bottom inset for Android
-            paddingBottom: Math.max(insets.bottom, 8), // Ensure minimum padding
+            height: 60, // removed safe area bottom inset for Android
+            paddingBottom: 0, // removed bottom padding
             paddingTop: 8,
           },
         }),
@@ -41,6 +42,7 @@ export default function TabLayout() {
         },
         tabBarItemStyle: {
           paddingVertical: 4,
+          marginHorizontal: 5, // create a horizontal gap of ~10 between items
         },
       }}>
 

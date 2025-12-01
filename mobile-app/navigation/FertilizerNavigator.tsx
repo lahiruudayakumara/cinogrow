@@ -31,6 +31,7 @@ export type FertilizerStackParamList = {
         soilImage?: string;
         analysisType?: 'leaf-only' | 'comprehensive';
         mlAnalysis?: FertilizerAnalysisResponse; // Add ML analysis data
+        roboflowAnalysis?: any; // Add Roboflow workflow output
     };
 };
 

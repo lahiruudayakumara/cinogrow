@@ -16,10 +16,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
-import { imageAnalysisService } from '../../services/imageAnalysisService';
-import { metadataStorageService } from '../../services/metadataStorageService';
-import { LeafAnalysisMetadata } from '../../services/imageAnalysisService';
-import MetadataProgress from '../../components/MetadataProgress';
 
 type UploadLeafScreenNavigationProp = StackNavigationProp<
     FertilizerStackParamList,
@@ -32,8 +28,6 @@ interface UploadLeafScreenProps {
 
 const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
-    const [metadataStage, setMetadataStage] = useState<'analyzing' | 'extracting' | 'storing' | 'complete'>('analyzing');
     const insets = useSafeAreaInsets();
 
     const requestCameraPermission = async () => {
@@ -91,49 +85,12 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                 const imageUri = result.assets[0].uri;
                 setSelectedImage(imageUri);
 
-                // Extract metadata for ML analysis
-                let extractedMetadata: LeafAnalysisMetadata | null = null;
-                try {
-                    setIsExtractingMetadata(true);
-                    setMetadataStage('analyzing');
-
-                    // Create new analysis session
-                    const sessionId = await metadataStorageService.createSession();
-
-                    setMetadataStage('extracting');
-
-                    // Extract leaf-specific metadata
-                    const leafMetadata = await imageAnalysisService.extractImageMetadata(
-                        imageUri,
-                        'leaf',
-                        'camera'
-                    ) as LeafAnalysisMetadata;
-
-                    extractedMetadata = leafMetadata;
-
-                    setMetadataStage('storing');
-
-                    // Store metadata for future ML training
-                    await metadataStorageService.storeLeafMetadata(sessionId, leafMetadata);
-
-                    setMetadataStage('complete');
-
-                    // Brief delay to show completion
-                    setTimeout(() => {
-                        setIsExtractingMetadata(false);
-                    }, 500);
-                } catch (metadataError) {
-                    console.log('Metadata extraction failed:', metadataError);
-                    setIsExtractingMetadata(false);
-                    // Continue with navigation even if metadata fails
-                }
-
-                // Auto-navigate to PhotoPreview
+                // Navigate directly to PhotoPreview for Roboflow analysis
+                console.log('📸 Photo captured, navigating to preview...');
                 navigation.navigate('FertilizerPhotoPreview', {
                     imageUri: imageUri,
                     imageType: 'leaf',
                     leafImage: imageUri,
-                    leafMetadata: extractedMetadata || undefined,
                 });
             }
         } catch (error) {
@@ -158,49 +115,12 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                 const imageUri = result.assets[0].uri;
                 setSelectedImage(imageUri);
 
-                // Extract metadata for ML analysis
-                let extractedMetadata: LeafAnalysisMetadata | null = null;
-                try {
-                    setIsExtractingMetadata(true);
-                    setMetadataStage('analyzing');
-
-                    // Create new analysis session
-                    const sessionId = await metadataStorageService.createSession();
-
-                    setMetadataStage('extracting');
-
-                    // Extract leaf-specific metadata
-                    const leafMetadata = await imageAnalysisService.extractImageMetadata(
-                        imageUri,
-                        'leaf',
-                        'library'
-                    ) as LeafAnalysisMetadata;
-
-                    extractedMetadata = leafMetadata;
-
-                    setMetadataStage('storing');
-
-                    // Store metadata for future ML training
-                    await metadataStorageService.storeLeafMetadata(sessionId, leafMetadata);
-
-                    setMetadataStage('complete');
-
-                    // Brief delay to show completion
-                    setTimeout(() => {
-                        setIsExtractingMetadata(false);
-                    }, 500);
-                } catch (metadataError) {
-                    console.log('Metadata extraction failed:', metadataError);
-                    setIsExtractingMetadata(false);
-                    // Continue with navigation even if metadata fails
-                }
-
-                // Auto-navigate to PhotoPreview
+                // Navigate directly to PhotoPreview for Roboflow analysis
+                console.log('🖼️ Image selected from library, navigating to preview...');
                 navigation.navigate('FertilizerPhotoPreview', {
                     imageUri: imageUri,
                     imageType: 'leaf',
                     leafImage: imageUri,
-                    leafMetadata: extractedMetadata || undefined,
                 });
             }
         } catch (error) {
@@ -337,13 +257,6 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                     </View>
                 )}
             </ScrollView>
-
-            {/* Metadata Extraction Progress */}
-            <MetadataProgress
-                isVisible={isExtractingMetadata}
-                stage={metadataStage}
-                sampleType="leaf"
-            />
         </SafeAreaView>
     );
 };

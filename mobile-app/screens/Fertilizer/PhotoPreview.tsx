@@ -19,7 +19,6 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
 import { fertilizerAPI, FertilizerAnalysisResponse } from '../../services/fertilizerAPI';
-import { metadataStorageService } from '../../services/metadataStorageService';
 
 type PhotoPreviewNavigationProp = StackNavigationProp<
     FertilizerStackParamList,
@@ -79,128 +78,25 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
     const performLeafAnalysis = async () => {
         try {
             setIsAnalyzing(true);
-            setAnalysisProgress('Connecting to ML service...');
+            setAnalysisProgress('🔍 Detecting deficiencies with Roboflow AI...');
 
-            console.log('🚀 Starting leaf analysis process...');
+            console.log('🚀 Starting leaf analysis with Roboflow via backend...');
             console.log(`🖼️ Image URI: ${imageUri}`);
 
-            // First, test if the fertilizer API is available
-            console.log('🔍 Step 1: Testing fertilizer API availability...');
-            let isAvailable = true;
-            try {
-                if (typeof (fertilizerAPI as any).isServiceAvailable === 'function') {
-                    isAvailable = await (fertilizerAPI as any).isServiceAvailable();
-                } else {
-                    // Fallback: assume service is available if the method is not implemented on this build
-                    console.warn('⚠ fertilizerAPI.isServiceAvailable not implemented; assuming service is available.');
-                    isAvailable = true;
-                }
-            } catch (err) {
-                console.warn('⚠ Error checking service availability, proceeding with assumption that service is available.', err);
-                isAvailable = true;
-            }
-            console.log(`📡 API availability result: ${isAvailable ? '✅ Available' : '❌ Unavailable'}`);
+            // Step 1: Use backend API to call Roboflow
+            console.log('🤖 Step 1: Calling backend Roboflow API...');
+            const roboflowResult = await fertilizerAPI.analyzeLeafWithRoboflow(imageUri);
 
-            if (!isAvailable) {
-                throw new Error('ML service is not available. Please check backend connection.');
-            }
+            console.log('✅ Roboflow detection completed:', roboflowResult);
 
-            setAnalysisProgress('Analyzing leaf condition...');
-            console.log('🔬 Step 2: Starting ML analysis...');
+            setIsAnalyzing(false);
 
-            // Get session ID from route params or create one
-            let sessionId: string | undefined;
-            try {
-                sessionId = await metadataStorageService.createSession();
-                console.log(`📋 Session created: ${sessionId}`);
-            } catch (error) {
-                console.log('⚠ Failed to create session, continuing without session tracking');
-            }
-
-            // Analyze the leaf using available method
-            console.log('🔬 Step 3: Calling ML analysis API...');
-
-            let analysis: FertilizerAnalysisResponse | null = null;
-
-            if (leafMetadata && leafMetadata.leafFeatures && leafMetadata.leafFeatures.colorDistribution && leafMetadata.leafFeatures.visibleDefects) {
-                // Use feature-based analysis when metadata is available
-                console.log('🧬 Using feature-based analysis with extracted metadata:', leafMetadata.leafFeatures);
-                analysis = await fertilizerAPI.analyzeLeafFeatures(leafMetadata.leafFeatures, leafMetadata.quality, sessionId);
-            } else {
-                // Fall back to image-based analysis
-                console.log('🖼 Using image-based analysis (no metadata available)');
-                analysis = await fertilizerAPI.analyzeLeafImage(imageUri, sessionId);
-            }
-
-            if (!analysis) {
-                throw new Error('Failed to analyze leaf. Please try again.');
-            }
-
-            if (!analysis) {
-                throw new Error('Failed to analyze leaf image. Please try again.');
-            }
-
-            console.log('✅ ML Analysis completed successfully:', analysis);
-
-            setAnalysisProgress('Getting recommendations...');
-            console.log('💡 Step 4: Fetching recommendations...');
-
-            // Get detailed recommendations
-            const recommendations = await fertilizerAPI.getDetailedRecommendations(
-                analysis.predicted_deficiency,
-                analysis.severity,
-                sessionId
-            );
-
-            console.log('✅ Recommendations received:', recommendations);
-
-            // Update analysis with recommendations
-            analysis.recommendations = recommendations;
-            setAnalysisResult(analysis);
-
-            setAnalysisProgress('Analysis complete!');
-            console.log('🎉 Step 5: Analysis process completed successfully!');
-
-            // Complete the session
-            if (sessionId) {
-                try {
-                    await metadataStorageService.completeSession(
-                        sessionId,
-                        `${analysis.predicted_deficiency} detected with ${analysis.severity} severity`,
-                        {
-                            deficiency: analysis.predicted_deficiency,
-                            confidence: analysis.confidence,
-                            recommendations: recommendations
-                        }
-                    );
-                    console.log('✅ Session completed successfully');
-                } catch (error) {
-                    console.log('⚠ Failed to complete session, but analysis succeeded');
-                }
-            }
-
-            console.log('🔬 ML Analysis Summary:', {
-                deficiency: analysis.predicted_deficiency,
-                confidence: analysis.confidence,
-                severity: analysis.severity,
-                recommendationsCount: recommendations.length,
-                sessionId: sessionId
-            });
-
-            // Detailed analysis data before navigation
-            console.log('🎯 Full analysis data being passed to results:', {
-                mlAnalysis: analysis,
-                detectedIssuesCount: analysis.detected_issues?.length || 0,
-                hasRecommendations: recommendations.length > 0,
-                analysisKeys: Object.keys(analysis)
-            });
-
-            // Navigate to results with real ML data
-            console.log('🎯 Navigating to results screen with ML data...');
+            // Navigate directly to show Roboflow output
+            console.log('🎯 Navigating to results with Roboflow data...');
             navigation.navigate('FertilizerResult', {
                 leafImage: imageUri,
-                analysisType: 'leaf-only',
-                mlAnalysis: analysis // Pass the real ML analysis data
+                analysisType: 'leaf-only' as const, // Use valid type
+                roboflowAnalysis: roboflowResult // Pass Roboflow data from backend
             });
 
         } catch (error) {

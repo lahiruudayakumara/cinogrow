@@ -15,8 +15,15 @@ load_dotenv()
 # Import database and routers
 from app.database import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
+<<<<<<< HEAD
+from app.routers.fertilizer.roboflow_simple import router as roboflow_simple_router
+
+# Import your oil yield router
+from app.oil_yield.router import router as oil_yield_router
+=======
 # from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router
 # from app.routers.fertilizer.ml_metadata_api import router as ml_metadata_router
+>>>>>>> e5ac0ac2e3087b53595e455761f423ba8a3af5e6
 
 # Create FastAPI app
 app = FastAPI(
@@ -25,6 +32,12 @@ app = FastAPI(
     version='1.0.0'
 )
 
+<<<<<<< HEAD
+# Enable CORS for frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can replace "*" with your frontend URL for production
+=======
 # Configure CORS
 
 # Import your oil yield router
@@ -36,6 +49,7 @@ app = FastAPI(title="Cinogrow Backend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
+>>>>>>> e5ac0ac2e3087b53595e455761f423ba8a3af5e6
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
@@ -57,8 +71,12 @@ async def startup_event():
     Base.metadata.create_all(bind=engine)
 
 # Include routers
+<<<<<<< HEAD
+app.include_router(roboflow_simple_router, prefix='/api/v1')  # Roboflow deficiency detection
+=======
 # app.include_router(fertilizer_router, prefix='/api/v1/fertilizer')
 # app.include_router(ml_metadata_router, prefix='/api/v1')
+>>>>>>> e5ac0ac2e3087b53595e455761f423ba8a3af5e6
 app.include_router(weather.router, prefix="/api/v1")
 app.include_router(farm.router, prefix="/api/v1")
 app.include_router(farm_assistance.router, prefix="/api/v1")

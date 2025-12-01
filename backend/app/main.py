@@ -11,7 +11,7 @@ load_dotenv()
 
 # Import database and routers
 from app.database import create_db_and_tables
-from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
+from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction, hybrid_prediction
 # from app.routers.fertilizer.fertilizer_detection_real import router as fertilizer_router  # Temporarily disabled due to missing model
 # from app.oil_yield.router import router as oil_yield_router  # Temporarily disabled due to missing model
 # from app.routers.fertilizer.ml_metadata_api import router as ml_metadata_router
@@ -53,6 +53,7 @@ app.include_router(weather.router, prefix="/api/v1")
 app.include_router(farm.router, prefix="/api/v1")
 app.include_router(farm_assistance.router, prefix="/api/v1")
 app.include_router(yield_prediction.router, prefix="/api/v1")
+app.include_router(hybrid_prediction.router, prefix="/api/v1")
 
 @app.get('/')
 async def root():

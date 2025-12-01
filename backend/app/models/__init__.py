@@ -25,6 +25,8 @@ from .fertilizer.deficiency_detection import (
     ImageAnalysisLog
 )
 
+from .user import User
+
 __all__ = [
     "Farm", 
     "Plot", 

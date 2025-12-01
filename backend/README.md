@@ -60,6 +60,10 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Your server will start on `http://localhost:8000`
 
+**Network Access**: To access from other devices, replace `localhost` with your machine's IP address.
+- Find your IP: `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
+- Example: `http://192.168.1.100:8000`
+
 ## 📡 API Endpoints
 
 ### Weather Endpoints

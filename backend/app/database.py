@@ -5,26 +5,21 @@ from typing import Generator
 # Import all models to ensure they are registered with SQLModel
 from app.models import *
 
-# Get database URL from environment variables
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///cinogrow_dev.db")
+# Get database URL from environment variables (PostgreSQL required)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable must be set. Please configure PostgreSQL connection.")
 
-# Create database engine with appropriate settings for SQLite or PostgreSQL
-if DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(
-        DATABASE_URL,
-        echo=True if os.getenv("DEBUG", "False").lower() == "true" else False,
-        connect_args={"check_same_thread": False}
-    )
-else:
-    engine = create_engine(
-        DATABASE_URL,
-        echo=True if os.getenv("DEBUG", "False").lower() == "true" else False,
-        pool_pre_ping=True,
-        pool_recycle=300,
-        connect_args={
-            "options": "-c timezone=utc"
-        }
-    )
+# Create database engine for PostgreSQL
+engine = create_engine(
+    DATABASE_URL,
+    echo=True if os.getenv("DEBUG", "False").lower() == "true" else False,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    connect_args={
+        "options": "-c timezone=utc"
+    }
+)
 
 
 def create_db_and_tables():

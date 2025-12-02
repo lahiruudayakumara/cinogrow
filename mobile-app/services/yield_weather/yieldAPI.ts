@@ -72,7 +72,7 @@ class YieldAPI {
 
   // User Yield Records
   async createUserYieldRecord(record: Omit<UserYieldRecord, 'yield_id' | 'created_at' | 'plot_name'>): Promise<UserYieldRecord> {
-    return this.request('/yield-records', {
+    return this.request('/yield-weather/yield-records', {
       method: 'POST',
       body: JSON.stringify(record),
     });
@@ -206,7 +206,7 @@ class YieldAPI {
 
     console.log('🌳 Making real hybrid prediction request:', requestBody);
     
-    return this.request('/hybrid-prediction', {
+    return this.request('/yield-weather/hybrid-prediction', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -234,7 +234,7 @@ class YieldAPI {
   }
 
   async getModelInfo(): Promise<any> {
-    return this.request('/ml/model-info');
+    return this.request('/yield-weather/ml/model-info');
   }
 
   async trainModel(retrain: boolean = false): Promise<any> {
@@ -364,11 +364,11 @@ class YieldAPI {
 
   // Dataset operations (for admin/testing)
   async getYieldDataset(): Promise<YieldDatasetRecord[]> {
-    return this.request('/yield-dataset');
+    return this.request('/yield-weather/yield-dataset');
   }
 
   async createYieldDatasetRecord(record: Omit<YieldDatasetRecord, 'id'>): Promise<YieldDatasetRecord> {
-    return this.request('/yield-dataset', {
+    return this.request('/yield-weather/yield-dataset', {
       method: 'POST',
       body: JSON.stringify(record),
     });

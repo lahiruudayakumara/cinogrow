@@ -20,7 +20,7 @@ except ImportError:
     logging.warning("⚠️ inference-sdk not installed. Run: pip install inference-sdk")
 
 # Load environment variables
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), '../../../..', '.env'))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

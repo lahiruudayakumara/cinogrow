@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -13,11 +12,13 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { YieldWeatherStackParamList } from '../../navigation/YieldWeatherNavigator';
 import { plantingRecordsAPI, PlantingRecord, Plot } from '../../services/yield_weather/plantingRecordsAPI';
+import { farmAPI } from '../../services/yield_weather/farmAPI';
 import DatePicker from '../../components/ui/DatePicker';
 import { CinnamonVarietyPicker } from '../../components/CinnamonVarietyPicker';
 import { DEFAULT_CINNAMON_VARIETY } from '../../constants/CinnamonVarieties';
@@ -118,8 +119,23 @@ const MyPlantingRecords = () => {
     }
     
     try {
-      const records = await plantingRecordsAPI.getUserPlantingRecords(USER_ID);
-      setPlantingRecords(records || []);
+      // Get all farms and then load planting records for each farm
+      const farms = await farmAPI.getFarms();
+      let allRecords: any[] = [];
+      
+      for (const farm of farms) {
+        if (farm.id) {
+          try {
+            const farmRecords = await plantingRecordsAPI.getFarmPlantingRecords(farm.id);
+            allRecords = [...allRecords, ...farmRecords];
+          } catch (farmError) {
+            console.warn(`Failed to get planting records for farm ${farm.id}:`, farmError);
+            // Continue with other farms
+          }
+        }
+      }
+      
+      setPlantingRecords(allRecords || []);
     } catch (error) {
       console.error('Failed to load planting records from backend:', error);
       setPlantingRecords([]);

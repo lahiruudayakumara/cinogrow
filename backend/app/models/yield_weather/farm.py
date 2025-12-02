@@ -39,15 +39,22 @@ class Farm(SQLModel, table=True):
 
 
 class Plot(SQLModel, table=True):
-    """Database model for farm plots - contains only core form data"""
+    """Database model for farm plots"""
     __tablename__ = "plots"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     farm_id: int = Field(foreign_key="farms.id")
     name: str = Field(max_length=100)
     area: float  # in hectares
-    crop_type: Optional[str] = Field(default="Ceylon Cinnamon", max_length=100)  # Cinnamon variety from form
+    crop_type: Optional[str] = Field(default="Ceylon Cinnamon", max_length=100)
     notes: Optional[str] = Field(default=None, max_length=1000)
+    status: str = Field(default="PREPARING", max_length=50)  # Plot status
+    planting_date: Optional[datetime] = Field(default=None)
+    expected_harvest_date: Optional[datetime] = Field(default=None)
+    age_months: Optional[int] = Field(default=None)
+    progress_percentage: int = Field(default=0)
+    seedling_count: int = Field(default=0)  # Number of seedlings planted
+    cinnamon_variety: str = Field(default="Ceylon Cinnamon", max_length=100)  # Cinnamon variety
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
@@ -55,72 +62,6 @@ class Plot(SQLModel, table=True):
     farm: Farm = Relationship(back_populates="plots")
     planting_records: List["PlantingRecord"] = Relationship(back_populates="plot")
     trees: List["Tree"] = Relationship(back_populates="plot")
-    
-    @property
-    def status(self) -> PlotStatus:
-        """Calculate status based on planting records"""
-        if not self.planting_records:
-            return PlotStatus.PREPARING
-        
-        # Get the most recent planting record
-        latest_planting = max(self.planting_records, key=lambda x: x.planted_date)
-        days_since_planting = (datetime.utcnow() - latest_planting.planted_date).days
-        
-        if days_since_planting < 30:
-            return PlotStatus.PLANTED
-        elif days_since_planting < 365:
-            return PlotStatus.GROWING
-        elif days_since_planting < 1095:  # 3 years
-            return PlotStatus.GROWING
-        else:
-            return PlotStatus.MATURE
-    
-    @property
-    def planting_date(self) -> Optional[datetime]:
-        """Get planting date from most recent planting record"""
-        if not self.planting_records:
-            return None
-        return max(self.planting_records, key=lambda x: x.planted_date).planted_date
-    
-    @property
-    def age_months(self) -> Optional[int]:
-        """Calculate age in months from planting date"""
-        if not self.planting_date:
-            return None
-        return int((datetime.utcnow() - self.planting_date).days / 30.44)  # Average days per month
-    
-    @property
-    def progress_percentage(self) -> int:
-        """Calculate progress percentage based on age"""
-        if not self.age_months:
-            return 0
-        
-        # Cinnamon is typically ready to harvest after 36 months
-        progress = min(100, int((self.age_months / 36) * 100))
-        return progress
-    
-    @property
-    def expected_harvest_date(self) -> Optional[datetime]:
-        """Calculate expected harvest date (36 months after planting)"""
-        if not self.planting_date:
-            return None
-        return self.planting_date + timedelta(days=1095)  # 3 years
-    
-    @property
-    def seedling_count(self) -> int:
-        """Get total seedling count from planting records"""
-        if not self.planting_records:
-            return 0
-        return sum(record.seedling_count for record in self.planting_records)
-    
-    @property
-    def cinnamon_variety(self) -> Optional[str]:
-        """Get cinnamon variety from most recent planting record or crop_type"""
-        if self.planting_records:
-            latest_planting = max(self.planting_records, key=lambda x: x.planted_date)
-            return latest_planting.cinnamon_variety
-        return self.crop_type
-
 
 
 class FarmActivity(SQLModel, table=True):
@@ -186,6 +127,8 @@ class PlotCreate(BaseModel):
     area: float
     crop_type: Optional[str] = "Ceylon Cinnamon"
     notes: Optional[str] = None
+    seedling_count: int = 0
+    cinnamon_variety: str = "Ceylon Cinnamon"
 
 
 class PlotUpdate(BaseModel):
@@ -193,6 +136,8 @@ class PlotUpdate(BaseModel):
     area: Optional[float] = None
     crop_type: Optional[str] = None
     notes: Optional[str] = None
+    seedling_count: Optional[int] = None
+    cinnamon_variety: Optional[str] = None
 
 
 class PlotRead(BaseModel):
@@ -204,16 +149,15 @@ class PlotRead(BaseModel):
     area: float
     crop_type: Optional[str]
     notes: Optional[str]
+    status: str
+    planting_date: Optional[datetime]
+    expected_harvest_date: Optional[datetime]
+    age_months: Optional[int]
+    progress_percentage: int
+    seedling_count: int
+    cinnamon_variety: str
     created_at: datetime
-    
-    # Computed properties (will be set manually)
-    status: Optional[str] = None
-    planting_date: Optional[datetime] = None
-    expected_harvest_date: Optional[datetime] = None
-    age_months: Optional[int] = None
-    progress_percentage: Optional[int] = None
-    seedling_count: Optional[int] = None
-    cinnamon_variety: Optional[str] = None
+    updated_at: datetime
 
 
 # Pydantic models for PlantingRecord API

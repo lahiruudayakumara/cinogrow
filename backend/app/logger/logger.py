@@ -3,13 +3,13 @@ import sys
 import os
 from logging.handlers import RotatingFileHandler
 
-# Emoji map for log levels
+# Plain text map for log levels to avoid Unicode issues on Windows
 LEVEL_EMOJI = {
-    logging.DEBUG: "🐛 DEBUG",
-    logging.INFO: "ℹ️ INFO",
-    logging.WARNING: "⚠️ WARNING",
-    logging.ERROR: "❌ ERROR",
-    logging.CRITICAL: "💥 CRITICAL"
+    logging.DEBUG: "DEBUG",
+    logging.INFO: "INFO", 
+    logging.WARNING: "WARNING",
+    logging.ERROR: "ERROR",
+    logging.CRITICAL: "CRITICAL"
 }
 
 class EmojiFormatter(logging.Formatter):

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -11,9 +10,12 @@ import {
   RefreshControl,
   TextInput,
   Modal,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { YieldWeatherStackParamList } from '../../navigation/YieldWeatherNavigator';
 import { farmAPI, type Farm, type Plot, type Activity } from '../../services/yield_weather/farmAPI';
@@ -28,6 +30,8 @@ const MyFarm = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [farm, setFarm] = useState<Farm | null>(null);
+  const [availableFarms, setAvailableFarms] = useState<Farm[]>([]);
+  const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
   const [plots, setPlots] = useState<Plot[]>([]);
   const [plantingRecords, setPlantingRecords] = useState<PlantingRecord[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -54,38 +58,99 @@ const MyFarm = () => {
         setLoading(true);
       }
 
-      // Check if backend is available
-      const isBackendAvailable = await farmAPI.testConnection();
-      
-      if (isBackendAvailable) {
-        // Use real API
-        const farms = await farmAPI.getFarms();
+      // Add timeout wrapper for the entire operation
+      const operationTimeout = new Promise<void>((_, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Operation timeout after 30 seconds'));
+        }, 30000);
         
-        if (farms && farms.length > 0) {
-          const farmData = farms[0]; // Use first farm for this user
-          setFarm(farmData);
-          setFarmName(farmData.name);
-          setOwnerName(farmData.owner_name);
-          setFarmLocation(farmData.location);
-          setFarmArea(farmData.total_area.toString());
-          setIsEditing(true);
+        // Clear timeout if operation completes normally
+        return timeoutId;
+      });
 
-          // Load plots and activities
-          await loadPlotsAndActivities(farmData.id!);
+      await Promise.race([
+        (async () => {
+          console.log('🚀 Starting loadFarmData operation...');
+          
+          // Check if backend is available with simpler error handling
+          let isBackendAvailable = false;
+          try {
+            isBackendAvailable = await farmAPI.testConnection();
+            console.log('🔗 Backend availability:', isBackendAvailable);
+          } catch (connectionError) {
+            console.warn('⚠️ Connection test failed:', connectionError);
+            isBackendAvailable = false;
+          }
+          
+          if (isBackendAvailable) {
+            try {
+              // Use real API
+              console.log('📡 Fetching farms from API...');
+              const farms = await farmAPI.getFarms();
+              console.log('📊 Received farms:', farms);
+              setAvailableFarms(farms);
+              
+              if (farms && farms.length > 0) {
+                // Set selected farm if none is selected or if current selection is not available
+                let farmToSelect = farms[0]; // Default to first farm
+                if (selectedFarmId) {
+                  const existingFarm = farms.find(f => f.id === selectedFarmId);
+                  if (existingFarm) {
+                    farmToSelect = existingFarm;
+                  }
+                }
+                
+                setSelectedFarmId(farmToSelect.id!);
+                // Store selected farm ID in AsyncStorage for other screens to access
+                await AsyncStorage.setItem('selectedFarmId', farmToSelect.id!.toString());
+                
+                setFarm(farmToSelect);
+                setFarmName(farmToSelect.name);
+                setOwnerName(farmToSelect.owner_name);
+                setFarmLocation(farmToSelect.location);
+                setFarmArea(farmToSelect.total_area.toString());
+                setIsEditing(true);
+
+                // Load plots and activities for selected farm
+                console.log('📍 Loading plots and activities...');
+                await loadPlotsAndActivities(farmToSelect.id!);
+                console.log('✅ Farm data loaded successfully');
+              } else {
+                // No farm found, show empty form
+                console.log('ℹ️ No farms found, showing empty form');
+                setIsEditing(false);
+                clearForm();
+              }
+            } catch (apiError) {
+              console.error('❌ API error:', apiError);
+              throw apiError;
+            }
+          } else {
+            // Backend not available - show error
+            throw new Error('Backend not available - connection test failed');
+          }
+        })(),
+        operationTimeout
+      ]);
+    } catch (error) {
+      console.error('❌ Error loading farm data:', error);
+      
+      // More specific error handling
+      if (error instanceof Error) {
+        if (error.message.includes('timeout') || error.message.includes('undefined is not a function')) {
+          Alert.alert(
+            'Connection Issue',
+            'Unable to connect to the server. Please check if the backend is running and try again.',
+            [{ text: 'OK' }]
+          );
         } else {
-          // No farm found, show empty form
-          setIsEditing(false);
-          clearForm();
+          Alert.alert('Error', `Failed to load farm data: ${error.message}`);
         }
       } else {
-        // Backend not available - show error
-        throw new Error('Backend not available');
+        Alert.alert('Error', 'An unexpected error occurred while loading farm data.');
       }
-    } catch (error) {
-      console.error('Error loading farm data:', error);
-      Alert.alert('Error', 'Failed to load farm data. Please check your connection and try again.');
       
-      // No fallback - force user to fix connection
+      // Clear state on error
       setFarm(null);
       setPlots([]);
       setActivities([]);
@@ -98,38 +163,73 @@ const MyFarm = () => {
 
   const loadPlotsAndActivities = async (farmId: number) => {
     try {
-      // Check if backend is available
-      const isBackendAvailable = await farmAPI.testConnection();
-      
-      if (isBackendAvailable) {
-        // Load real data from API
-        const plotsData = await farmAPI.getFarmPlots(farmId);
-        setPlots(plotsData);
-        setNumPlots(plotsData.length.toString());
+      // Add timeout wrapper
+      const operationTimeout = new Promise<void>((_, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Plot operation timeout after 25 seconds'));
+        }, 25000);
+        
+        return timeoutId;
+      });
 
-        // Load planting records for the plots
-        try {
-          const plantingRecordsData = await plantingRecordsAPI.getUserPlantingRecords(USER_ID);
-          setPlantingRecords(plantingRecordsData);
-        } catch (plantingError) {
-          console.warn('Could not load planting records:', plantingError);
-          setPlantingRecords([]);
-        }
+      await Promise.race([
+        (async () => {
+          console.log('🌱 Starting loadPlotsAndActivities operation...');
+          
+          // Check if backend is available with simpler error handling
+          let isBackendAvailable = false;
+          try {
+            isBackendAvailable = await farmAPI.testConnection();
+            console.log('🔗 Backend availability for plots:', isBackendAvailable);
+          } catch (connectionError) {
+            console.warn('⚠️ Connection test failed in loadPlotsAndActivities:', connectionError);
+            isBackendAvailable = false;
+          }
+          
+          if (isBackendAvailable) {
+            try {
+              // Load real data from API
+              console.log('📊 Fetching plots from API...');
+              const plotsData = await farmAPI.getFarmPlots(farmId);
+              console.log('📍 Received plots:', plotsData);
+              setPlots(plotsData);
+              setNumPlots(plotsData.length.toString());
 
-        // For now, set empty activities since we don't have activity endpoints yet
-        setActivities([]);
-      } else {
-        // Backend not available
-        throw new Error('Backend not available');
-      }
+              // Load planting records for this farm
+              try {
+                console.log('🌱 Fetching planting records for farm:', farmId);
+                const plantingRecordsData = await plantingRecordsAPI.getFarmPlantingRecords(farmId);
+                console.log('📋 Received planting records:', plantingRecordsData);
+                setPlantingRecords(plantingRecordsData);
+              } catch (plantingError) {
+                console.warn('⚠️ Could not load planting records:', plantingError);
+                setPlantingRecords([]);
+              }
+
+              // For now, set empty activities since we don't have activity endpoints yet
+              setActivities([]);
+              console.log('✅ Plots and activities loaded successfully');
+            } catch (apiError) {
+              console.error('❌ API error in loadPlotsAndActivities:', apiError);
+              throw apiError;
+            }
+          } else {
+            // Backend not available
+            throw new Error('Backend not available for plots operation');
+          }
+        })(),
+        operationTimeout
+      ]);
     } catch (error) {
-      console.error('Error loading plots and activities:', error);
+      console.error('❌ Error loading plots and activities:', error);
       
-      // No fallback - clear data
+      // Clear data on error
       setPlots([]);
       setActivities([]);
       setPlantingRecords([]);
       setNumPlots('0');
+      
+      // Don't show error alert here since parent function will handle it
     }
   };
 
@@ -230,6 +330,39 @@ const MyFarm = () => {
     setFarmArea('');
     setNumPlots('1');
     setPlantingRecords([]);
+  };
+
+  // Get selected farm name for dropdown display
+  const getSelectedFarmName = () => {
+    if (!selectedFarmId) return 'Select Farm';
+    const selectedFarm = availableFarms.find(farm => farm.id === selectedFarmId);
+    return selectedFarm ? selectedFarm.name : 'Select Farm';
+  };
+
+  // Handle farm selection change
+  const handleFarmChange = async (farmId: number) => {
+    try {
+      setSelectedFarmId(farmId);
+      const selectedFarm = availableFarms.find(farm => farm.id === farmId);
+      
+      // Store selected farm ID in AsyncStorage for other screens to access
+      await AsyncStorage.setItem('selectedFarmId', farmId.toString());
+      
+      if (selectedFarm) {
+        setFarm(selectedFarm);
+        setFarmName(selectedFarm.name);
+        setOwnerName(selectedFarm.owner_name);
+        setFarmLocation(selectedFarm.location);
+        setFarmArea(selectedFarm.total_area.toString());
+        setIsEditing(true);
+        
+        // Load plots and activities for selected farm
+        await loadPlotsAndActivities(farmId);
+      }
+    } catch (error) {
+      console.error('❌ Error changing farm:', error);
+      Alert.alert('Error', 'Failed to load farm data. Please try again.');
+    }
   };
 
   const generatePlots = (farmId: number, numberOfPlots: number, totalArea: number): Plot[] => {
@@ -585,6 +718,50 @@ const MyFarm = () => {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Farm Selection Dropdown */}
+        {availableFarms.length > 1 && (
+          <View style={styles.farmSelectionCard}>
+            <View style={styles.farmSelectionHeader}>
+              <Ionicons name="business" size={20} color="#4CAF50" />
+              <Text style={styles.farmSelectionTitle}>Select Farm</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.farmDropdown}
+              onPress={() => {
+                if (availableFarms.length === 0) {
+                  Alert.alert('No Farms Available', 'No farms found. Please create a farm first.');
+                  return;
+                }
+                
+                Alert.alert(
+                  'Select Farm',
+                  'Choose a farm to view and manage:',
+                  availableFarms.map(farm => ({
+                    text: `${farm.name} (${farm.num_plots} plots, ${farm.total_area} ha)`,
+                    onPress: () => handleFarmChange(farm.id!),
+                  })).concat([
+                    { text: 'Cancel', onPress: () => {} }
+                  ])
+                );
+              }}
+            >
+              <Text style={styles.farmDropdownText}>
+                {getSelectedFarmName()}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+            {selectedFarmId && (
+              <View style={styles.farmSummary}>
+                <Text style={styles.farmSummaryText}>
+                  📍 {availableFarms.find(f => f.id === selectedFarmId)?.location} • 
+                  📊 {plots.length} plots • 
+                  📏 {availableFarms.find(f => f.id === selectedFarmId)?.total_area} ha
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Farm Details Card */}
         <View style={styles.farmCard}>
@@ -1322,6 +1499,61 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#10B981',
     fontWeight: '500',
+  },
+  // Farm Selection Styles
+  farmSelectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  farmSelectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  farmSelectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  farmDropdown: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  farmDropdownText: {
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  farmSummary: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  farmSummaryText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
   },
 });
 

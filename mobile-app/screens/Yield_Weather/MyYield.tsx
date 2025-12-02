@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -12,15 +11,17 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { YieldWeatherStackParamList } from '../../navigation/YieldWeatherNavigator';
 import DatePicker from '../../components/ui/DatePicker';
 
 // API imports
 import { yieldAPI, UserYieldRecord } from '../../services/yield_weather/yieldAPI';
-import { farmAPI, Plot } from '../../services/yield_weather/farmAPI';
+import { farmAPI, Farm, Plot } from '../../services/yield_weather/farmAPI';
 
 // Extended Plot interface with farm context
 interface PlotWithFarmInfo extends Plot {
@@ -39,6 +40,8 @@ const MyYieldScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [userYieldRecords, setUserYieldRecords] = useState<UserYieldRecord[]>([]);
   const [availablePlots, setAvailablePlots] = useState<PlotWithFarmInfo[]>([]);
+  const [availableFarms, setAvailableFarms] = useState<Farm[]>([]);
+  const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
   
   // Form state
   const [showAddYieldModal, setShowAddYieldModal] = useState(false);
@@ -95,6 +98,17 @@ const MyYieldScreen = () => {
       }
       setError(null);
 
+      // Get selected farm ID from AsyncStorage
+      const savedFarmId = await AsyncStorage.getItem('selectedFarmId');
+      let targetFarmId = selectedFarmId;
+      
+      if (savedFarmId) {
+        targetFarmId = parseInt(savedFarmId);
+        if (targetFarmId !== selectedFarmId) {
+          setSelectedFarmId(targetFarmId);
+        }
+      }
+
       // Load all required data in parallel
       const [farmsData, userYieldsData] = await Promise.all([
         farmAPI.getFarms(),
@@ -102,29 +116,57 @@ const MyYieldScreen = () => {
       ]);
 
       console.log(`🏭 Loaded ${farmsData.length} farms:`, farmsData.map(f => f.name));
+      setAvailableFarms(farmsData);
+      
+      // Set selected farm if none is selected
+      if (!targetFarmId && farmsData.length > 0 && farmsData[0].id) {
+        targetFarmId = farmsData[0].id;
+        setSelectedFarmId(targetFarmId);
+        await AsyncStorage.setItem('selectedFarmId', targetFarmId.toString());
+      }
 
-      // Get all plots from all farms with farm context
+      // Get plots only from selected farm (or all if no farm selected)
       let allPlots: PlotWithFarmInfo[] = [];
-      for (const farm of farmsData) {
-        if (farm.id) {
+      
+      if (targetFarmId) {
+        // Load plots only from selected farm
+        const selectedFarm = farmsData.find(f => f.id === targetFarmId);
+        if (selectedFarm) {
           try {
-            const farmPlots = await farmAPI.getFarmPlots(farm.id);
-            console.log(`🌱 Farm "${farm.name}" has ${farmPlots.length} plots:`, farmPlots.map(p => p.name));
+            const farmPlots = await farmAPI.getFarmPlots(targetFarmId);
+            console.log(`🌱 Selected Farm "${selectedFarm.name}" has ${farmPlots.length} plots:`, farmPlots.map(p => p.name));
             
             // Add farm context to each plot
             const plotsWithFarmInfo: PlotWithFarmInfo[] = farmPlots.map(plot => ({
               ...plot,
-              farm_name: farm.name,
-              farm_location: farm.location
+              farm_name: selectedFarm.name,
+              farm_location: selectedFarm.location
             }));
-            allPlots = [...allPlots, ...plotsWithFarmInfo];
+            allPlots = plotsWithFarmInfo;
           } catch (plotError) {
-            console.error(`❌ Failed to load plots for farm ${farm.name} (${farm.id}):`, plotError);
+            console.error(`❌ Failed to load plots for farm ${selectedFarm.name} (${targetFarmId}):`, plotError);
+          }
+        }
+      } else {
+        // Load all plots if no specific farm is selected (fallback)
+        for (const farm of farmsData) {
+          if (farm.id) {
+            try {
+              const farmPlots = await farmAPI.getFarmPlots(farm.id);
+              const plotsWithFarmInfo: PlotWithFarmInfo[] = farmPlots.map(plot => ({
+                ...plot,
+                farm_name: farm.name,
+                farm_location: farm.location
+              }));
+              allPlots = [...allPlots, ...plotsWithFarmInfo];
+            } catch (plotError) {
+              console.error(`❌ Failed to load plots for farm ${farm.name} (${farm.id}):`, plotError);
+            }
           }
         }
       }
       
-      console.log(`📊 Total plots loaded: ${allPlots.length}`);
+      console.log(`📊 Plots loaded for selected farm: ${allPlots.length}`);
       console.log(`📝 Plot details:`, allPlots.map(p => ({
         name: p.name,
         farm: p.farm_name,
@@ -210,6 +252,27 @@ const MyYieldScreen = () => {
     loadData();
   }, []);
 
+  // Reload data when screen comes into focus (e.g., returning from MyFarm screen)
+  useFocusEffect(
+    React.useCallback(() => {
+      // Check if selected farm has changed
+      AsyncStorage.getItem('selectedFarmId')
+        .then(savedFarmId => {
+          if (savedFarmId) {
+            const farmId = parseInt(savedFarmId);
+            // Check if we need to reload data for a different farm
+            if (selectedFarmId !== farmId) {
+              setSelectedFarmId(farmId);
+              loadData();
+            }
+          }
+        })
+        .catch(error => {
+          console.warn('Failed to read selected farm ID:', error);
+        });
+    }, [selectedFarmId])
+  );
+
   const formatYield = (amount: number) => `${amount.toFixed(1)} kg`;
   const formatDate = (dateString: string) => {
     try {
@@ -217,6 +280,30 @@ const MyYieldScreen = () => {
     } catch {
       return dateString;
     }
+  };
+
+  // Get plots filtered by selected farm
+  const getFilteredPlots = () => {
+    // Since we now only load plots from selected farm, return all available plots
+    return availablePlots;
+  };
+
+  // Get selected farm name
+  const getSelectedFarmName = () => {
+    const selectedFarm = availableFarms.find(farm => farm.id === selectedFarmId);
+    return selectedFarm ? selectedFarm.name : 'No Farm Selected';
+  };
+
+  // Handle farm selection change
+  const handleFarmChange = (farmId: number) => {
+    setSelectedFarmId(farmId);
+    setSelectedPlotId(null); // Clear plot selection when farm changes
+    setTreesCompletedForPlot(null);
+    setHybridYieldResult(null);
+    // Store in AsyncStorage and reload data
+    AsyncStorage.setItem('selectedFarmId', farmId.toString()).then(() => {
+      loadData();
+    });
   };
 
   const getSelectedPlotName = () => {
@@ -612,7 +699,7 @@ const MyYieldScreen = () => {
               {!selectedPlotId ? (
                 <View>
                   <Text style={styles.instructionTitle}>How to Use Hybrid Yield Prediction:</Text>
-                  <Text style={styles.instructionText}>1. Select a mature plot (age {'>'}3 years) from the dropdown above</Text>
+                  <Text style={styles.instructionText}>1. Select a plot with "HARVESTING" status from the dropdown above</Text>
                   <Text style={styles.instructionText}>2. Click "Add Tree Data" to collect measurements from 10 random trees</Text>
                   <Text style={styles.instructionText}>3. Get AI-powered hybrid prediction combining tree and plot data</Text>
                   
@@ -627,7 +714,7 @@ const MyYieldScreen = () => {
                 <View>
                   <Text style={styles.instructionTitle}>Next Step: Tree Data Collection</Text>
                   <Text style={styles.instructionText}>
-                    Plot selected: {availablePlots.find(p => p.id === selectedPlotId)?.name}
+                    Plot selected: {getFilteredPlots().find(p => p.id === selectedPlotId)?.name}
                   </Text>
                   <Text style={styles.instructionText}>
                     Click "Add Tree Data" below to collect measurements from 10 random trees for hybrid yield prediction.
@@ -637,6 +724,64 @@ const MyYieldScreen = () => {
             </View>
           </View>
         )}
+
+        {/* Farm Selection Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="business" size={20} color="#4CAF50" />
+            <Text style={styles.sectionTitle}>Select Farm</Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.dropdown}
+            onPress={() => {
+              if (availableFarms.length === 0) {
+                Alert.alert('No Farms Available', 'No farms found. Please create a farm first.');
+                return;
+              }
+              
+              Alert.alert(
+                'Select Farm',
+                'Choose a farm to view its plots:',
+                availableFarms.map(farm => ({
+                  text: `${farm.name} (${farm.num_plots} plots, ${farm.total_area} ha)`,
+                  onPress: () => handleFarmChange(farm.id!),
+                })).concat([
+                  { text: 'Cancel', onPress: () => {} }
+                ])
+              );
+            }}
+          >
+            <Text style={[styles.dropdownText, !selectedFarmId && styles.placeholderText]}>
+              {getSelectedFarmName()}
+            </Text>
+            <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          {selectedFarmId && (
+            <View style={styles.farmInfo}>
+              {(() => {
+                const farm = availableFarms.find(f => f.id === selectedFarmId);
+                if (!farm) return null;
+                const farmPlots = getFilteredPlots();
+                const harvestingPlots = farmPlots.filter(p => p.status === 'HARVESTING');
+                return (
+                  <>
+                    <Text style={styles.plotInfoText}>
+                      <Ionicons name="location" size={14} color="#6B7280" /> Location: {farm.location}
+                    </Text>
+                    <Text style={styles.plotInfoText}>
+                      <Ionicons name="resize" size={14} color="#6B7280" /> Total Area: {farm.total_area} hectares
+                    </Text>
+                    <Text style={styles.plotInfoText}>
+                      <Ionicons name="grid" size={14} color="#6B7280" /> Plots: {farmPlots.length} total, {harvestingPlots.length} ready for harvest
+                    </Text>
+                  </>
+                );
+              })()}
+            </View>
+          )}
+        </View>
 
         {/* Plot Selection Section */}
         <View style={styles.section}>
@@ -648,14 +793,19 @@ const MyYieldScreen = () => {
           <TouchableOpacity 
             style={styles.dropdown}
             onPress={() => {
-              if (availablePlots.length === 0) {
+              if (!selectedFarmId) {
+                Alert.alert('No Farm Selected', 'Please select a farm first.');
+                return;
+              }
+              
+              const filteredPlots = getFilteredPlots();
+              if (filteredPlots.length === 0) {
                 Alert.alert(
                   'No Plots Available', 
-                  'No plots found in your farms. Please go to the Farm page to add farms and create plots first.',
+                  `No plots found in the selected farm. Please go to the Farm page to add plots to "${getSelectedFarmName()}" first.`,
                   [
                     { text: 'Cancel' },
                     { text: 'Go to Farms', onPress: () => {
-                      // Navigate to farm tab - you might need to adjust this based on your navigation structure
                       console.log('Navigate to farms tab');
                     }}
                   ]
@@ -663,27 +813,23 @@ const MyYieldScreen = () => {
                 return;
               }
               
-              const plotOptions = availablePlots
+              const plotOptions = filteredPlots
                 .filter(plot => {
-                  const plotAgeMonths = plot.age_months || 0;
-                  const plotAgeYears = plotAgeMonths / 12;
-                  return plotAgeYears > 3; // Only show mature plots
+                  return plot.status === 'HARVESTING'; // Only show plots ready for harvesting
                 })
                 .map(plot => ({
-                  text: `${plot.name} (${plot.farm_name || 'Unknown Farm'}) - ${(plot.age_months! / 12).toFixed(1)} years, ${plot.area} ha`,
+                  text: `${plot.name} (${plot.farm_name || 'Unknown Farm'}) - Status: ${plot.status}, ${plot.area} ha`,
                   onPress: () => setSelectedPlotId(plot.id!)
                 }));
               
               if (plotOptions.length === 0) {
-                const totalPlots = availablePlots.length;
-                const youngPlots = availablePlots.filter(plot => {
-                  const ageYears = (plot.age_months || 0) / 12;
-                  return ageYears <= 3;
-                });
+                const totalPlots = filteredPlots.length;
+                const harvestingPlots = filteredPlots.filter(plot => plot.status === 'HARVESTING');
+                const otherStatusPlots = filteredPlots.filter(plot => plot.status !== 'HARVESTING');
                 
                 Alert.alert(
-                  'No Mature Plots Available', 
-                  `Found ${totalPlots} total plots, but ${youngPlots.length} are too young (≤ 3 years). Cinnamon trees need to be at least 3 years old for bark harvesting. Please wait for your plots to mature or add older plots in the Farm section.`,
+                  'No Plots Ready for Harvesting', 
+                  `Found ${totalPlots} total plots, but none have "HARVESTING" status. ${otherStatusPlots.length} plots have other statuses (${otherStatusPlots.map(p => p.status).join(', ')}). Only plots ready for harvest can be used for yield prediction.`,
                   [{ text: 'OK' }]
                 );
                 return;
@@ -715,7 +861,7 @@ const MyYieldScreen = () => {
           {selectedPlotId && (
             <View style={styles.plotInfo}>
               {(() => {
-                const plot = availablePlots.find(p => p.id === selectedPlotId);
+                const plot = getFilteredPlots().find(p => p.id === selectedPlotId);
                 if (!plot) return null;
                 const ageYears = (plot.age_months || 0) / 12;
                 return (

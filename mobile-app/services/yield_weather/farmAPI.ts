@@ -51,90 +51,141 @@ export interface DashboardStats {
 }
 
 class FarmAPI {
-  private async request(endpoint: string, options: RequestInit = {}) {
-    try {
-      const url = `${API_BASE_URL}${endpoint}`;
-      console.log(` Making API request to: ${url}`);
-      console.log(` Using base URL: ${API_BASE_URL}`);
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
+  private async request(endpoint: string, options: RequestInit = {}): Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Check if fetch is available
+        if (typeof fetch === 'undefined') {
+          throw new Error('Fetch API is not available');
+        }
 
-      console.log(` Response status: ${response.status}`);
+        const url = `${API_BASE_URL}${endpoint}`;
+        console.log(`🚀 Making API request to: ${url}`);
+        console.log(`🔧 Using base URL: ${API_BASE_URL}`);
+        
+        const requestOptions: RequestInit = {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...options.headers,
+          },
+          ...options,
+        };
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error(` HTTP Error ${response.status}: ${errorData}`);
-        throw new Error(`HTTP ${response.status}: ${errorData}`);
+        // Add timeout functionality using AbortController
+        const timeoutMs = 30000;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+        }, timeoutMs);
+        
+        requestOptions.signal = controller.signal;
+
+        const response = await fetch(url, requestOptions);
+        clearTimeout(timeoutId);
+
+        console.log(`📡 Response status: ${response.status}`);
+
+        if (!response.ok) {
+          let errorData: string;
+          try {
+            errorData = await response.text();
+          } catch (textError) {
+            errorData = `${response.status} ${response.statusText}`;
+          }
+          console.error(`❌ HTTP Error ${response.status}: ${errorData}`);
+          reject(new Error(`HTTP ${response.status}: ${errorData}`));
+          return;
+        }
+
+        // Check if response has content
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const data = await response.json();
+            console.log(`✅ API response received:`, data);
+            resolve(data);
+          } catch (jsonError) {
+            console.error('❌ JSON parsing error:', jsonError);
+            reject(new Error('Invalid JSON response from server'));
+          }
+        } else {
+          try {
+            const text = await response.text();
+            console.log(`📄 API response (text):`, text);
+            resolve(text);
+          } catch (textError) {
+            console.error('❌ Text parsing error:', textError);
+            reject(new Error('Failed to parse response'));
+          }
+        }
+      } catch (error) {
+        console.error('❌ API request failed:', error);
+        
+        if (error instanceof Error && (
+          error.message.includes('Network request failed') ||
+          error.message.includes('undefined is not a function') ||
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('The operation was aborted') ||
+          error.name === 'AbortError'
+        )) {
+          console.error('🔌 Network connectivity issue:', error);
+          reject(new Error('Network connection failed. Please check your internet connection and ensure the backend server is running and accessible.'));
+        } else {
+          reject(error);
+        }
       }
-
-      const data = await response.json();
-      console.log(` API response received:`, data);
-      return data;
-    } catch (error) {
-      if (error instanceof TypeError && error.message.includes('Network request failed')) {
-        console.error(' Network connectivity issue:', error);
-        throw new Error('Network connection failed. Please check your internet connection and ensure the backend server is running and accessible.');
-      } else {
-        console.error(' API request failed:', error);
-        throw error;
-      }
-    }
+    });
   }
 
   // Farm CRUD operations
   async createFarm(farm: Omit<Farm, 'id' | 'created_at'>): Promise<Farm> {
-    return this.request('/farms', {
+    return this.request('/yield-weather/farms', {
       method: 'POST',
       body: JSON.stringify(farm),
     });
   }
 
   async getFarms(): Promise<Farm[]> {
-    return this.request('/farms');
+    return this.request('/yield-weather/farms');
   }
 
   async getFarm(farmId: number): Promise<Farm> {
-    return this.request(`/farms/${farmId}`);
+    return this.request(`/yield-weather/farms/${farmId}`);
   }
 
   async updateFarm(farmId: number, farm: Omit<Farm, 'id' | 'created_at'>): Promise<Farm> {
-    return this.request(`/farms/${farmId}`, {
+    return this.request(`/yield-weather/farms/${farmId}`, {
       method: 'PUT',
       body: JSON.stringify(farm),
     });
   }
 
   async deleteFarm(farmId: number): Promise<{ message: string }> {
-    return this.request(`/farms/${farmId}`, {
+    return this.request(`/yield-weather/farms/${farmId}`, {
       method: 'DELETE',
     });
   }
 
   // Plot operations
   async createPlot(plot: Omit<Plot, 'id'>): Promise<Plot> {
-    return this.request('/plots', {
+    return this.request('/yield-weather/plots', {
       method: 'POST',
       body: JSON.stringify(plot),
     });
   }
 
   async getFarmPlots(farmId: number): Promise<Plot[]> {
-    return this.request(`/farms/${farmId}/plots`);
+    return this.request(`/yield-weather/farms/${farmId}/plots`);
   }
 
   async getPlot(plotId: number): Promise<Plot> {
-    return this.request(`/plots/${plotId}`);
+    return this.request(`/yield-weather/plots/${plotId}`);
   }
 
   async updatePlot(plotId: number, plotData: Partial<Plot>): Promise<Plot> {
-    return this.request(`/plots/${plotId}`, {
+    return this.request(`/yield-weather/plots/${plotId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -144,7 +195,7 @@ class FarmAPI {
   }
 
   async updateFarmPlotAreas(farmId: number, plotsData: Partial<Plot>[]): Promise<{ message: string; plots: Plot[] }> {
-    return this.request(`/farms/${farmId}/plots/areas`, {
+    return this.request(`/yield-weather/farms/${farmId}/plots/areas`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -159,14 +210,14 @@ class FarmAPI {
       params.append('progress_percentage', progress_percentage.toString());
     }
     
-    return this.request(`/plots/${plotId}/status?${params.toString()}`, {
+    return this.request(`/yield-weather/plots/${plotId}/status?${params.toString()}`, {
       method: 'PUT',
     });
   }
 
   // Dashboard stats
   async getDashboardStats(): Promise<DashboardStats> {
-    return this.request('/stats/dashboard');
+    return this.request('/yield-weather/stats/dashboard');
   }
 
   // Batch operations for creating multiple plots
@@ -189,7 +240,7 @@ class FarmAPI {
   }
 
   async deletePlot(plotId: number): Promise<{ message: string }> {
-    return this.request(`/plots/${plotId}`, {
+    return this.request(`/yield-weather/plots/${plotId}`, {
       method: 'DELETE',
     });
   }
@@ -207,32 +258,41 @@ class FarmAPI {
   // Test connection to backend
   async testConnection(): Promise<boolean> {
     try {
+      console.log('🔍 Testing backend connection...');
+      
       // Health endpoint is at root level, not under /api/v1
       const baseUrl = API_BASE_URL.replace('/api/v1', '');
       const healthUrl = `${baseUrl}/health`;
       
-      console.log(` Testing backend connection to: ${healthUrl}`);
+      console.log(`🔍 Testing backend connection to: ${healthUrl}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, 15000); // Shorter timeout for connection test
       
       const response = await fetch(healthUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        // Add timeout for mobile networks
+        signal: controller.signal,
       });
       
-      console.log(` Response status: ${response.status}`);
+      clearTimeout(timeoutId);
+      
+      console.log(`📡 Response status: ${response.status}`);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log(` Backend connection successful:`, data);
+      console.log(`✅ Backend connection successful:`, data);
       return true;
     } catch (error) {
-      console.error(' Backend connection failed:', error);
-      throw new Error('Backend connection failed. Please check if the server is running.');
+      console.error('❌ Backend connection failed:', error);
+      return false; // Don't throw error, just return false
     }
   }
 }

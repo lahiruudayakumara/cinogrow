@@ -7,7 +7,8 @@ from sqlmodel import SQLModel, Session
 from app.logger import get_logger
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load environment variables from parent directory
+load_dotenv(os.path.join(os.path.dirname(__file__), '../../..', '.env'))
 
 logger = get_logger("db_logger")
 # --------------------------

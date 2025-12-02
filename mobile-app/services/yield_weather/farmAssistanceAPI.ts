@@ -156,7 +156,7 @@ class FarmAssistanceAPI {
       
       return await this.tryMultipleUrls(async (baseUrl) => {
         const response = await fetch(
-          `${baseUrl}/farm-assistance/activity-records`,
+          `${baseUrl}/yield-weather/farm-assistance/activity-records`,
           {
             method: 'POST',
             headers: {
@@ -212,7 +212,7 @@ class FarmAssistanceAPI {
 
       return await this.tryMultipleUrls(async (baseUrl) => {
         const response = await fetch(
-          `${baseUrl}/farm-assistance/activity-records/${userId}?${params.toString()}`,
+          `${baseUrl}/yield-weather/farm-assistance/activity-records/${userId}?${params.toString()}`,
           {
             method: 'GET',
             headers: {
@@ -256,7 +256,7 @@ class FarmAssistanceAPI {
 
       return await this.tryMultipleUrls(async (baseUrl) => {
         const response = await fetch(
-          `${baseUrl}/farm-assistance/activity-records/plot/${plotId}?${params.toString()}`,
+          `${baseUrl}/yield-weather/farm-assistance/activity-records/plot/${plotId}?${params.toString()}`,
           {
             method: 'GET',
             headers: {
@@ -295,7 +295,7 @@ class FarmAssistanceAPI {
       
       return await this.tryMultipleUrls(async (baseUrl) => {
         const response = await fetch(
-          `${baseUrl}/farm-assistance/activity-records/${recordId}`,
+          `${baseUrl}/yield-weather/farm-assistance/activity-records/${recordId}`,
           {
             method: 'DELETE',
             headers: {
@@ -334,7 +334,7 @@ class FarmAssistanceAPI {
       
       return await this.tryMultipleUrls(async (baseUrl) => {
         const response = await fetch(
-          `${baseUrl}/farm-assistance/plots-with-age/${userId}`,
+          `${baseUrl}/yield-weather/farm-assistance/plots-with-age/${userId}`,
           {
             method: 'GET',
             headers: {
@@ -378,7 +378,7 @@ class FarmAssistanceAPI {
 
       return await this.tryMultipleUrls(async (baseUrl) => {
         const response = await fetch(
-          `${baseUrl}/farm-assistance/activity-records/home/${userId}?${params.toString()}`,
+          `${baseUrl}/yield-weather/farm-assistance/activity-records/home/${userId}?${params.toString()}`,
           {
             method: 'GET',
             headers: {
@@ -417,7 +417,7 @@ class FarmAssistanceAPI {
       
       return await this.tryMultipleUrls(async (baseUrl) => {
         const response = await fetch(
-          `${baseUrl}/farm-assistance/demo-farm-cards`,
+          `${baseUrl}/yield-weather/farm-assistance/demo-farm-cards`,
           {
             method: 'GET',
             headers: {
@@ -456,7 +456,7 @@ class FarmAssistanceAPI {
       
       return await this.tryMultipleUrls(async (baseUrl) => {
         const response = await fetch(
-          `${baseUrl}/farm-assistance/contact-info`,
+          `${baseUrl}/yield-weather/farm-assistance/contact-info`,
           {
             method: 'GET',
             headers: {
@@ -495,7 +495,7 @@ class FarmAssistanceAPI {
       
       return await this.tryMultipleUrls(async (baseUrl) => {
         const response = await fetch(
-          `${baseUrl}/farm-assistance/plots/realtime-updates/${userId}`,
+          `${baseUrl}/yield-weather/farm-assistance/plots/realtime-updates/${userId}`,
           {
             method: 'GET',
             headers: {
@@ -531,7 +531,7 @@ class FarmAssistanceAPI {
   async checkHealth(): Promise<{ status: string; service: string; message: string }> {
     try {
       return await this.tryMultipleUrls(async (baseUrl) => {
-        const response = await fetch(`${baseUrl}/farm-assistance/health`);
+        const response = await fetch(`${baseUrl}/yield-weather/farm-assistance/health`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

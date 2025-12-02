@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -12,7 +11,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useNavigation } from '@react-navigation/native';
@@ -140,8 +139,19 @@ const YieldWeatherHome = () => {
       const userFarms = farms.filter(farm => farm.id); // All farms for now
       const totalArea = userFarms.reduce((sum, farm) => sum + farm.total_area, 0);
       
-      // Get planting records to determine active plots
-      const plantingRecords = await plantingRecordsAPI.getUserPlantingRecords(USER_ID);
+      // Get planting records for all farms to determine active plots
+      let allPlantingRecords: any[] = [];
+      for (const farm of userFarms) {
+        if (farm.id) {
+          try {
+            const farmPlantingRecords = await plantingRecordsAPI.getFarmPlantingRecords(farm.id);
+            allPlantingRecords = [...allPlantingRecords, ...farmPlantingRecords];
+          } catch (error) {
+            console.warn(`Failed to get planting records for farm ${farm.id}:`, error);
+            // Continue with other farms even if one fails
+          }
+        }
+      }
       
       // Get all plots and determine which are active based on planting records
       let activePlots = 0;
@@ -153,7 +163,7 @@ const YieldWeatherHome = () => {
           
           // Count plots that have planting records
           for (const plot of plots) {
-            const plantingRecord = plantingRecords.find(record => record.plot_id === plot.id);
+            const plantingRecord = allPlantingRecords.find(record => record.plot_id === plot.id);
             if (plantingRecord) {
               activePlots++;
               

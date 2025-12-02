@@ -6,16 +6,23 @@ from dotenv import load_dotenv
 from datetime import datetime
 import platform
 import os
-from app.routers import auth
-from app.db import Base, engine
 
 # Load environment variables FIRST before importing anything else
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), '../..', '.env'))
+
+# Import all models FIRST to ensure they are registered with SQLModel
+from app.models.yield_weather.farm import Farm, Plot, FarmActivity, PlantingRecord, UserYieldRecord, YieldPrediction
+from app.models.yield_weather.tree import Tree, TreeMeasurement, TreeHarvestRecord
+from app.models.yield_weather.weather import WeatherRecord
+from app.models.yield_weather.farm_assistance import ActivityHistory
+from app.models.fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis
+from app.models.fertilizer.fertilizer import FertilizerType, FertilizerApplication, FertilizerSchedule, FertilizerRecommendation
 
 # Import database and routers
 from app.db.session import create_db_and_tables
-from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
+from app.routers.yield_weather import weather, farm, farm_assistance, hybrid_prediction
 from app.routers.fertilizer.roboflow_simple import router as roboflow_simple_router
+from app.routers import auth
 
 # Import your oil yield router
 from app.oil_yield.router import router as oil_yield_router
@@ -49,14 +56,13 @@ app.mount('/uploads', StaticFiles(directory='uploads'), name='uploads')
 @app.on_event('startup')
 async def startup_event():
     create_db_and_tables()
-    Base.metadata.create_all(bind=engine)
 
 # Include routers
 app.include_router(roboflow_simple_router, prefix='/api/v1')  # Roboflow deficiency detection
-app.include_router(weather.router, prefix="/api/v1")
-app.include_router(farm.router, prefix="/api/v1")
-app.include_router(farm_assistance.router, prefix="/api/v1")
-app.include_router(yield_prediction.router, prefix="/api/v1")
+app.include_router(weather.router, prefix="/api/v1")  # Weather endpoints at /api/v1/weather/
+app.include_router(farm.router, prefix="/api/v1/yield-weather")
+app.include_router(farm_assistance.router, prefix="/api/v1/yield-weather")
+app.include_router(hybrid_prediction.router, prefix="/api/v1/yield-weather")
 app.include_router(auth.router, prefix="/api/v1")
 
 @app.get('/')

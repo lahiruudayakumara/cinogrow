@@ -9,7 +9,7 @@ import uvicorn
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # Add the current directory to Python path
 current_dir = Path(__file__).parent

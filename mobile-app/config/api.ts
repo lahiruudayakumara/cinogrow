@@ -7,7 +7,7 @@ const getEnvVar = (key: string, fallback: string): string => {
 };
 
 // Environment configuration - Single source from .env file
-const API_HOST = getEnvVar('API_BASE_HOST', '192.168.1.2');
+const API_HOST = getEnvVar('API_BASE_HOST', 'localhost');
 const API_PORT = getEnvVar('API_PORT', '8000');
 
 const ENV_CONFIG = {

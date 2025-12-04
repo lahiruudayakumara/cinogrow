@@ -73,7 +73,7 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
             date: '2024-12-25',
             severity: 'High',
             recommendedAction: 'Lime application required.',
-            description: 'High soil acidity (pH 4.5) with low phosphorus levels.',
+            description: 'High soil acidity (pH 4.5) with low potassium levels.',
         },
     ];
 

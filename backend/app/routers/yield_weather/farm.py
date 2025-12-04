@@ -1,14 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 from app.db.session import get_session
 from app.models.yield_weather.farm import (
     Farm, Plot, PlantingRecord, FarmActivity, UserYieldRecord, YieldPrediction,
     FarmCreate, FarmRead, PlotCreate, PlotUpdate, PlotRead,
-    PlantingRecordCreate, PlantingRecordUpdate, PlantingRecordRead
+    PlantingRecordCreate, PlantingRecordUpdate, PlantingRecordRead,
+    UserYieldRecordCreate, UserYieldRecordUpdate, UserYieldRecordRead
 )
 from app.models.yield_weather.farm_assistance import ActivityHistory
+from app.services.farm_service import FarmService
+from app.services.plot_service import PlotService
+from app.services.planting_service import PlantingRecordsService
+from app.services.yield_service import YieldRecordsService
 from app.utils.plot_status import calculate_plot_status, should_update_plot_status
 
 router = APIRouter(tags=["yield-weather-farms"])
@@ -17,128 +22,65 @@ router = APIRouter(tags=["yield-weather-farms"])
 @router.post("/farms", response_model=FarmRead)
 async def create_farm(farm_data: FarmCreate, db: Session = Depends(get_session)):
     """Create a new farm"""
-    farm = Farm(**farm_data.dict())
-    db.add(farm)
-    db.commit()
-    db.refresh(farm)
-    return farm
+    farm_service = FarmService(db)
+    return farm_service.create_farm(farm_data)
 
 
 @router.get("/farms", response_model=List[FarmRead])
 async def get_farms(db: Session = Depends(get_session)):
     """Get all farms"""
-    farms = db.exec(select(Farm)).all()
-    return farms
+    farm_service = FarmService(db)
+    return farm_service.get_farms()
 
 
 @router.get("/farms/{farm_id}", response_model=FarmRead)
 async def get_farm(farm_id: int, db: Session = Depends(get_session)):
     """Get a specific farm by ID"""
-    farm = db.get(Farm, farm_id)
-    if not farm:
-        raise HTTPException(status_code=404, detail="Farm not found")
-    return farm
+    farm_service = FarmService(db)
+    try:
+        return farm_service.get_farm(farm_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.put("/farms/{farm_id}", response_model=FarmRead)
 async def update_farm(farm_id: int, farm_data: FarmCreate, db: Session = Depends(get_session)):
     """Update an existing farm"""
-    farm = db.get(Farm, farm_id)
-    if not farm:
-        raise HTTPException(status_code=404, detail="Farm not found")
-    
-    # Get current plot count
-    plots_query = db.exec(select(Plot).where(Plot.farm_id == farm_id))
-    actual_plots_count = len(list(plots_query))
-    
-    # Update farm fields
-    for field, value in farm_data.dict().items():
-        setattr(farm, field, value)
-    
-    # Keep the num_plots value from the frontend request
-    # This allows the frontend to manage plot count changes properly
-    # The actual plot creation/deletion should be handled separately
-    
-    farm.updated_at = datetime.utcnow()
-    
-    db.add(farm)
-    db.commit()
-    db.refresh(farm)
-    return farm
+    farm_service = FarmService(db)
+    try:
+        return farm_service.update_farm(farm_id, farm_data)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.delete("/farms/{farm_id}")
 async def delete_farm(farm_id: int, db: Session = Depends(get_session)):
-    """Delete a farm and all its associated activities and plots"""
-    farm = db.get(Farm, farm_id)
-    if not farm:
-        raise HTTPException(status_code=404, detail="Farm not found")
-    
-    # Delete all farm activities associated with the farm first
-    farm_activities = db.exec(select(FarmActivity).where(FarmActivity.farm_id == farm_id)).all()
-    for activity in farm_activities:
-        db.delete(activity)
-    
-    # Delete all plots associated with the farm
-    plots = db.exec(select(Plot).where(Plot.farm_id == farm_id)).all()
-    for plot in plots:
-        db.delete(plot)
-    
-    # Delete the farm
-    db.delete(farm)
-    db.commit()
-    
-    return {"message": "Farm and all associated activities and plots deleted successfully"}
+    """Delete a farm and all its associated data (handled by CASCADE)"""
+    farm_service = FarmService(db)
+    try:
+        return farm_service.delete_farm(farm_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.post("/plots", response_model=PlotRead)
 async def create_plot(plot_data: PlotCreate, db: Session = Depends(get_session)):
     """Create a new plot"""
+    plot_service = PlotService(db)
     try:
-        # Check if farm exists
-        farm = db.get(Farm, plot_data.farm_id)
-        if not farm:
-            raise HTTPException(status_code=404, detail="Farm not found")
-        
-        # Create plot with explicit datetime fields
-        plot_dict = plot_data.model_dump()
-        plot_dict['created_at'] = datetime.utcnow()
-        plot_dict['updated_at'] = datetime.utcnow()
-        
-        plot = Plot(**plot_dict)
-        db.add(plot)
-        db.commit()
-        db.refresh(plot)
-        
-        # Update farm's num_plots count
-        plots_query = db.exec(select(Plot).where(Plot.farm_id == plot_data.farm_id))
-        actual_plots_count = len(list(plots_query))
-        farm.num_plots = actual_plots_count
-        farm.updated_at = datetime.utcnow()
-        db.add(farm)
-        db.commit()
-        
-        return plot
-    except HTTPException:
-        raise
+        return plot_service.create_plot(plot_data)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        print(f"Error in create_plot: {e}")
-        db.rollback()
         raise HTTPException(status_code=500, detail="Failed to create plot")
 
 
 @router.get("/farms/{farm_id}/plots", response_model=List[PlotRead])
 async def get_farm_plots(farm_id: int, db: Session = Depends(get_session)):
     """Get all plots for a specific farm"""
+    plot_service = PlotService(db)
     try:
-        farm = db.get(Farm, farm_id)
-        if not farm:
-            raise HTTPException(status_code=404, detail="Farm not found")
-        
-        plots = db.exec(select(Plot).where(Plot.farm_id == farm_id)).all()
-        return list(plots)
-    except HTTPException:
-        raise
+        return plot_service.get_plots_by_farm(farm_id)
     except Exception as e:
         print(f"Error in get_farm_plots: {e}")
         return []
@@ -646,3 +588,162 @@ async def update_all_plot_ages(db: Session = Depends(get_session)):
         "updated_plots": updated_plots,
         "timestamp": current_time.isoformat()
     }
+
+
+# ============================================================================
+# USER YIELD RECORDS ENDPOINTS
+# ============================================================================
+
+@router.get("/users/{user_id}/yield-records", response_model=List[UserYieldRecordRead])
+async def get_user_yield_records_by_user_id(user_id: int, db: Session = Depends(get_session)):
+    """Get all yield records for a specific user"""
+    results = db.exec(
+        select(UserYieldRecord, Plot)
+        .join(Plot)
+        .where(UserYieldRecord.user_id == user_id)
+        .order_by(UserYieldRecord.yield_date.desc())
+    ).all()
+    
+    # Convert results to include plot names
+    records = []
+    for record, plot in results:
+        record_dict = UserYieldRecordRead.from_orm(record).dict()
+        record_dict['plot_name'] = plot.name
+        records.append(UserYieldRecordRead(**record_dict))
+    
+    return records
+
+@router.post("/yield-records", response_model=UserYieldRecordRead)
+async def create_user_yield_record(record_data: UserYieldRecordCreate, db: Session = Depends(get_session)):
+    """Create a new user yield record"""
+    # Check if plot exists
+    plot = db.get(Plot, record_data.plot_id)
+    if not plot:
+        raise HTTPException(status_code=404, detail="Plot not found")
+    
+    record = UserYieldRecord(**record_data.dict())
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    
+    # Return with plot name
+    result = UserYieldRecordRead.from_orm(record)
+    result.plot_name = plot.name
+    return result
+
+@router.get("/yield-records", response_model=List[UserYieldRecordRead])
+async def get_user_yield_records(
+    user_id: Optional[int] = None,
+    plot_id: Optional[int] = None,
+    db: Session = Depends(get_session)
+):
+    """Get user yield records with optional filtering"""
+    query = select(UserYieldRecord, Plot).join(Plot)
+    
+    if user_id:
+        query = query.where(UserYieldRecord.user_id == user_id)
+    
+    if plot_id:
+        query = query.where(UserYieldRecord.plot_id == plot_id)
+    
+    results = db.exec(query.order_by(UserYieldRecord.yield_date.desc())).all()
+    
+    # Convert results to include plot names
+    records = []
+    for record, plot in results:
+        record_dict = UserYieldRecordRead.from_orm(record).dict()
+        record_dict['plot_name'] = plot.name
+        records.append(UserYieldRecordRead(**record_dict))
+    
+    return records
+
+@router.put("/yield-records/{yield_id}", response_model=UserYieldRecordRead)
+async def update_user_yield_record(
+    yield_id: int,
+    record_update: UserYieldRecordUpdate,
+    db: Session = Depends(get_session)
+):
+    """Update a user yield record"""
+    record = db.get(UserYieldRecord, yield_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Yield record not found")
+    
+    # Update only provided fields
+    update_data = record_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(record, field, value)
+    
+    record.updated_at = datetime.utcnow()
+    
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    
+    # Get plot name
+    plot = db.get(Plot, record.plot_id)
+    result = UserYieldRecordRead.from_orm(record)
+    result.plot_name = plot.name if plot else None
+    return result
+
+@router.delete("/yield-records/{yield_id}")
+async def delete_user_yield_record(yield_id: int, db: Session = Depends(get_session)):
+    """Delete a user yield record"""
+    record = db.get(UserYieldRecord, yield_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Yield record not found")
+    
+    db.delete(record)
+    db.commit()
+    return {"message": "Yield record deleted successfully"}
+
+
+# Predicted Yields Routes
+
+@router.get("/users/{user_id}/predicted-yields")
+async def get_predicted_yields(user_id: int, location: Optional[str] = None, db: Session = Depends(get_session)):
+    """Get predicted yields for a user's plots"""
+    # Get all farms belonging to the user
+    farms = db.exec(select(Farm).where(Farm.user_id == user_id)).all()
+    if not farms:
+        return []
+    
+    predicted_yields = []
+    
+    for farm in farms:
+        # Get all plots for this farm
+        plots = db.exec(select(Plot).where(Plot.farm_id == farm.id)).all()
+        
+        for plot in plots:
+            # Skip plots if location filter is provided and doesn't match
+            if location and farm.location and location.lower() not in farm.location.lower():
+                continue
+                
+            # Get the latest yield prediction for this plot
+            latest_prediction = db.exec(
+                select(YieldPrediction)
+                .where(YieldPrediction.plot_id == plot.id)
+                .order_by(YieldPrediction.prediction_date.desc())
+            ).first()
+            
+            if latest_prediction:
+                predicted_yields.append({
+                    "plot_id": plot.id,
+                    "plot_name": plot.plot_name,
+                    "plot_area": plot.area or 0,
+                    "predicted_yield": latest_prediction.predicted_yield,
+                    "confidence_score": latest_prediction.confidence_score,
+                    "prediction_source": "hybrid_model"
+                })
+            else:
+                # If no prediction exists, provide a default based on plot area
+                default_yield = (plot.area or 1) * 100  # 100kg per hectare as default
+                predicted_yields.append({
+                    "plot_id": plot.id,
+                    "plot_name": plot.plot_name,
+                    "plot_area": plot.area or 0,
+                    "predicted_yield": default_yield,
+                    "confidence_score": 0.5,
+                    "prediction_source": "average"
+                })
+    
+    return predicted_yields

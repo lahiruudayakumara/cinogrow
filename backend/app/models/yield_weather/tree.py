@@ -43,7 +43,11 @@ class Tree(SQLModel, table=True):
     # Tree characteristics
     tree_age_years: Optional[float] = Field(default=None)
     stem_count: int = Field(default=1)  # Number of stems on this tree
+    stem_diameter_mm: Optional[float] = Field(default=None)  # Stem diameter for ML predictions
     is_active: bool = Field(default=True)  # Whether tree is alive and productive
+    
+    # ML Predictions
+    hybrid_yield_estimate: Optional[float] = Field(default=None)  # Predicted yield from this tree
     
     # Management history
     last_harvest_date: Optional[datetime] = Field(default=None)
@@ -138,6 +142,7 @@ class TreeCreate(BaseModel):
     planting_date: Optional[datetime] = None
     variety: str = "Sri Gemunu"
     tree_age_years: Optional[float] = None
+    stem_diameter_mm: Optional[float] = None
     fertilizer_used: bool = False
     fertilizer_type: Optional[FertilizerType] = None
     fertilizer_application_date: Optional[datetime] = None
@@ -151,6 +156,8 @@ class TreeUpdate(BaseModel):
     location_y: Optional[float] = None
     variety: Optional[str] = None
     tree_age_years: Optional[float] = None
+    stem_diameter_mm: Optional[float] = None
+    hybrid_yield_estimate: Optional[float] = None
     fertilizer_used: Optional[bool] = None
     fertilizer_type: Optional[FertilizerType] = None
     fertilizer_application_date: Optional[datetime] = None
@@ -171,6 +178,8 @@ class TreeRead(BaseModel):
     variety: str
     tree_age_years: Optional[float]
     stem_count: int
+    stem_diameter_mm: Optional[float]
+    hybrid_yield_estimate: Optional[float]
     is_active: bool
     fertilizer_used: bool
     fertilizer_type: Optional[FertilizerType]

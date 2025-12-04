@@ -79,21 +79,21 @@ class YieldAPI {
   }
 
   async getUserYieldRecords(userId: number): Promise<UserYieldRecord[]> {
-    return this.request(`/users/${userId}/yield-records`);
+    return this.request(`/yield-weather/users/${userId}/yield-records`);
   }
 
   async updateUserYieldRecord(
     yieldId: number, 
     updates: Partial<Omit<UserYieldRecord, 'yield_id' | 'user_id' | 'created_at' | 'plot_name'>>
   ): Promise<UserYieldRecord> {
-    return this.request(`/yield-records/${yieldId}`, {
+    return this.request(`/yield-weather/yield-records/${yieldId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
     });
   }
 
   async deleteUserYieldRecord(yieldId: number): Promise<{ message: string }> {
-    return this.request(`/yield-records/${yieldId}`, {
+    return this.request(`/yield-weather/yield-records/${yieldId}`, {
       method: 'DELETE',
     });
   }
@@ -105,7 +105,7 @@ class YieldAPI {
       params.append('location', location);
     }
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    return this.request(`/users/${userId}/predicted-yields${queryString}`);
+    return this.request(`/yield-weather/users/${userId}/predicted-yields${queryString}`);
   }
 
   // ML Model Predictions

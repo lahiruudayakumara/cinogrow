@@ -31,6 +31,12 @@ class Farm(SQLModel, table=True):
     location: str = Field(max_length=255)
     latitude: float
     longitude: float
+    
+    # Computed fields (auto-managed by service layer)
+    active_plots_count: int = Field(default=0)
+    total_yield_kg: float = Field(default=0.0)
+    last_activity_date: Optional[datetime] = Field(default=None)
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
@@ -55,6 +61,20 @@ class Plot(SQLModel, table=True):
     progress_percentage: int = Field(default=0)
     seedling_count: int = Field(default=0)  # Number of seedlings planted
     cinnamon_variety: str = Field(default="Ceylon Cinnamon", max_length=100)  # Cinnamon variety
+    total_trees: Optional[int] = Field(default=None)  # Total trees in plot (for hybrid scaling)
+    
+    # Computed fields (auto-managed by service layer)
+    last_planting_date: Optional[datetime] = Field(default=None)
+    last_yield_date: Optional[datetime] = Field(default=None)
+    planting_records_count: int = Field(default=0)
+    yield_records_count: int = Field(default=0)
+    trees_count: int = Field(default=0)
+    total_yield_kg: float = Field(default=0.0)
+    average_yield_per_harvest: Optional[float] = Field(default=None)
+    best_yield_kg: Optional[float] = Field(default=None)
+    health_score: Optional[float] = Field(default=None)
+    estimated_next_harvest_date: Optional[datetime] = Field(default=None)
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
@@ -129,6 +149,7 @@ class PlotCreate(BaseModel):
     notes: Optional[str] = None
     seedling_count: int = 0
     cinnamon_variety: str = "Ceylon Cinnamon"
+    total_trees: Optional[int] = None
 
 
 class PlotUpdate(BaseModel):
@@ -138,6 +159,7 @@ class PlotUpdate(BaseModel):
     notes: Optional[str] = None
     seedling_count: Optional[int] = None
     cinnamon_variety: Optional[str] = None
+    total_trees: Optional[int] = None
 
 
 class PlotRead(BaseModel):
@@ -156,6 +178,20 @@ class PlotRead(BaseModel):
     progress_percentage: int
     seedling_count: int
     cinnamon_variety: str
+    total_trees: Optional[int]
+    
+    # Computed fields
+    last_planting_date: Optional[datetime] = None
+    last_yield_date: Optional[datetime] = None
+    planting_records_count: int = 0
+    yield_records_count: int = 0
+    trees_count: int = 0
+    total_yield_kg: float = 0.0
+    average_yield_per_harvest: Optional[float] = None
+    best_yield_kg: Optional[float] = None
+    health_score: Optional[float] = None
+    estimated_next_harvest_date: Optional[datetime] = None
+    
     created_at: datetime
     updated_at: datetime
 

@@ -15,12 +15,14 @@ from app.models.yield_weather.farm import Farm, Plot, FarmActivity, PlantingReco
 from app.models.yield_weather.tree import Tree, TreeMeasurement, TreeHarvestRecord
 from app.models.yield_weather.weather import WeatherRecord
 from app.models.yield_weather.farm_assistance import ActivityHistory
+from app.models.yield_weather.hybrid_yield import HybridYieldResult
 from app.models.fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis
 from app.models.fertilizer.fertilizer import FertilizerType, FertilizerApplication, FertilizerSchedule, FertilizerRecommendation
 
 # Import database and routers
 from app.db.session import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, hybrid_prediction
+from app.routers.hybrid_yield import router as hybrid_yield_router
 from app.routers.fertilizer.roboflow_simple import router as roboflow_simple_router
 from app.routers import auth
 
@@ -63,6 +65,7 @@ app.include_router(weather.router, prefix="/api/v1")  # Weather endpoints at /ap
 app.include_router(farm.router, prefix="/api/v1/yield-weather")
 app.include_router(farm_assistance.router, prefix="/api/v1/yield-weather")
 app.include_router(hybrid_prediction.router, prefix="/api/v1/yield-weather")
+app.include_router(hybrid_yield_router, prefix="/api/v1")  # New hybrid yield endpoints
 app.include_router(auth.router, prefix="/api/v1")
 
 @app.get('/')

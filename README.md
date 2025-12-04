@@ -218,62 +218,13 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Create a `.env` file inside `backend/`:
-
-```
-# Database Configuration
-DATABASE_URL=postgresql://username:password@localhost:5432/dbname
-
-# OpenWeather API Configuration
-OPENWEATHER_API_KEY=your_openweather_api_key_here
-OPENWEATHER_BASE_URL=https://api.openweathermap.org/data/2.5
-
-# Application Configuration
-DEBUG=True
-```
-
- **Get your OpenWeather API key:**
-1. Visit [OpenWeather API](https://openweathermap.org/api)
-2. Sign up for a free account
-3. Get your API key from the dashboard
-4. Replace `your_openweather_api_key_here` with your actual API key
-
-5. Apply database migrations:
-
-```bash
-alembic upgrade head
-```
-
-6. Run the FastAPI server:
+4. Run the FastAPI server:
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Visit [http://localhost:8000/docs](http://localhost:8000/docs) to test the API.
-
-> **Important:** Use `--host 0.0.0.0` to allow mobile app connections. You can also test the server health at [http://localhost:8000/health](http://localhost:8000/health).
-
-**Weather API Endpoints:**
-- `GET /api/v1/weather/current?latitude=X&longitude=Y` - Get weather by coordinates
-- `GET /api/v1/weather/city?city=CityName` - Get weather by city name
-- `POST /api/v1/weather/current` - Get weather by coordinates (POST)
-- `GET /api/v1/weather/health` - Weather service health check
-
-**Test the API:**
-```bash
-# Test health endpoint
-curl http://localhost:8000/health
-
-# Test weather by coordinates (Colombo, Sri Lanka)
-curl "http://localhost:8000/api/v1/weather/current?latitude=6.9271&longitude=79.8612"
-
-# Test weather by city
-curl "http://localhost:8000/api/v1/weather/city?city=Colombo,LK"
-
-# Test network accessibility for mobile app (replace with your IP)
-curl http://YOUR_IP_HERE:8000/health
-```
+Visit [http://localhost:8000/docs](http://localhost:8000/docs) to access the API documentation.
 
 ---
 
@@ -297,52 +248,11 @@ pnpm install
 pnpm expo start
 ```
 
-> **Quick Test**: After starting both backend and mobile app, you can also run the integration test:
-> ```bash
-> node test_weather_integration.js
-> ```
-
 4. Configure API URL:
 
-In your app's config or `.env` (or a config file), set:
-
-```ts
-export const API_URL = "http://127.0.0.1:8000";
-```
-
-
- ⚠️ **For Android Emulator**: The mobile app automatically uses `http://10.0.2.2:8000` for Android emulators and `http://YOUR_IP_HERE:8000` for iOS simulators.
-
-
-
- 🔧 **Troubleshooting Network Issues:**
- 
- If you get "Network request failed" errors:
- 1. Make sure the backend is running on `0.0.0.0:8000` (not just `127.0.0.1`)
- 2. Run: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
- 3. Test backend accessibility: `curl http://YOUR_IP_HERE:8000/health`
- 4. Check your firewall settings
- 5. For physical devices, use your computer's IP address instead of localhost
-
-**Mobile App Features:**
-- **Real-time Weather Display**: Shows current temperature, rainfall, humidity, wind speed
-- **Location Services**: GPS location detection with manual city input fallback
-- **Dynamic Weather Alerts**: Contextual farming advice based on current weather conditions
-- **Yield Prediction**: AI-powered yield estimates incorporating real weather data
-- **Farm Assistant**: Weather-aware farming recommendations and activity scheduling
-- **API Debugging**: Built-in connectivity testing and error diagnosis
+In your app's config, set the backend URL to connect to your FastAPI server.
 
 ---
-
-## Environment Variables Summary
-
-| Variable                 | Description                           |
-| ------------------------ | ------------------------------------- |
-| `DATABASE_URL`           | PostgreSQL DB connection string       |
-| `OPENWEATHER_API_KEY`    | OpenWeather API key (free from openweathermap.org) |
-| `OPENWEATHER_BASE_URL`   | OpenWeather API base URL              |
-| `DEBUG`                  | Application debug mode                |
-| `API_URL`                | Backend URL used by mobile app        |
 
 ---
 

@@ -9,6 +9,7 @@ import {
     Platform,
     ActivityIndicator,
     RefreshControl,
+    Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+import {
+    fetchFertilizerHistory,
+    formatAnalysisDate,
+    getSeverityColor,
+    formatConfidence,
+    FertilizerHistoryRecord,
+} from '../../services/fertilizerHistoryService';
 
 type FertilizerHomeScreenNavigationProp = StackNavigationProp<
     FertilizerStackParamList,
@@ -29,21 +37,13 @@ interface FertilizerHomeScreenProps {
     route: FertilizerHomeScreenRouteProp;
 }
 
-interface RecommendationItem {
-    id: string;
-    analysisId: string;
-    type: 'Leaf Analysis' | 'Soil Analysis' | 'Combined Analysis';
-    date: string;
-    severity: 'Low' | 'Moderate' | 'High' | 'Critical';
-    description: string;
-    recommendedAction: string;
-}
-
 const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) => {
     const [leafImage, setLeafImage] = useState<string | null>(null);
     const [soilImage, setSoilImage] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [recentAnalyses, setRecentAnalyses] = useState<FertilizerHistoryRecord[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(true);
 
     const insets = useSafeAreaInsets();
 
@@ -56,26 +56,23 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
         }
     }, [route.params]);
 
-    const recentRecommendations: RecommendationItem[] = [
-        {
-            id: '1',
-            analysisId: 'A-20250110-001',
-            type: 'Combined Analysis',
-            date: '2025-01-10',
-            severity: 'Moderate',
-            recommendedAction: 'Apply 15-5-10 NPK mix.',
-            description: 'Moderate nitrogen deficiency detected with early signs of leaf spot disease.',
-        },
-        {
-            id: '2',
-            analysisId: 'A-20241225-002',
-            type: 'Soil Analysis',
-            date: '2024-12-25',
-            severity: 'High',
-            recommendedAction: 'Lime application required.',
-            description: 'High soil acidity (pH 4.5) with low potassium levels.',
-        },
-    ];
+    // Load recent fertilizer history
+    useEffect(() => {
+        loadRecentAnalyses();
+    }, []);
+
+    const loadRecentAnalyses = async () => {
+        try {
+            setLoadingHistory(true);
+            const data = await fetchFertilizerHistory(0, 5); // Get 5 most recent
+            setRecentAnalyses(data);
+        } catch (error) {
+            console.error('Failed to load recent analyses:', error);
+            // Silently fail - don't show error to user
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
 
     const handleUploadLeafSample = () => {
         navigation.navigate('FertilizerUploadLeaf');
@@ -111,24 +108,44 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
         }
     };
 
-    const handleRecommendationPress = (item: RecommendationItem) => {
-        console.log('Recommendation pressed:', item.id);
+    const handleHistoryPress = (item: FertilizerHistoryRecord) => {
+        // Navigate to result screen with history data
+        navigation.navigate('FertilizerResult', {
+            roboflowAnalysis: {
+                success: true,
+                primary_deficiency: item.deficiency,
+                confidence: item.confidence,
+                severity: item.severity,
+                history_id: item.id,
+                detections: [{
+                    class: item.deficiency || 'Unknown',
+                    confidence: item.confidence || 0,
+                    deficiency: item.deficiency || 'Unknown',
+                    severity: item.severity || 'Low'
+                }],
+                roboflow_output: [{
+                    predictions: {
+                        predictions: [{
+                            class: item.deficiency || 'Unknown',
+                            confidence: item.confidence || 0
+                        }]
+                    }
+                }]
+            },
+            plantAge: 1, // Default age, can be customized
+        });
+    };
+
+    const handleViewAllHistory = () => {
+        // Navigate to full history screen
+        // navigation.navigate('FertilizerHistory');
+        console.log('View all history');
     };
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await loadRecentAnalyses();
         setRefreshing(false);
-    };
-
-    const getSeverityColor = (severity: string) => {
-        switch (severity) {
-            case 'Critical': return '#DC2626';
-            case 'High': return '#EA580C';
-            case 'Moderate': return '#D97706';
-            case 'Low': return '#16A34A';
-            default: return '#6B7280';
-        }
     };
 
     const renderUploadCard = (
@@ -169,36 +186,42 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
         </TouchableOpacity>
     );
 
-    const renderRecommendationCard = (item: RecommendationItem) => (
-        <TouchableOpacity
-            key={item.id}
-            style={styles.recommendationCard}
-            onPress={() => handleRecommendationPress(item)}
-            activeOpacity={0.8}
-        >
-            <View style={styles.recommendationHeader}>
-                <View style={styles.recommendationTitleRow}>
-                    <Text style={styles.recommendationType}>{item.type}</Text>
-                    <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(item.severity) }]}>
-                        <Text style={styles.severityText}>{item.severity}</Text>
+    const renderHistoryCard = (item: FertilizerHistoryRecord) => {
+        const severityColor = getSeverityColor(item.severity);
+        const confidence = formatConfidence(item.confidence);
+        const date = formatAnalysisDate(item.analyzed_at);
+
+        return (
+            <TouchableOpacity
+                key={item.id}
+                style={styles.recommendationCard}
+                onPress={() => handleHistoryPress(item)}
+                activeOpacity={0.8}
+            >
+                <View style={styles.recommendationHeader}>
+                    <View style={styles.recommendationTitleRow}>
+                        <Text style={styles.recommendationType}>
+                            {item.deficiency || 'Unknown Deficiency'}
+                        </Text>
+                        {item.severity && (
+                            <View style={[styles.severityBadge, { backgroundColor: severityColor }]}>
+                                <Text style={styles.severityText}>{item.severity}</Text>
+                            </View>
+                        )}
                     </View>
+                    <Text style={styles.recommendationDate}>{date}</Text>
                 </View>
-                <Text style={styles.recommendationDate}>{new Date(item.date).toLocaleDateString()}</Text>
-            </View>
 
-            <Text style={styles.recommendationDescription} numberOfLines={2}>
-                {item.description}
-            </Text>
-
-            <View style={styles.actionRow}>
-                <View style={styles.actionContent}>
-                    <Ionicons name="flash" size={16} color="#4CAF50" style={styles.actionIcon} />
-                    <Text style={styles.actionText}>{item.recommendedAction}</Text>
+                <View style={styles.actionRow}>
+                    <View style={styles.actionContent}>
+                        <Ionicons name="analytics-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
+                        <Text style={styles.actionText}>Confidence: {confidence}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </View>
-        </TouchableOpacity>
-    );
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -293,14 +316,30 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
                             <Ionicons name="time-outline" size={20} color="#4CAF50" />
                             <Text style={styles.sectionTitle}>Recent Analysis</Text>
                         </View>
-                        <TouchableOpacity style={styles.viewAllButton}>
+                        <TouchableOpacity
+                            style={styles.viewAllButton}
+                            onPress={handleViewAllHistory}
+                        >
                             <Text style={styles.viewAllText}>View All</Text>
                             <Ionicons name="chevron-forward" size={16} color="#4CAF50" />
                         </TouchableOpacity>
                     </View>
 
-                    {recentRecommendations.length > 0 && (
-                        recentRecommendations.map((item) => renderRecommendationCard(item))
+                    {loadingHistory ? (
+                        <View style={styles.historyLoadingContainer}>
+                            <ActivityIndicator size="small" color="#4CAF50" />
+                            <Text style={styles.historyLoadingText}>Loading recent analyses...</Text>
+                        </View>
+                    ) : recentAnalyses.length > 0 ? (
+                        recentAnalyses.map((item) => renderHistoryCard(item))
+                    ) : (
+                        <View style={styles.emptyHistoryContainer}>
+                            <Ionicons name="flask-outline" size={48} color="#D1D5DB" />
+                            <Text style={styles.emptyHistoryText}>No analysis history yet</Text>
+                            <Text style={styles.emptyHistorySubtext}>
+                                Start by analyzing a leaf sample
+                            </Text>
+                        </View>
                     )}
                 </View>
             </ScrollView>
@@ -549,6 +588,37 @@ const styles = StyleSheet.create({
     highlightText: {
         fontWeight: '600',
         color: '#4CAF50',
+    },
+    historyLoadingContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+        gap: 12,
+    },
+    historyLoadingText: {
+        fontSize: 14,
+        color: '#6B7280',
+    },
+    emptyHistoryContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 48,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+        borderStyle: 'dashed',
+    },
+    emptyHistoryText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+        marginTop: 16,
+        marginBottom: 4,
+    },
+    emptyHistorySubtext: {
+        fontSize: 14,
+        color: '#9CA3AF',
     },
 });
 

@@ -41,7 +41,16 @@ def get_logger(
     if logger.hasHandlers():
         logger.handlers.clear()
 
-    # Console handler
+    # Console handler with UTF-8 encoding support
+    # On Windows, reconfigure stdout to use UTF-8 to handle emoji
+    if sys.platform == 'win32':
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except AttributeError:
+            # Python < 3.7 doesn't have reconfigure, wrap the stream
+            import codecs
+            sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.DEBUG)
     console_format = EmojiFormatter(

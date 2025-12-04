@@ -19,6 +19,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
 import { fertilizerAPI, FertilizerAnalysisResponse } from '../../services/fertilizerAPI';
+import PlantAgeSelector from '../../components/PlantAgeSelector';
 
 type PhotoPreviewNavigationProp = StackNavigationProp<
     FertilizerStackParamList,
@@ -40,6 +41,8 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisProgress, setAnalysisProgress] = useState('');
     const [analysisResult, setAnalysisResult] = useState<FertilizerAnalysisResponse | null>(null);
+    const [showAgeSelectorModal, setShowAgeSelectorModal] = useState(false);
+    const [detectionResult, setDetectionResult] = useState<any>(null);
 
     const detectedIssues = [
         {
@@ -91,13 +94,9 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
 
             setIsAnalyzing(false);
 
-            // Navigate directly to show Roboflow output
-            console.log('🎯 Navigating to results with Roboflow data...');
-            navigation.navigate('FertilizerResult', {
-                leafImage: imageUri,
-                analysisType: 'leaf-only' as const, // Use valid type
-                roboflowAnalysis: roboflowResult // Pass Roboflow data from backend
-            });
+            // Store detection result and show age selector
+            setDetectionResult(roboflowResult);
+            setShowAgeSelectorModal(true);
 
         } catch (error) {
             console.error('❌ Leaf analysis error:', error);
@@ -135,6 +134,19 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
         } finally {
             setIsAnalyzing(false);
         }
+    };
+
+    const handleAgeConfirm = (plantAge: number) => {
+        console.log(`🌱 Plant age selected: ${plantAge} years`);
+        setShowAgeSelectorModal(false);
+
+        // Navigate to results with detection data and plant age
+        navigation.navigate('FertilizerResult', {
+            leafImage: imageUri,
+            analysisType: 'leaf-only' as const,
+            roboflowAnalysis: detectionResult,
+            plantAge: plantAge // Pass plant age to results
+        });
     };
 
     const handleAddSoilAnalysis = () => {
@@ -373,6 +385,13 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
                         </TouchableOpacity>
                     )}
                 </View>
+
+                {/* Plant Age Selector Modal */}
+                <PlantAgeSelector
+                    visible={showAgeSelectorModal}
+                    onClose={() => setShowAgeSelectorModal(false)}
+                    onConfirm={handleAgeConfirm}
+                />
             </ScrollView>
         </SafeAreaView>
     );

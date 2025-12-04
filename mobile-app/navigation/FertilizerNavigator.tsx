@@ -32,6 +32,7 @@ export type FertilizerStackParamList = {
         analysisType?: 'leaf-only' | 'comprehensive';
         mlAnalysis?: FertilizerAnalysisResponse; // Add ML analysis data
         roboflowAnalysis?: any; // Add Roboflow workflow output
+        plantAge?: number; // Plant age in years for recommendations
     };
 };
 

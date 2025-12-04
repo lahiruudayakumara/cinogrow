@@ -857,8 +857,19 @@ def generate_recommendations(deficiency: str, severity: str, plant_age: int, con
         }
     }
     
+    # Normalize deficiency name to handle typos (e.g., "Potasium" -> "Potassium")
+    normalized_deficiency = deficiency
+    if "potasium" in deficiency.lower():
+        normalized_deficiency = "Potassium Deficiency"
+    elif "nitrogen" in deficiency.lower():
+        normalized_deficiency = "Nitrogen Deficiency"
+    elif "phosphorus" in deficiency.lower():
+        normalized_deficiency = "Phosphorus Deficiency"
+    elif "magnesium" in deficiency.lower():
+        normalized_deficiency = "Magnesium Deficiency"
+    
     # Get recommendation for this deficiency
-    deficiency_info = fertilizer_guide.get(deficiency, fertilizer_guide["Nitrogen Deficiency"])
+    deficiency_info = fertilizer_guide.get(normalized_deficiency, fertilizer_guide["Nitrogen Deficiency"])
     
     # Get the appropriate dosage for plant age
     dosage_info = deficiency_info["dosages"][year_category]

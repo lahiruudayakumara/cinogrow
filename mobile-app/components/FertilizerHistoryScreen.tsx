@@ -134,6 +134,22 @@ export const FertilizerHistoryScreen = () => {
                         <Text style={styles.infoValue}>{confidence}</Text>
                     </View>
 
+                    {item.plant_age && (
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Plant Age:</Text>
+                            <Text style={styles.infoValue}>{item.plant_age} year{item.plant_age !== 1 ? 's' : ''}</Text>
+                        </View>
+                    )}
+
+                    {item.recommendations && (
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Recommendations:</Text>
+                            <View style={[styles.severityBadge, { backgroundColor: '#16A34A' }]}>
+                                <Text style={styles.severityText}>Available</Text>
+                            </View>
+                        </View>
+                    )}
+
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Image:</Text>
                         <Text style={styles.infoValue} numberOfLines={1}>

@@ -40,9 +40,8 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
     // State for ML analysis
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisProgress, setAnalysisProgress] = useState('');
-    const [analysisResult, setAnalysisResult] = useState<FertilizerAnalysisResponse | null>(null);
     const [showAgeSelectorModal, setShowAgeSelectorModal] = useState(false);
-    const [detectionResult, setDetectionResult] = useState<any>(null);
+    const [selectedPlantAge, setSelectedPlantAge] = useState<number>(1);
 
     const detectedIssues = [
         {
@@ -65,8 +64,8 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
 
     const handleContinue = async () => {
         if (imageType === 'leaf') {
-            // Call real ML API for leaf analysis
-            await performLeafAnalysis();
+            // Show age selector first, then perform analysis after age is selected
+            setShowAgeSelectorModal(true);
         } else if (imageType === 'soil') {
             // For now, go to results with basic soil analysis
             // TODO: Implement soil analysis API
@@ -78,25 +77,30 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
         }
     };
 
-    const performLeafAnalysis = async () => {
+    const performLeafAnalysis = async (plantAge: number) => {
         try {
             setIsAnalyzing(true);
             setAnalysisProgress('🔍 Detecting deficiencies with Roboflow AI...');
 
             console.log('🚀 Starting leaf analysis with Roboflow via backend...');
             console.log(`🖼️ Image URI: ${imageUri}`);
+            console.log(`🌱 Plant Age: ${plantAge} years`);
 
-            // Step 1: Use backend API to call Roboflow
+            // Step 1: Use backend API to call Roboflow with plant age
             console.log('🤖 Step 1: Calling backend Roboflow API...');
-            const roboflowResult = await fertilizerAPI.analyzeLeafWithRoboflow(imageUri);
+            const roboflowResult = await fertilizerAPI.analyzeLeafWithRoboflow(imageUri, plantAge);
 
             console.log('✅ Roboflow detection completed:', roboflowResult);
 
             setIsAnalyzing(false);
 
-            // Store detection result and show age selector
-            setDetectionResult(roboflowResult);
-            setShowAgeSelectorModal(true);
+            // Navigate directly to results with the analysis data
+            navigation.navigate('FertilizerResult', {
+                leafImage: imageUri,
+                analysisType: 'leaf-only' as const,
+                roboflowAnalysis: roboflowResult,
+                plantAge: plantAge
+            });
 
         } catch (error) {
             console.error('❌ Leaf analysis error:', error);
@@ -116,7 +120,7 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
                 [
                     {
                         text: 'Try Again',
-                        onPress: () => performLeafAnalysis()
+                        onPress: () => performLeafAnalysis(plantAge)
                     },
                     {
                         text: 'Basic Analysis',
@@ -139,14 +143,10 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
     const handleAgeConfirm = (plantAge: number) => {
         console.log(`🌱 Plant age selected: ${plantAge} years`);
         setShowAgeSelectorModal(false);
+        setSelectedPlantAge(plantAge);
 
-        // Navigate to results with detection data and plant age
-        navigation.navigate('FertilizerResult', {
-            leafImage: imageUri,
-            analysisType: 'leaf-only' as const,
-            roboflowAnalysis: detectionResult,
-            plantAge: plantAge // Pass plant age to results
-        });
+        // Perform analysis with the selected plant age
+        performLeafAnalysis(plantAge);
     };
 
     const handleAddSoilAnalysis = () => {

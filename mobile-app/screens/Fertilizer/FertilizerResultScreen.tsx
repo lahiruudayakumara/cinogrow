@@ -124,8 +124,12 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
             console.log('📊 Processed detections:', allDetections);
             setDetections(allDetections);
 
-            // Fetch recommendations if plant age is provided
-            if (plantAge && allDetections.length > 0) {
+            // Use recommendations from roboflowAnalysis if available
+            if (roboflowAnalysis.recommendations) {
+                console.log('✅ Using recommendations from analysis response');
+                setRecommendations(roboflowAnalysis.recommendations);
+            } else if (plantAge && allDetections.length > 0) {
+                // Fallback: fetch recommendations if not included in response
                 fetchRecommendations(allDetections[0]);
             }
         }

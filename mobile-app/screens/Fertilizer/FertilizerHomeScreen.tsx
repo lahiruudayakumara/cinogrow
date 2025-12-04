@@ -113,26 +113,28 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
         navigation.navigate('FertilizerResult', {
             roboflowAnalysis: {
                 success: true,
-                primary_deficiency: item.deficiency,
+                primary_deficiency: item.primary_deficiency,
                 confidence: item.confidence,
                 severity: item.severity,
+                plant_age: item.plant_age,
+                recommendations: item.recommendations,
                 history_id: item.id,
                 detections: [{
-                    class: item.deficiency || 'Unknown',
+                    class: item.primary_deficiency || 'Unknown',
                     confidence: item.confidence || 0,
-                    deficiency: item.deficiency || 'Unknown',
+                    deficiency: item.primary_deficiency || 'Unknown',
                     severity: item.severity || 'Low'
                 }],
                 roboflow_output: [{
                     predictions: {
                         predictions: [{
-                            class: item.deficiency || 'Unknown',
+                            class: item.primary_deficiency || 'Unknown',
                             confidence: item.confidence || 0
                         }]
                     }
                 }]
             },
-            plantAge: 1, // Default age, can be customized
+            plantAge: item.plant_age || 1,
         });
     };
 
@@ -201,7 +203,7 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
                 <View style={styles.recommendationHeader}>
                     <View style={styles.recommendationTitleRow}>
                         <Text style={styles.recommendationType}>
-                            {item.deficiency || 'Unknown Deficiency'}
+                            {item.primary_deficiency || 'Unknown Deficiency'}
                         </Text>
                         {item.severity && (
                             <View style={[styles.severityBadge, { backgroundColor: severityColor }]}>
@@ -217,6 +219,12 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
                         <Ionicons name="analytics-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
                         <Text style={styles.actionText}>Confidence: {confidence}</Text>
                     </View>
+                    {item.plant_age && (
+                        <View style={styles.actionContent}>
+                            <Ionicons name="leaf-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
+                            <Text style={styles.actionText}>{item.plant_age}yr</Text>
+                        </View>
+                    )}
                     <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
                 </View>
             </TouchableOpacity>

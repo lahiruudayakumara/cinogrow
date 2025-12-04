@@ -13,7 +13,7 @@ from PIL import Image
 import io
 from pathlib import Path
 from sqlmodel import Session, select
-from app.database import get_db
+from app.database import get_session
 from app.models.fertilizer_history import (
     FertilizerHistory,
     FertilizerHistoryCreate,
@@ -113,8 +113,9 @@ async def health_check() -> Dict[str, Any]:
 @router.post("/analyze")
 async def analyze_leaf_with_roboflow(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    user_id: Optional[int] = None
+    db: Session = Depends(get_session),
+    user_id: Optional[int] = None,
+    plant_age: int = Query(1, ge=1, description="Plant age in years")
 ) -> Dict[str, Any]:
     """
     Analyze leaf image using Roboflow Inference SDK and save to history
@@ -127,6 +128,7 @@ async def analyze_leaf_with_roboflow(
         file: Leaf image file (JPEG, PNG)
         db: Database session
         user_id: Optional user ID for tracking (query parameter)
+        plant_age: Age of the plant in years (query parameter)
         
     Returns:
         Dict containing Roboflow workflow output and saved record ID
@@ -305,14 +307,32 @@ async def analyze_leaf_with_roboflow(
             max_confidence = 0.0
             severity = "Low"
         
+        # Generate recommendations based on deficiency, severity, and plant age
+        recommendations = None
+        try:
+            logger.info(f"🌱 Generating recommendations for plant_age={plant_age}, deficiency={primary_deficiency}")
+            recommendations = generate_recommendations(
+                deficiency=primary_deficiency or "Unknown",
+                severity=severity or "Low",
+                plant_age=plant_age,
+                confidence=max_confidence
+            )
+            logger.info(f"✅ Generated recommendations: {recommendations.get('summary', 'N/A')}")
+        except Exception as e:
+            logger.error(f"❌ Failed to generate recommendations: {e}")
+            import traceback
+            logger.error(f"❌ Traceback: {traceback.format_exc()}")
+        
         # Save to database (simplified)
         try:
-            logger.info(f"💾 Saving to database: deficiency={primary_deficiency}, confidence={max_confidence}, severity={severity}")
+            logger.info(f"💾 Saving to database: deficiency={primary_deficiency}, confidence={max_confidence}, severity={severity}, plant_age={plant_age}")
             
             history_record = FertilizerHistory(
-                deficiency=primary_deficiency,
+                primary_deficiency=primary_deficiency,
                 confidence=max_confidence,
                 severity=severity,
+                plant_age=plant_age,
+                recommendations=recommendations,
                 analyzed_at=datetime.utcnow()
             )
             
@@ -336,6 +356,8 @@ async def analyze_leaf_with_roboflow(
             "primary_deficiency": primary_deficiency,
             "confidence": max_confidence,
             "severity": severity,
+            "plant_age": plant_age,
+            "recommendations": recommendations,
             "history_id": history_record.id if 'history_record' in locals() else None,
             "metadata": {
                 "filename": file.filename,
@@ -390,7 +412,7 @@ async def get_roboflow_status() -> Dict[str, Any]:
 
 @router.get("/history", response_model=List[FertilizerHistoryResponse])
 async def get_fertilizer_history(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_session),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(10, ge=1, le=100, description="Maximum number of records to return"),
     user_id: Optional[int] = Query(None, description="Filter by user ID"),
@@ -454,7 +476,7 @@ async def get_fertilizer_history(
 @router.get("/history/{history_id}", response_model=FertilizerHistoryResponse)
 async def get_fertilizer_history_by_id(
     history_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_session)
 ) -> FertilizerHistoryResponse:
     """
     Get a specific fertilizer analysis record by ID
@@ -495,7 +517,7 @@ async def get_fertilizer_history_by_id(
 async def get_history_recommendations(
     history_id: int,
     plant_age: int = Query(1, ge=1, description="Plant age in years"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_session)
 ) -> Dict[str, Any]:
     """
     Get fertilizer recommendations for a specific history record
@@ -556,7 +578,7 @@ async def get_history_recommendations(
 @router.delete("/history/{history_id}")
 async def delete_fertilizer_history(
     history_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_session)
 ) -> Dict[str, Any]:
     """
     Delete a specific fertilizer analysis record
@@ -602,7 +624,7 @@ async def delete_fertilizer_history(
 
 @router.get("/history/stats/summary")
 async def get_history_statistics(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_session),
     user_id: Optional[int] = Query(None, description="Filter stats by user ID")
 ) -> Dict[str, Any]:
     """
@@ -713,22 +735,298 @@ async def get_fertilizer_recommendations(
 def generate_recommendations(deficiency: str, severity: str, plant_age: int, confidence: float) -> Dict[str, Any]:
     """
     Generate fertilizer recommendations based on plant age and deficiency
-    Following official cinnamon cultivation guidelines for N, P, K deficiencies
+    Following official cinnamon cultivation guidelines with soil preparation requirements
+    Updated: December 2025 - Official Ministry Guidelines
     """
     
-    # Determine plant year category for dosage
+    # Determine plant year category for dosage and placement
     if plant_age == 1:
         year_category = "year_1"
-        year_desc = "Year 1"
-        ring_distance = "15 cm"
+        year_desc = "Year 1 (0-1 year)"
+        ring_distance = "15 cm (6 inches)"
+        placement_desc = "Apply fertilizer 15 cm (6 inches) away from the base of the seedling"
     elif plant_age == 2:
         year_category = "year_2"
         year_desc = "Year 2"
-        ring_distance = "20 cm"
+        ring_distance = "30 cm (12 inches)"
+        placement_desc = "Apply fertilizer 30 cm (12 inches) away from the base"
     else:  # 3+ years
         year_category = "year_3_plus"
         year_desc = "Year 3+"
-        ring_distance = "30 cm"
+        ring_distance = "30 cm (12 inches)"
+        placement_desc = "Apply fertilizer 30 cm (12 inches) away from the base"
+    
+    # Fertilizer recommendations by deficiency type - UPDATED GUIDELINES
+    fertilizer_guide = {
+        "Nitrogen Deficiency": {
+            "primary_nutrient": "Nitrogen (N)",
+            "dosages": {
+                "year_1": {"amount": 17, "unit": "g N"},
+                "year_2": {"amount": 34, "unit": "g N"},
+                "year_3_plus": {"amount": 50, "unit": "g N"}
+            },
+            "fertilizer": {
+                "name": "Urea",
+                "composition": "46% N",
+                "description": "Main nitrogen source for cinnamon cultivation"
+            },
+            "application_method": {
+                "timing": "Apply when soil has sufficient moisture (start or end of rainy season)",
+                "placement": placement_desc,
+                "coverage": "After applying fertilizer: mulch / lightly water"
+            },
+            "symptoms": [
+                "Yellowing between veins",
+                "Pale, thin leaves",
+                "Overall poor growth"
+            ],
+            "extra_note": "Nitrogen deficiency combined with yellow-brown patches may indicate Magnesium deficiency, which can be corrected by Dolomite"
+        },
+        "Phosphorus Deficiency": {
+            "primary_nutrient": "Phosphorus (P)",
+            "dosages": {
+                "year_1": {"amount": 8, "unit": "g P"},
+                "year_2": {"amount": 17, "unit": "g P"},
+                "year_3_plus": {"amount": 25, "unit": "g P"}
+            },
+            "fertilizer": {
+                "name": "ERP (Eppawala Rock Phosphate)",
+                "composition": "Variable P content (typically 20-30% P₂O₅)",
+                "description": "Main phosphorus source, slow-release natural rock phosphate"
+            },
+            "application_method": {
+                "timing": "Apply early in the season because P releases slowly",
+                "placement": "Mix lightly with soil for better absorption",
+                "coverage": "Maintain soil pH 5.5–6.5 for phosphorus efficiency"
+            },
+            "symptoms": [
+                "Slow growth",
+                "Purple or darkened lower leaves",
+                "Thin stems"
+            ],
+            "extra_note": "Phosphorus is slow-release, so early application ensures availability during growth period"
+        },
+        "Potassium Deficiency": {
+            "primary_nutrient": "Potassium (K)",
+            "dosages": {
+                "year_1": {"amount": 8, "unit": "g K"},
+                "year_2": {"amount": 17, "unit": "g K"},
+                "year_3_plus": {"amount": 25, "unit": "g K"}
+            },
+            "fertilizer": {
+                "name": "MOP (Muriate of Potash)",
+                "composition": "60% K₂O",
+                "description": "Main potassium source for cinnamon cultivation"
+            },
+            "application_method": {
+                "timing": "Apply during moist conditions only (start/end of rainy season)",
+                "placement": f"Keep fertilizer {ring_distance} away from the base",
+                "coverage": "Avoid applying on dry soil"
+            },
+            "symptoms": [
+                "Brown leaf edges",
+                "Leaf scorch",
+                "Weak stems",
+                "Reduced oil content in cinnamon bark"
+            ],
+            "extra_note": "Potassium deficiency can significantly reduce the quality and oil content of cinnamon bark"
+        },
+        "Magnesium Deficiency": {
+            "primary_nutrient": "Magnesium (Mg)",
+            "dosages": {
+                "year_1": {"amount": 50, "unit": "g"},
+                "year_2": {"amount": 75, "unit": "g"},
+                "year_3_plus": {"amount": 100, "unit": "g"}
+            },
+            "fertilizer": {
+                "name": "Dolomite",
+                "composition": "Contains Ca and Mg",
+                "description": "Corrects both Magnesium deficiency and soil acidity. Apply 6 weeks before fertilizer application."
+            },
+            "application_method": {
+                "timing": "Apply during preparation or early season, 6 weeks before fertilizer",
+                "placement": "Broadcast around plant and lightly incorporate",
+                "coverage": "Also helps maintain optimal soil pH (5.5-6.5)"
+            },
+            "symptoms": [
+                "Yellow-brown patches on leaves",
+                "Interveinal chlorosis",
+                "Often appears with Nitrogen deficiency"
+            ],
+            "extra_note": "If soil pH is below 5.5, apply dolomite. If pH < 5.0, apply 400 kg/acre"
+        }
+    }
+    
+    # Get recommendation for this deficiency
+    deficiency_info = fertilizer_guide.get(deficiency, fertilizer_guide["Nitrogen Deficiency"])
+    
+    # Get the appropriate dosage for plant age
+    dosage_info = deficiency_info["dosages"][year_category]
+    nutrient_amount = dosage_info["amount"]
+    nutrient_unit = dosage_info["unit"]
+    
+    # Get fertilizer details
+    fertilizer = deficiency_info["fertilizer"]
+    application = deficiency_info["application_method"]
+    
+    # Calculate actual fertilizer amount based on nutrient content
+    if "Urea" in fertilizer["name"]:
+        fertilizer_amount = round(nutrient_amount / 0.46)
+        fertilizer_calculation = f"{nutrient_amount}g N ÷ 0.46 = {fertilizer_amount}g Urea"
+    elif "ERP" in fertilizer["name"] or "Rock Phosphate" in fertilizer["name"]:
+        fertilizer_amount = round(nutrient_amount / 0.11)
+        fertilizer_calculation = f"{nutrient_amount}g P ÷ 0.11 (approx) = {fertilizer_amount}g ERP"
+    elif "MOP" in fertilizer["name"] or "Muriate of Potash" in fertilizer["name"]:
+        fertilizer_amount = round(nutrient_amount / 0.50)
+        fertilizer_calculation = f"{nutrient_amount}g K ÷ 0.50 = {fertilizer_amount}g MOP"
+    else:
+        fertilizer_amount = nutrient_amount
+        fertilizer_calculation = f"{nutrient_amount}{nutrient_unit}"
+    
+    # Determine urgency
+    immediate_action = severity == "High" and confidence > 0.7
+    
+    # Build comprehensive recommendations
+    recommendations = {
+        # SOIL PREPARATION (CRITICAL - MUST DO FIRST)
+        "soil_preparation": {
+            "title": "⚠️ BEFORE APPLYING ANY FERTILIZER",
+            "essential_conditions": [
+                "Maintain adequate soil moisture",
+                "Ensure proper soil aeration",
+                "Maintain good soil microbial activity",
+                "Maintain soil pH within 5.5 – 6.5 range",
+                "Perform soil testing at least once a year (pH + nutrient availability)"
+            ],
+            "dolomite_application": {
+                "when_to_apply": "Apply dolomite if soil pH is below 5.5",
+                "dosage_guideline": "If pH < 5.0 → apply 400 kg/acre",
+                "timing": "Apply 6 weeks BEFORE fertilizer application",
+                "benefits": "Provides Calcium (Ca) and Magnesium (Mg), preventing Mg deficiency"
+            }
+        },
+        
+        # PLANT INFORMATION
+        "plant_information": {
+            "age_years": plant_age,
+            "year_category": year_desc,
+            "placement_distance": ring_distance,
+            "description": f"Cinnamon plant in {year_desc} stage"
+        },
+        
+        # DETECTED DEFICIENCY
+        "deficiency_details": {
+            "detected_deficiency": deficiency,
+            "primary_nutrient": deficiency_info["primary_nutrient"],
+            "symptoms": deficiency_info["symptoms"],
+            "severity": severity,
+            "confidence": round(confidence * 100, 1)
+        },
+        
+        # FERTILIZER RECOMMENDATION
+        "fertilizer_recommendation": {
+            "fertilizer_name": fertilizer["name"],
+            "composition": fertilizer["composition"],
+            "description": fertilizer["description"],
+            "nutrient_required": f"{nutrient_amount} {nutrient_unit}",
+            "fertilizer_amount": f"{fertilizer_amount}g per plant",
+            "calculation": fertilizer_calculation
+        },
+        
+        # APPLICATION GUIDELINES
+        "application_guidelines": {
+            "timing": application["timing"],
+            "placement": application["placement"],
+            "method": application["coverage"],
+            "urgency": "Within 3-7 days" if immediate_action else "Within 1-2 weeks",
+            "best_time": "Early morning or late afternoon to avoid heat stress",
+            "split_application": "Apply in two splits each year (every 6 months)" if plant_age >= 3 else "Apply every 3-4 months"
+        },
+        
+        # IMPORTANT NOTES
+        "important_notes": {
+            "moisture_requirement": "✓ Apply ONLY when soil has sufficient moisture",
+            "soil_preparation": "✓ Ensure soil pH is 5.5-6.5 before fertilizer application",
+            "distance_from_stem": f"✓ Maintain {ring_distance} distance from plant base",
+            "after_application": "✓ Mulch or lightly water after fertilizer application",
+            "special_note": deficiency_info.get("extra_note", "Follow standard application practices")
+        },
+        
+        # MATURE CINNAMON GUIDANCE (3+ years)
+        "mature_plant_guide": {
+            "applicable": plant_age >= 3,
+            "npk_ratio": "23 : 7 : 15 (N : P₂O₅ : K₂O)",
+            "annual_requirement": "900 kg per hectare",
+            "application_frequency": "Apply in two splits each year (every 6 months)"
+        } if plant_age >= 3 else None,
+        
+        # MONITORING
+        "monitoring": {
+            "improvement_timeline": "Expect visible improvement in 2-4 weeks in new growth",
+            "full_recovery": "Complete recovery typically takes 6-8 weeks",
+            "check_for": [
+                "New leaf color and size",
+                "Overall plant vigor",
+                "Stem strength"
+            ]
+        },
+        
+        # WARNINGS
+        "warnings": [
+            "⚠️ Check and correct soil pH BEFORE applying fertilizer",
+            "⚠️ Do not exceed recommended dosage",
+            "⚠️ Keep fertilizer away from direct contact with stem",
+            "⚠️ Apply only during moist conditions",
+            "⚠️ Avoid application during drought or extreme heat"
+        ],
+        
+        # SUMMARY
+        "summary": f"For {year_desc} cinnamon plant with {deficiency}: Apply {fertilizer_amount}g of {fertilizer['name']} at {ring_distance} from base. Ensure soil pH is 5.5-6.5 and soil is moist before application.",
+        
+        # LEGACY FIELDS FOR MOBILE APP COMPATIBILITY
+        "growth_stage": {
+            "stage": year_category,
+            "description": f"Cinnamon plant in {year_desc} stage",
+            "age_years": plant_age
+        },
+        "primary_fertilizer": {
+            "name": fertilizer["name"],
+            "npk_ratio": fertilizer["composition"],
+            "dosage": f"{fertilizer_amount}g per plant",
+            "dosage_note": f"Based on {nutrient_amount}{nutrient_unit} requirement ({fertilizer_calculation})",
+            "frequency": "Apply every 6 months" if plant_age >= 3 else "Apply every 3-4 months",
+            "application_method": f"{application['placement']}. {application['coverage']}"
+        },
+        "application_schedule": {
+            "immediate_action_required": immediate_action,
+            "first_application": "Within 3-7 days" if immediate_action else "Within 1-2 weeks",
+            "ongoing_schedule": "Apply every 6 months" if plant_age >= 3 else "Apply every 3-4 months",
+            "best_time": "Early morning or late afternoon to avoid heat stress",
+            "weather_conditions": "Apply when soil is moist; avoid rain within 24 hours"
+        },
+        "organic_alternative": {
+            "description": deficiency_info["symptoms"][0] if deficiency_info["symptoms"] else "Organic alternatives available",
+            "note": f"Consider organic options based on availability. {deficiency_info.get('extra_note', '')}"
+        },
+        "expected_results": {
+            "improvement_timeline": "Expect visible improvement in 2-4 weeks in new growth",
+            "full_recovery": "Complete recovery typically takes 6-8 weeks",
+            "monitoring_points": [
+                "New leaf color and size",
+                "Overall plant vigor",
+                "Stem strength",
+                "Bark quality (for mature plants)"
+            ]
+        },
+        "additional_care": {
+            "watering": "Maintain consistent soil moisture; apply only when soil has sufficient moisture",
+            "mulching": "Apply organic mulch after fertilizer application to retain moisture",
+            "monitoring": "Check for improvement in new growth after 2-3 weeks",
+            "soil_testing": "Maintain soil pH between 5.5-6.5 for optimal nutrient uptake"
+        }
+    }
+    
+    return recommendations
     
     # Fertilizer recommendations by deficiency type with exact dosages
     fertilizer_guide = {

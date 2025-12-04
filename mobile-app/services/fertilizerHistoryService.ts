@@ -19,10 +19,12 @@ export interface FertilizerDetection {
 
 export interface FertilizerHistoryRecord {
   id: number;
-  deficiency: string | null;
+  primary_deficiency: string | null;
   severity: 'Low' | 'Medium' | 'High' | null;
   confidence: number | null;
   image_path: string | null;
+  plant_age: number | null;
+  recommendations: any | null;
   analyzed_at: string;
 }
 

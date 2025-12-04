@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from typing import List
 from datetime import datetime
-from app.database import get_db
+from app.db.session import get_db
 from app.models.yield_weather.farm import (
     Farm, Plot, PlantingRecord, FarmActivity, UserYieldRecord, YieldPrediction,
     FarmCreate, FarmRead, PlotCreate, PlotUpdate, PlotRead,

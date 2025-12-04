@@ -33,7 +33,12 @@ def train_model():
 def load_model():
     """
     Load the trained XGBoost model from disk.
+    If the model doesn't exist, train it first.
     """
+    if not MODEL_PATH.exists():
+        print(f"⚠️ Model not found at {MODEL_PATH}. Training a new model...")
+        train_model()
+    
     return joblib.load(MODEL_PATH)
 
 # --- Run training if executed directly ---

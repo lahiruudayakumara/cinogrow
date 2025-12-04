@@ -13,7 +13,7 @@ from app.db import Base, engine
 load_dotenv()
 
 # Import database and routers
-from app.database import create_db_and_tables
+from app.db.session import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, yield_prediction
 from app.routers.fertilizer.roboflow_simple import router as roboflow_simple_router
 
@@ -32,12 +32,12 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # You can replace "*" with your frontend URL for production
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include the oil yield router
-# app.include_router(oil_yield_router)
+app.include_router(oil_yield_router)
 
 # Create upload directories if they don't exist
 Path('uploads/fertilizer_analysis').mkdir(parents=True, exist_ok=True)

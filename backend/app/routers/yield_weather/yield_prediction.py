@@ -6,7 +6,7 @@ import pandas as pd
 import json
 from io import StringIO
 
-from app.database import get_session
+from app.db.session import get_session
 from app.models.yield_weather import (
     YieldDataset, UserYieldRecord, YieldPrediction, Plot,
     YieldDatasetCreate, YieldDatasetRead,

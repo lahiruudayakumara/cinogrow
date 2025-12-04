@@ -29,7 +29,7 @@ export interface PredictedYield {
   plot_area: number;
   predicted_yield: number;
   confidence_score?: number;
-  prediction_source: 'dataset_match' | 'ai_model' | 'average';
+  prediction_source: 'hybrid_model' | 'dataset_match' | 'ai_model' | 'ml_model' | 'average';
 }
 
 class YieldAPI {
@@ -143,6 +143,96 @@ class YieldAPI {
     });
   }
 
+  // Real Hybrid Yield Prediction with actual tree sampling data
+  async predictHybridYield(
+    plotId: number,
+    sampleTrees: Array<{
+      tree_code?: string;
+      stem_diameter_mm: number;
+      fertilizer_used: boolean;
+      fertilizer_type?: 'organic' | 'npk' | 'urea' | 'compost' | null;
+      disease_status: 'none' | 'mild' | 'severe';
+      num_existing_stems: number;
+      tree_age_years?: number;
+    }>,
+    environmentalFactors?: {
+      rainfall?: number;
+      temperature?: number;
+    },
+    treesPerPlot?: number // New parameter for total trees in plot
+  ): Promise<{
+    plot_id: number;
+    plot_area: number;
+    sample_size: number;
+    final_hybrid_yield_kg: number;
+    yield_per_hectare: number;
+    confidence_score: number;
+    tree_model_yield_kg: number;
+    plot_model_yield_kg: number;
+    avg_predicted_canes_per_tree: number;
+    avg_predicted_fresh_weight_per_tree: number;
+    avg_predicted_dry_weight_per_tree: number;
+    estimated_trees_per_hectare: number;
+    total_estimated_trees: number;
+    tree_model_confidence: number;
+    plot_model_confidence: number;
+    blending_weight_tree: number;
+    blending_weight_plot: number;
+    prediction_date: string;
+    model_versions: any;
+    features_used: any;
+    estimated_dry_bark_percentage: number;
+    estimated_market_price_per_kg?: number;
+    estimated_revenue?: number;
+    notes?: string;
+    error?: string;
+  }> {
+    const requestBody = {
+      plot_id: plotId,
+      sample_trees: sampleTrees.map(tree => ({
+        tree_code: tree.tree_code,
+        stem_diameter_mm: tree.stem_diameter_mm,
+        fertilizer_used: tree.fertilizer_used,
+        fertilizer_type: tree.fertilizer_type,
+        disease_status: tree.disease_status,
+        num_existing_stems: tree.num_existing_stems,
+        tree_age_years: tree.tree_age_years || 4.0,
+      })),
+      trees_per_plot: treesPerPlot, // Include total trees count
+      rainfall_recent_mm: environmentalFactors?.rainfall || 2500,
+      temperature_recent_c: environmentalFactors?.temperature || 26,
+      notes: `Mobile app tree sampling with ${sampleTrees.length} trees${treesPerPlot ? ` out of ${treesPerPlot} total trees` : ''}`
+    };
+
+    console.log('🌳 Making real hybrid prediction request:', requestBody);
+    
+    return this.request('/hybrid-prediction', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+  }
+
+  // Quick hybrid prediction without detailed tree sampling
+  async predictQuickHybrid(
+    plotId: number
+  ): Promise<{
+    predicted_yield: number;
+    confidence_score: number;
+    prediction_source: string;
+    estimated_trees_count: number;
+    error?: string;
+  }> {
+    const params = new URLSearchParams();
+    params.append('plot_id', plotId.toString());
+
+    return this.request(`/hybrid-prediction/quick-predict?${params.toString()}`, {
+      method: 'POST',
+    });
+  }
+
   async getModelInfo(): Promise<any> {
     return this.request('/ml/model-info');
   }
@@ -153,7 +243,7 @@ class YieldAPI {
     });
   }
 
-  // Comprehensive prediction method (tries ML first, then fallback)
+  // Comprehensive prediction method (tries Hybrid first, then ML, then fallback)
   async predictYield(
     plotArea: number,
     location: string = 'Sri Lanka',
@@ -165,7 +255,7 @@ class YieldAPI {
   ): Promise<{
     predicted_yield: number | null;
     confidence_score: number;
-    prediction_source: 'ml_model' | 'historical_data' | 'mock_data' | 'not_planted';
+    prediction_source: 'hybrid_model' | 'ml_model' | 'historical_data' | 'mock_data' | 'not_planted';
     method_used: string;
     error?: string;
     message?: string;
@@ -173,9 +263,33 @@ class YieldAPI {
   }> {
     console.log('🤖 Starting comprehensive yield prediction for:', { plotArea, location, variety });
     
-    // Step 1: Try ML Model first
+    // Step 1: Try Hybrid Model first if plotId is available
+    if (plotId) {
+      try {
+        console.log('🌳 Attempting hybrid yield prediction...');
+        const hybridResult = await this.predictQuickHybrid(plotId);
+        
+        console.log('📊 Hybrid API Response:', hybridResult);
+        
+        if (hybridResult.predicted_yield && hybridResult.predicted_yield > 0) {
+          console.log('✅ Hybrid prediction successful');
+          return {
+            predicted_yield: hybridResult.predicted_yield,
+            confidence_score: hybridResult.confidence_score,
+            prediction_source: 'hybrid_model',
+            method_used: `Hybrid Model (${hybridResult.estimated_trees_count} trees estimated)`,
+            message: `Advanced hybrid prediction using tree-level and plot-level ML models`
+          };
+        }
+      } catch (hybridError) {
+        console.warn('⚠️ Hybrid prediction failed, falling back to standard ML:', hybridError);
+        // Continue to next method
+      }
+    }
+    
+    // Step 2: Try Standard ML Model
     try {
-      console.log('🔬 Attempting ML model prediction...');
+      console.log('🔬 Attempting standard ML model prediction...');
       const mlResult = await this.predictYieldML(
         location,
         variety,

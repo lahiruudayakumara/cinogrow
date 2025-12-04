@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from sqlmodel import Session
-from app.database import engine, create_db_and_tables
+from app.db.session import engine, create_db_and_tables
 from app.models.farm import Farm, Plot, PlotStatus
 
 

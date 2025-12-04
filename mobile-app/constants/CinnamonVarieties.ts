@@ -1,25 +1,18 @@
-// Cinnamon variety constants extracted from yield dataset
+// Cinnamon variety constants for Sri Lankan varieties
 export const CINNAMON_VARIETIES = [
   {
-    value: 'Ceylon Cinnamon',
-    label: 'Ceylon Cinnamon',
-    description: 'Premium quality cinnamon, also known as "True Cinnamon"',
-    scientificName: 'Cinnamomum verum',
-    characteristics: 'Sweet, delicate flavor with low coumarin content'
+    value: 'Sri Gemunu',
+    label: 'Sri Gemunu',
+    description: 'High-yielding Sri Lankan cinnamon variety with excellent commercial value',
+    scientificName: 'Cinnamomum zeylanicum var. Sri Gemunu',
+    characteristics: 'Superior bark quality, good peeling characteristics, high oil content'
   },
   {
-    value: 'Alba',
-    label: 'Alba',
-    description: 'High-yielding variety with good commercial value',
-    scientificName: 'Cinnamomum cassia var. Alba',
-    characteristics: 'Robust growth, medium flavor intensity'
-  },
-  {
-    value: 'Continental',
-    label: 'Continental',
-    description: 'Hardy variety suitable for various climatic conditions',
-    scientificName: 'Cinnamomum cassia var. Continental',
-    characteristics: 'Strong flavor, good for spice production'
+    value: 'Sri Wijaya',
+    label: 'Sri Wijaya',
+    description: 'Premium Sri Lankan variety known for superior quality and aroma',
+    scientificName: 'Cinnamomum zeylanicum var. Sri Wijaya',
+    characteristics: 'Excellent flavor profile, fine bark texture, disease resistant'
   }
 ] as const;
 
@@ -27,7 +20,7 @@ export const CINNAMON_VARIETIES = [
 export const CINNAMON_VARIETY_VALUES = CINNAMON_VARIETIES.map(variety => variety.value);
 
 // Default variety (most common in dataset)
-export const DEFAULT_CINNAMON_VARIETY = 'Ceylon Cinnamon';
+export const DEFAULT_CINNAMON_VARIETY = 'Sri Gemunu';
 
 // Variety selection options for dropdowns
 export const CINNAMON_VARIETY_OPTIONS = CINNAMON_VARIETIES.map(variety => ({

@@ -695,7 +695,7 @@ const getStatusColor = (detectedIssue: string) => {
         return { backgroundColor: '#4CAF50' };
     } else if (detectedIssue.includes('Nitrogen')) {
         return { backgroundColor: '#FF9800' };
-    } else if (detectedIssue.includes('Phosphorus')) {
+    } else if (detectedIssue.includes('Potassium')) {
         return { backgroundColor: '#F44336' };
     }
     return { backgroundColor: '#9E9E9E' };
@@ -706,8 +706,8 @@ const getStatusMessage = (detectedIssue: string) => {
         return 'Leaf appears healthy';
     } else if (detectedIssue.includes('Nitrogen')) {
         return 'Nitrogen deficiency detected - Action needed';
-    } else if (detectedIssue.includes('Phosphorus')) {
-        return 'Phosphorus deficiency detected - Urgent action needed';
+    } else if (detectedIssue.includes('Potassium')) {
+        return 'Potassium deficiency detected (brown edges) - Urgent action needed';
     }
     return 'Analysis completed';
 };

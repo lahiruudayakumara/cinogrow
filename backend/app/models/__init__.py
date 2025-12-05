@@ -1,5 +1,5 @@
 # Import all models to ensure they are registered with SQLModel
-from .yield_weather.farm import Farm, Plot, FarmActivity, PlantingRecord
+from .yield_weather.farm import Farm, Plot, FarmActivity, PlantingRecord, UserYieldRecord, YieldPrediction
 from .yield_weather.weather import WeatherRecord, WeatherResponse, LocationRequest, WeatherData
 from .yield_weather.farm_assistance import ActivityHistory
 
@@ -13,17 +13,6 @@ from .fertilizer.fertilizer import (
     FertilizerSchedule,
     FertilizerRecommendation
 )
-from .fertilizer.ml_metadata import (
-    MLAnalysisSession,
-    MLImageAnalysis,
-    MLTrainingDataset,
-    MLModelVersion
-)
-from .fertilizer.deficiency_detection import (
-    DeficiencyAnalysis,
-    CinnamonFertilizerRecommendation,
-    ImageAnalysisLog
-)
 
 from .user import User
 
@@ -32,6 +21,8 @@ __all__ = [
     "Plot", 
     "FarmActivity", 
     "PlantingRecord",
+    "UserYieldRecord",
+    "YieldPrediction",
     "WeatherRecord", 
     "WeatherResponse", 
     "LocationRequest",
@@ -43,14 +34,5 @@ __all__ = [
     "FertilizerType",
     "FertilizerApplication",
     "FertilizerSchedule",
-    "FertilizerRecommendation",
-    # ML Metadata models
-    "MLAnalysisSession",
-    "MLImageAnalysis",
-    "MLTrainingDataset",
-    "MLModelVersion",
-    # Deficiency detection models
-    "DeficiencyAnalysis",
-    "CinnamonFertilizerRecommendation",
-    "ImageAnalysisLog"
+    "FertilizerRecommendation"
 ]

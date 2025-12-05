@@ -5,6 +5,7 @@ This backend provides weather data integration using the OpenWeather API for the
 ## 📦 Prerequisites
 
 * Python >= 3.10
+* PostgreSQL database (required)
 * OpenWeather API Key (free from [OpenWeather](https://openweathermap.org/api))
 * `virtualenv` or `poetry`
 
@@ -37,17 +38,28 @@ Create a `.env` file in the `backend` directory:
 cp .env.example .env
 ```
 
+Configure your environment variables:
+
+### Database Configuration (Required)
+```
+DATABASE_URL=postgresql+psycopg2://postgres:password@127.0.0.1:5432/mydb
+```
+
+### OpenWeather API Configuration
 Get your OpenWeather API key:
 - Visit [OpenWeather API](https://openweathermap.org/api)
 - Sign up for a free account
 - Get your API key from the dashboard
 
-Edit `.env` with your API key:
-
 ```
 OPENWEATHER_API_KEY=your_actual_api_key_here
-OPENWEATHER_BASE_URL=https://api.openweathermap.org/data/2.5
 DEBUG=True
+```
+
+**Note**: PostgreSQL database is required. Use Docker Compose to set up the full stack including PostgreSQL:
+```bash
+cd ..  # Go to project root
+docker-compose up
 ```
 
 ---
@@ -59,6 +71,10 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Your server will start on `http://localhost:8000`
+
+**Network Access**: To access from other devices, replace `localhost` with your machine's IP address.
+- Find your IP: `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
+- Example: `http://192.168.1.100:8000`
 
 ## 📡 API Endpoints
 

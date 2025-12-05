@@ -4,7 +4,7 @@ from typing import Optional
 from datetime import datetime
 from sqlmodel import Session
 from app.models.yield_weather.weather import WeatherData, WeatherResponse, WeatherRecord
-from app.database import engine
+from app.db.session import engine
 
 
 class WeatherService:

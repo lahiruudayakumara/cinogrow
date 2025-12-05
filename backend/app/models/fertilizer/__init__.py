@@ -1,4 +1,4 @@
-"""Fertilizer models package"""
+"""Fertilizer models package - Basic models only (Roboflow handles detection)"""
 
 from .fertilizer import (
     FertilizerType,
@@ -11,16 +11,6 @@ from .fertilizer import (
     ScheduleFrequency
 )
 
-from .ml_metadata import (
-    MLAnalysisSession,
-    MLImageAnalysis,
-    MLTrainingDataset,
-    MLModelVersion,
-    SampleType,
-    CaptureMethod,
-    SessionStatus
-)
-
 __all__ = [
     "FertilizerType",
     "FertilizerApplication",
@@ -30,11 +20,4 @@ __all__ = [
     "ApplicationMethod",
     "FertilizerCategory",
     "ScheduleFrequency",
-    "MLAnalysisSession",
-    "MLImageAnalysis",
-    "MLTrainingDataset",
-    "MLModelVersion",
-    "SampleType",
-    "CaptureMethod",
-    "SessionStatus"
 ]

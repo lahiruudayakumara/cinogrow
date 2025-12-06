@@ -12,3 +12,12 @@ class OilYieldInput(BaseModel):
 class OilYieldOutput(BaseModel):
     predicted_yield_liters: float = Field(..., description="Predicted oil yield in liters")
     input_summary: dict = Field(..., description="Summary of input parameters")
+
+class DistillationTimeInput(BaseModel):
+    plant_part: Literal["Leaves & Twigs", "Featherings & Chips"] = Field(..., description="Part of the plant used")
+    cinnamon_type: Literal["Sri Gamunu", "Sri Wijaya"] = Field(..., description="Cinnamon type")
+    distillation_capacity_liters: float = Field(..., description="Distillation capacity in liters", gt=0)
+
+class DistillationTimeOutput(BaseModel):
+    predicted_time_hours: float = Field(..., description="Predicted distillation time in hours")
+    input_summary: dict = Field(..., description="Summary of input parameters")

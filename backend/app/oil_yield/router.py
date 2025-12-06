@@ -1,12 +1,14 @@
 # app/oil_yield/router.py
 from fastapi import APIRouter
-from .schemas import OilYieldInput, OilYieldOutput
+from .schemas import OilYieldInput, OilYieldOutput, DistillationTimeInput, DistillationTimeOutput
 from .model import load_model
+from .distillation_time_model import load_model as load_distillation_model
 import numpy as np
 
 router = APIRouter(prefix="/oil_yield", tags=["Oil Yield"])
 
 model = load_model()
+distillation_model = load_distillation_model()
 
 @router.post("/predict", response_model=OilYieldOutput)
 def predict_yield(data: OilYieldInput):
@@ -47,5 +49,40 @@ def predict_yield(data: OilYieldInput):
             "plant_part": data.plant_part,
             "age_years": data.age_years,
             "harvesting_season": data.harvesting_season
+        }
+    }
+
+@router.post("/predict_distillation_time", response_model=DistillationTimeOutput)
+def predict_distillation_time(data: DistillationTimeInput):
+    """
+    Predict distillation time based on plant characteristics and capacity.
+    
+    Parameters:
+    - plant_part: Plant part used (Leaves & Twigs or Featherings & Chips)
+    - cinnamon_type: Cinnamon type (Sri Gamunu or Sri Wijaya)
+    - distillation_capacity_liters: Distillation capacity in liters
+    
+    Returns predicted distillation time in hours.
+    """
+    # Encode categorical features
+    plant_part_encoded = 0 if data.plant_part == "Featherings & Chips" else 1
+    cinnamon_type_encoded = 0 if data.cinnamon_type == "Sri Gamunu" else 1
+    
+    # Prepare feature array
+    X = np.array([[
+        plant_part_encoded,
+        cinnamon_type_encoded,
+        data.distillation_capacity_liters
+    ]])
+    
+    # Make prediction
+    prediction = distillation_model.predict(X)[0]
+    
+    return {
+        "predicted_time_hours": round(float(prediction), 2),
+        "input_summary": {
+            "plant_part": data.plant_part,
+            "cinnamon_type": data.cinnamon_type,
+            "distillation_capacity_liters": data.distillation_capacity_liters
         }
     }

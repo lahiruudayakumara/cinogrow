@@ -256,7 +256,7 @@ export default function OilScreen() {
 
           {/* Research Center Section */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Research Center</Text>
+            <Text style={styles.sectionTitle}>Research Center Services</Text>
             <View style={styles.newBadge}>
               <Text style={styles.newBadgeText}>NEW</Text>
             </View>

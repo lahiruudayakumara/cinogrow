@@ -280,14 +280,14 @@ export default function DistillationProcess() {
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Bark Oil (Cinnamaldehyde)"
+                label="Featherings & Chips"
                 value="Bark"
                 selected={plantPart === 'Bark'}
                 onSelect={() => setPlantPart('Bark')}
                 icon="nature-people"
               />
               <RadioOption
-                label="Leaf Oil (Eugenol)"
+                label="Leaves & Twigs"
                 value="Leaf"
                 selected={plantPart === 'Leaf'}
                 onSelect={() => setPlantPart('Leaf')}

@@ -221,7 +221,7 @@ export default function OilScreen() {
               icon="white-balance-sunny"
               iconColor="#FF9F0A"
               backgroundColor="rgba(255, 159, 10, 0.15)"
-              title="Drying Process"
+              title="Drying Timer"
               subtitle="Optimize time"
               onPress={() => navigation.navigate('DryingProcess')}
             />
@@ -230,7 +230,7 @@ export default function OilScreen() {
               icon="steam"
               iconColor="#5E5CE6"
               backgroundColor="rgba(94, 92, 230, 0.15)"
-              title="Distillation"
+              title="Distillation Timer"
               subtitle="Track progress"
               onPress={() => navigation.navigate('DistillationProcess')}
             />

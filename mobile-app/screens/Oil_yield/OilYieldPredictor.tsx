@@ -203,7 +203,6 @@ export default function OilScreen() {
           {/* Grid Layout Title */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Features</Text>
-            <Text style={styles.sectionCount}>4 Tools</Text>
           </View>
 
           {/* Grid Cards - 2 Column Layout */}
@@ -242,6 +241,15 @@ export default function OilScreen() {
               title="Quality Guide"
               subtitle="Assess quality"
               onPress={() => navigation.navigate('OilQualityGuide')}
+            />
+            
+            <GridCard
+              icon="chart-line"
+              iconColor="#FF3B30"
+              backgroundColor="rgba(255, 59, 48, 0.15)"
+              title="Oil Price Predictor"
+              subtitle="Market forecast"
+              onPress={() => navigation.navigate('OilPricePredictor')}
             />
           </View>
 

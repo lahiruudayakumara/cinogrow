@@ -8,6 +8,7 @@ import DistillationProcessScreen from '../screens/Oil_yield/DistillationProcess'
 import OilYieldHomeScreen from '../screens/Oil_yield/OilYieldHome';
 import OilYieldPredictorSecond from '@/screens/Oil_yield/OilYieldPredictorSecond';
 import OilQualityGuideScreen from '../screens/Oil_yield/OilQualityGuide';
+import OilPricePredictorScreen from '../screens/Oil_yield/OilPricePredictor';
 
 // Define navigation parameter types
 export type RootStackParamList = {
@@ -17,6 +18,7 @@ export type RootStackParamList = {
   DryingProcess: undefined;
   DistillationProcess: undefined;
   OilQualityGuide: undefined;
+  OilPricePredictor: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -73,6 +75,13 @@ const OilYieldNavigator = () => {
         component={OilQualityGuideScreen}
         options={{
           title: 'Oil Quality Guide',
+        }}
+      />
+      <Stack.Screen
+        name="OilPricePredictor"
+        component={OilPricePredictorScreen}
+        options={{
+          title: 'Oil Price Predictor',
         }}
       />
     </Stack.Navigator>

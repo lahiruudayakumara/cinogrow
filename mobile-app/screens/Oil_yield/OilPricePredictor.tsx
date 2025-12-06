@@ -3,103 +3,118 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   Animated,
   StatusBar,
+  Dimensions,
+  ActivityIndicator,
+  Alert,
+  Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LineChart } from 'react-native-chart-kit';
+import apiConfig from '../../config/api';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CHART_WIDTH = SCREEN_WIDTH - 40;
+
+// Use localhost for web platform, otherwise use the configured API URL
+const API_BASE_URL = Platform.OS === 'web' 
+  ? 'http://localhost:8000/api/v1'
+  : apiConfig.API_BASE_URL;
 
 export default function OilPricePredictor() {
-  const [oilType, setOilType] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [qualityGrade, setQualityGrade] = useState('');
-  const [predictedPrice, setPredictedPrice] = useState<number | null>(null);
-  const [priceRange, setPriceRange] = useState<{ min: number; max: number } | null>(null);
+  const [timeRange, setTimeRange] = useState<'days' | 'months' | 'years'>('months');
+  const [forecastData, setForecastData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
 
-  // Price calculation based on current market rates
-  const calculatePrice = () => {
-    if (!oilType || !quantity || !qualityGrade) {
-      return;
-    }
+  // SARIMA time series forecasting
+  const fetchForecast = async (range: 'days' | 'months' | 'years') => {
+    console.log('🔍 Fetching SARIMA forecast');
+    console.log('Oil Type: Leaf');
+    console.log('Time Range:', range);
 
-    const qty = parseFloat(quantity);
-    if (isNaN(qty) || qty <= 0) {
-      return;
-    }
+    setLoading(true);
+    setShowResults(false);
+    setForecastData(null);
 
-    // Base prices per kg (LKR) - these are approximate market rates
-    let basePrice = 0;
-    let priceVariation = 0;
+    try {
+      const response = await fetch(`${API_BASE_URL}/oil_yield/price_forecast`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          oil_type: 'Leaf',
+          time_range: range,
+        }),
+      });
 
-    if (oilType === 'Leaf') {
-      // Cinnamon leaf oil: 75-85% eugenol
-      basePrice = 8000; // LKR per kg
-      priceVariation = 1500;
-      
-      // Quality adjustment
-      if (qualityGrade === 'Premium') {
-        basePrice += 2000; // High eugenol content (>80%)
-      } else if (qualityGrade === 'Standard') {
-        basePrice += 500;
+      console.log('📥 Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error:', errorText);
+        throw new Error(`API Error: ${response.status}`);
       }
-    } else if (oilType === 'Bark') {
-      // Cinnamon bark oil: 30-75% cinnamaldehyde
-      basePrice = 15000; // LKR per kg (higher than leaf oil)
-      priceVariation = 3000;
+
+      const data = await response.json();
+      console.log('✅ Forecast data received');
       
-      // Quality adjustment based on cinnamaldehyde content
-      if (qualityGrade === 'Premium') {
-        basePrice += 5000; // Superior grade (≥60% cinnamaldehyde)
-      } else if (qualityGrade === 'Standard') {
-        basePrice += 2000; // Special grade (55-60%)
-      }
+      setForecastData(data);
+      setTimeRange(range);
+      setShowResults(true);
+    } catch (error: any) {
+      console.error('❌ Forecast error:', error);
+      Alert.alert(
+        'Forecast Failed',
+        `Unable to fetch price forecast.\n\nError: ${error.message}\n\nPlease check your connection and try again.`
+      );
+    } finally {
+      setLoading(false);
     }
-
-    const totalPrice = basePrice * qty;
-    const minPrice = (basePrice - priceVariation) * qty;
-    const maxPrice = (basePrice + priceVariation) * qty;
-
-    setPredictedPrice(Math.round(totalPrice));
-    setPriceRange({ min: Math.round(minPrice), max: Math.round(maxPrice) });
-    setShowResults(true);
   };
+
+  // Load default chart on mount
+  useEffect(() => {
+    fetchForecast('months');
+  }, []);
 
   const formatCurrency = (value: number) => {
-    return `LKR ${value.toLocaleString()}`;
+    return `$${value.toFixed(2)}`;
   };
 
-  const getMarketInsights = () => {
-    const insights = {
-      trend: '',
-      factors: [] as string[],
-      recommendation: '',
-    };
-
-    if (oilType === 'Leaf') {
-      insights.trend = 'Stable demand in pharmaceutical and cosmetic industries';
-      insights.factors = [
-        'Eugenol content (75-85%) is key price determinant',
-        'International demand from perfume manufacturers',
-        'Seasonal variations affect availability',
-        'Export certifications increase value by 20-30%',
-      ];
-      insights.recommendation = 'Best selling time: After harvest season (March-June)';
-    } else if (oilType === 'Bark') {
-      insights.trend = 'High demand as premium flavoring agent';
-      insights.factors = [
-        'Cinnamaldehyde content directly impacts price',
-        'Superior grade (≥60%) commands premium prices',
-        'Food & beverage industry drives demand',
-        'International standards certification essential',
-      ];
-      insights.recommendation = 'Focus on quality to achieve superior grade classification';
+  const getChartData = () => {
+    if (!forecastData || !forecastData.forecast) {
+      return { labels: [], datasets: [{ data: [] }] };
     }
 
-    return insights;
+    const labels = forecastData.dates || [];
+    const prices = forecastData.forecast || [];
+
+    return {
+      labels: labels.map((date: string, index: number) => {
+        if (timeRange === 'days') return `D${index + 1}`;
+        if (timeRange === 'months') return `M${index + 1}`;
+        return `Y${index + 1}`;
+      }),
+      datasets: [
+        {
+          data: prices,
+          color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`,
+          strokeWidth: 3,
+        },
+      ],
+    };
+  };
+
+  const getTimeRangeLabel = () => {
+    if (timeRange === 'days') return 'Next 30 Days';
+    if (timeRange === 'months') return 'Next 12 Months';
+    return 'Next 5 Years';
   };
 
   const RadioOption = ({ label, value, selected, onSelect, icon, subtitle }: {
@@ -207,284 +222,235 @@ export default function OilPricePredictor() {
               <MaterialCommunityIcons name="chart-line" size={28} color="#FF3B30" />
             </View>
           </View>
-          <Text style={styles.header}>Oil Price Predictor</Text>
+          <Text style={styles.header}>Leaf Oil Price Forecast</Text>
           <Text style={styles.headerSubtitle}>
-            Estimate market value based on quality and quantity
+            SARIMA time series forecast for cinnamon leaf oil prices
           </Text>
         </View>
 
-        {/* Quick Info Banner */}
-        <View style={styles.infoBanner}>
-          <BlurView intensity={50} tint="light" style={styles.infoBannerBlur}>
-            <View style={styles.infoBannerContent}>
-              <MaterialCommunityIcons name="information" size={20} color="#FF3B30" />
-              <Text style={styles.infoBannerText}>
-                Real-time market rates for cinnamon oil
-              </Text>
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Input Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Product Details</Text>
-          <View style={styles.requiredBadge}>
-            <Text style={styles.requiredText}>Required</Text>
-          </View>
-        </View>
-
-        {/* Oil Type Card */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="flask" size={24} color="#FF3B30" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Oil Type</Text>
-                <Text style={styles.labelSubtext}>Select product type</Text>
-              </View>
-            </View>
-            <View style={styles.radioGroup}>
-              <RadioOption
-                label="Leaf Oil (Eugenol)"
-                value="Leaf"
-                selected={oilType === 'Leaf'}
-                onSelect={() => setOilType('Leaf')}
-                icon="leaf"
-                subtitle="~LKR 8,000-10,000/kg"
-              />
-              <RadioOption
-                label="Bark Oil (Cinnamaldehyde)"
-                value="Bark"
-                selected={oilType === 'Bark'}
-                onSelect={() => setOilType('Bark')}
-                icon="nature-people"
-                subtitle="~LKR 15,000-20,000/kg"
-              />
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Quality Grade Card */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="certificate" size={24} color="#30D158" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Quality Grade</Text>
-                <Text style={styles.labelSubtext}>Product classification</Text>
-              </View>
-            </View>
-            <View style={styles.radioGroup}>
-              <RadioOption
-                label="Premium Grade"
-                value="Premium"
-                selected={qualityGrade === 'Premium'}
-                onSelect={() => setQualityGrade('Premium')}
-                icon="star"
-                subtitle={oilType === 'Bark' ? '≥60% cinnamaldehyde' : '>80% eugenol'}
-              />
-              <RadioOption
-                label="Standard Grade"
-                value="Standard"
-                selected={qualityGrade === 'Standard'}
-                onSelect={() => setQualityGrade('Standard')}
-                icon="star-half-full"
-                subtitle={oilType === 'Bark' ? '55-60% cinnamaldehyde' : '75-80% eugenol'}
-              />
-              <RadioOption
-                label="Basic Grade"
-                value="Basic"
-                selected={qualityGrade === 'Basic'}
-                onSelect={() => setQualityGrade('Basic')}
-                icon="star-outline"
-                subtitle="Standard quality"
-              />
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Quantity Input Card */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="weight-kilogram" size={24} color="#0A84FF" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Quantity</Text>
-                <Text style={styles.labelSubtext}>In kilograms</Text>
-              </View>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter quantity (e.g., 10)"
-                placeholderTextColor="#C7C7CC"
-                keyboardType="numeric"
-                value={quantity}
-                onChangeText={setQuantity}
-              />
-              <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>kg</Text>
-              </View>
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Calculate Button */}
-        <ControlButton
-          onPress={calculatePrice}
-          isPrimary={true}
-          icon="calculator"
-          text="Calculate Market Value"
-          disabled={!oilType || !quantity || !qualityGrade}
-        />
-
-        {/* Results Section */}
-        {showResults && predictedPrice && priceRange && (
+        {/* View Toggle Buttons */}
+        {!loading && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Market Estimate</Text>
+              <Text style={styles.sectionTitle}>View</Text>
+            </View>
+            <View style={styles.viewToggleContainer}>
+              <TouchableOpacity
+                style={[styles.viewToggleButton, timeRange === 'days' && styles.viewToggleButtonActive]}
+                onPress={() => fetchForecast('days')}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons 
+                  name="calendar-today" 
+                  size={18} 
+                  color={timeRange === 'days' ? '#FFFFFF' : '#8E8E93'} 
+                />
+                <Text style={[styles.viewToggleText, timeRange === 'days' && styles.viewToggleTextActive]}>
+                  Daily
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.viewToggleButton, timeRange === 'months' && styles.viewToggleButtonActive]}
+                onPress={() => fetchForecast('months')}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons 
+                  name="calendar-month" 
+                  size={18} 
+                  color={timeRange === 'months' ? '#FFFFFF' : '#8E8E93'} 
+                />
+                <Text style={[styles.viewToggleText, timeRange === 'months' && styles.viewToggleTextActive]}>
+                  Monthly
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.viewToggleButton, timeRange === 'years' && styles.viewToggleButtonActive]}
+                onPress={() => fetchForecast('years')}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons 
+                  name="calendar" 
+                  size={18} 
+                  color={timeRange === 'years' ? '#FFFFFF' : '#8E8E93'} 
+                />
+                <Text style={[styles.viewToggleText, timeRange === 'years' && styles.viewToggleTextActive]}>
+                  Yearly
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FF3B30" />
+            <Text style={styles.loadingText}>Loading forecast...</Text>
+          </View>
+        )}
+
+        {/* Results Section */}
+        {showResults && forecastData && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Price Forecast</Text>
               <View style={styles.successBadge}>
                 <MaterialCommunityIcons name="check-circle" size={14} color="#30D158" />
-                <Text style={styles.successText}>Calculated</Text>
+                <Text style={styles.successText}>Complete</Text>
               </View>
             </View>
 
-            {/* Price Card */}
+            {/* Forecast Summary Card */}
             <View style={styles.resultCard}>
               <BlurView intensity={70} tint="light" style={styles.resultBlur}>
                 <View style={styles.resultHeader}>
                   <View style={styles.resultIconContainer}>
-                    <MaterialCommunityIcons name="cash-multiple" size={32} color="#FF3B30" />
+                    <MaterialCommunityIcons name="chart-line" size={32} color="#FF3B30" />
                   </View>
                   <View style={styles.resultBadge}>
-                    <Text style={styles.resultBadgeText}>Estimated Value</Text>
+                    <Text style={styles.resultBadgeText}>SARIMA Model</Text>
                   </View>
                 </View>
-                <Text style={styles.resultTitle}>Predicted Market Price</Text>
-                <View style={styles.resultValueRow}>
-                  <Text style={styles.resultValue}>{formatCurrency(predictedPrice)}</Text>
-                </View>
-                <View style={styles.resultDivider} />
-                <View style={styles.priceRangeContainer}>
-                  <View style={styles.priceRangeItem}>
-                    <MaterialCommunityIcons name="arrow-down" size={16} color="#FF3B30" />
-                    <Text style={styles.priceRangeLabel}>Min</Text>
-                    <Text style={styles.priceRangeValue}>{formatCurrency(priceRange.min)}</Text>
+                <Text style={styles.resultTitle}>{getTimeRangeLabel()}</Text>
+                <View style={styles.forecastSummary}>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Oil Type</Text>
+                    <Text style={styles.summaryValue}>Leaf Oil</Text>
                   </View>
-                  <View style={styles.priceRangeDivider} />
-                  <View style={styles.priceRangeItem}>
-                    <MaterialCommunityIcons name="arrow-up" size={16} color="#30D158" />
-                    <Text style={styles.priceRangeLabel}>Max</Text>
-                    <Text style={styles.priceRangeValue}>{formatCurrency(priceRange.max)}</Text>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Model</Text>
+                    <Text style={styles.summaryValue}>SARIMA</Text>
                   </View>
-                </View>
-                <View style={styles.resultMeta}>
-                  <MaterialCommunityIcons name="flask" size={14} color="#8E8E93" />
-                  <Text style={styles.resultMetaText}>{oilType} Oil</Text>
-                  <View style={styles.resultMetaDot} />
-                  <MaterialCommunityIcons name="certificate" size={14} color="#8E8E93" />
-                  <Text style={styles.resultMetaText}>{qualityGrade}</Text>
-                  <View style={styles.resultMetaDot} />
-                  <MaterialCommunityIcons name="weight" size={14} color="#8E8E93" />
-                  <Text style={styles.resultMetaText}>{quantity} kg</Text>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Data Points</Text>
+                    <Text style={styles.summaryValue}>{forecastData.forecast?.length || 0}</Text>
+                  </View>
                 </View>
               </BlurView>
             </View>
 
-            {/* Market Insights Card */}
+            {/* Price Chart Card */}
+            <View style={styles.chartCard}>
+              <BlurView intensity={70} tint="light" style={styles.chartBlur}>
+                <View style={styles.chartHeader}>
+                  <View style={styles.chartIconCircle}>
+                    <MaterialCommunityIcons name="chart-areaspline" size={24} color="#FF3B30" />
+                  </View>
+                  <View style={styles.chartHeaderText}>
+                    <Text style={styles.chartTitle}>Price Trend</Text>
+                    <Text style={styles.chartSubtext}>SARIMA forecast visualization</Text>
+                  </View>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <LineChart
+                    data={getChartData()}
+                    width={Math.max(CHART_WIDTH, (forecastData.forecast?.length || 0) * 40)}
+                    height={280}
+                    chartConfig={{
+                      backgroundColor: '#FFFFFF',
+                      backgroundGradientFrom: '#FFFFFF',
+                      backgroundGradientTo: '#F9F9F9',
+                      decimalPlaces: 2,
+                      color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`,
+                      labelColor: (opacity = 1) => `rgba(60, 60, 67, ${opacity})`,
+                      style: {
+                        borderRadius: 16,
+                      },
+                      propsForDots: {
+                        r: '5',
+                        strokeWidth: '2',
+                        stroke: '#FF3B30',
+                      },
+                      propsForBackgroundLines: {
+                        strokeDasharray: '',
+                        stroke: 'rgba(0, 0, 0, 0.05)',
+                      },
+                    }}
+                    bezier
+                    style={styles.chart}
+                    withVerticalLabels={true}
+                    withHorizontalLabels={true}
+                    withDots={true}
+                    withShadow={false}
+                    withInnerLines={true}
+                    withOuterLines={true}
+                    withVerticalLines={false}
+                    withHorizontalLines={true}
+                  />
+                </ScrollView>
+                <View style={styles.chartLegend}>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#FF3B30' }]} />
+                    <Text style={styles.legendText}>Predicted Price (USD/kg)</Text>
+                  </View>
+                </View>
+              </BlurView>
+            </View>
+
+            {/* Statistics Card */}
             <View style={styles.recommendationCard}>
               <BlurView intensity={70} tint="light" style={styles.recommendationBlur}>
                 <View style={styles.recommendationHeader}>
                   <View style={styles.recommendationIconCircle}>
-                    <MaterialCommunityIcons name="lightbulb-on" size={20} color="#FF9F0A" />
+                    <MaterialCommunityIcons name="chart-box" size={20} color="#0A84FF" />
                   </View>
-                  <Text style={styles.recommendationTitle}>Market Insights</Text>
+                  <Text style={styles.recommendationTitle}>Forecast Statistics</Text>
                 </View>
                 
-                {(() => {
-                  const insights = getMarketInsights();
-                  return (
-                    <>
-                      {/* Market Trend */}
-                      <View style={styles.recommendationPrimary}>
-                        <MaterialCommunityIcons name="trending-up" size={18} color="#FF3B30" />
-                        <Text style={styles.recommendationPrimaryText}>{insights.trend}</Text>
+                {forecastData.statistics && (
+                  <>
+                    <View style={styles.statsGrid}>
+                      <View style={styles.statItem}>
+                        <MaterialCommunityIcons name="arrow-up" size={20} color="#30D158" />
+                        <Text style={styles.statLabel}>Average</Text>
+                        <Text style={styles.statValue}>
+                          {formatCurrency(forecastData.statistics.mean || 0)}
+                        </Text>
                       </View>
-
-                      {/* Price Factors */}
-                      <View style={styles.recommendationSection}>
-                        <Text style={styles.recommendationSectionTitle}>Price Factors</Text>
-                        {insights.factors.map((factor: string, index: number) => (
-                          <View key={index} style={styles.recommendationTip}>
-                            <View style={styles.tipBullet}>
-                              <View style={styles.tipBulletDot} />
-                            </View>
-                            <Text style={styles.tipText}>{factor}</Text>
-                          </View>
-                        ))}
+                      <View style={styles.statItem}>
+                        <MaterialCommunityIcons name="arrow-down" size={20} color="#FF3B30" />
+                        <Text style={styles.statLabel}>Min</Text>
+                        <Text style={styles.statValue}>
+                          {formatCurrency(forecastData.statistics.min || 0)}
+                        </Text>
                       </View>
-
-                      {/* Recommendation Badge */}
-                      <View style={styles.qualityBadgeContainer}>
-                        <View style={styles.qualityBadge}>
-                          <MaterialCommunityIcons name="calendar-check" size={16} color="#5E5CE6" />
-                          <Text style={styles.qualityBadgeText}>{insights.recommendation}</Text>
+                      <View style={styles.statItem}>
+                        <MaterialCommunityIcons name="arrow-up" size={20} color="#FF9F0A" />
+                        <Text style={styles.statLabel}>Max</Text>
+                        <Text style={styles.statValue}>
+                          {formatCurrency(forecastData.statistics.max || 0)}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.recommendationSection}>
+                      <Text style={styles.recommendationSectionTitle}>Model Information</Text>
+                      <View style={styles.recommendationTip}>
+                        <View style={styles.tipBullet}>
+                          <View style={styles.tipBulletDot} />
                         </View>
+                        <Text style={styles.tipText}>
+                          Using Seasonal ARIMA (SARIMA) for time series forecasting
+                        </Text>
                       </View>
-                    </>
-                  );
-                })()}
-              </BlurView>
-            </View>
-
-            {/* Standards Reference Card */}
-            <View style={styles.infoCard}>
-              <BlurView intensity={70} tint="light" style={styles.infoBlur}>
-                <View style={styles.infoHeader}>
-                  <View style={styles.infoIconCircle}>
-                    <MaterialCommunityIcons name="file-document" size={20} color="#0A84FF" />
-                  </View>
-                  <Text style={styles.infoTitle}>Quality Standards</Text>
-                </View>
-                <View style={styles.infoContent}>
-                  {oilType === 'Leaf' ? (
-                    <>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="check-circle" size={16} color="#30D158" />
-                        <Text style={styles.infoItemText}>SLS 184:2012 & ISO 3524:2003 compliance</Text>
+                      <View style={styles.recommendationTip}>
+                        <View style={styles.tipBullet}>
+                          <View style={styles.tipBulletDot} />
+                        </View>
+                        <Text style={styles.tipText}>
+                          Historical price data analyzed for trend patterns
+                        </Text>
                       </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="flask" size={16} color="#30D158" />
-                        <Text style={styles.infoItemText}>Eugenol content: 75-85% required</Text>
+                      <View style={styles.recommendationTip}>
+                        <View style={styles.tipBullet}>
+                          <View style={styles.tipBulletDot} />
+                        </View>
+                        <Text style={styles.tipText}>
+                          Seasonal components factored into predictions
+                        </Text>
                       </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="certificate" size={16} color="#30D158" />
-                        <Text style={styles.infoItemText}>Export certification increases value 20-30%</Text>
-                      </View>
-                    </>
-                  ) : (
-                    <>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="check-circle" size={16} color="#30D158" />
-                        <Text style={styles.infoItemText}>SLS 185:2012 standard compliance</Text>
-                      </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="flask" size={16} color="#30D158" />
-                        <Text style={styles.infoItemText}>Superior: ≥60% cinnamaldehyde</Text>
-                      </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="certificate" size={16} color="#30D158" />
-                        <Text style={styles.infoItemText}>Premium pricing for certified superior grade</Text>
-                      </View>
-                    </>
-                  )}
-                </View>
+                    </View>
+                  </>
+                )}
               </BlurView>
             </View>
           </>
@@ -1062,5 +1028,184 @@ const styles = StyleSheet.create({
     color: '#3C3C43',
     lineHeight: 20,
     letterSpacing: -0.24,
+  },
+  loadingContainer: {
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 59, 48, 0.08)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 16,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 59, 48, 0.15)',
+  },
+  loadingText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FF3B30',
+    letterSpacing: -0.41,
+  },
+  forecastSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 12,
+  },
+  summaryItem: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+    borderRadius: 10,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8E8E93',
+    letterSpacing: -0.08,
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: -0.24,
+  },
+  chartCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#FF3B30',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  chartBlur: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 59, 48, 0.2)',
+    padding: 20,
+  },
+  chartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  chartIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chartHeaderText: {
+    flex: 1,
+  },
+  chartTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: -0.41,
+    marginBottom: 2,
+  },
+  chartSubtext: {
+    fontSize: 13,
+    color: '#8E8E93',
+    letterSpacing: -0.08,
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+  },
+  chartLegend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 0.5,
+    borderTopColor: 'rgba(60, 60, 67, 0.18)',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#3C3C43',
+    letterSpacing: -0.08,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+    borderRadius: 12,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8E8E93',
+    letterSpacing: -0.08,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: -0.24,
+  },
+  viewToggleContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 24,
+  },
+  viewToggleButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  viewToggleButtonActive: {
+    backgroundColor: '#FF3B30',
+    borderColor: '#FF3B30',
+    shadowColor: '#FF3B30',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  viewToggleText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#8E8E93',
+    letterSpacing: -0.24,
+  },
+  viewToggleTextActive: {
+    color: '#FFFFFF',
   },
 });

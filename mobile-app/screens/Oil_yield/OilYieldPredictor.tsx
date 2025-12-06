@@ -239,7 +239,7 @@ export default function OilScreen() {
               icon="clipboard-check-outline"
               iconColor="#0A84FF"
               backgroundColor="rgba(10, 132, 255, 0.15)"
-              title="Quality Guide"
+              title="Oil Quality"
               subtitle="Assess quality"
               onPress={() => navigation.navigate('OilQualityGuide')}
             />

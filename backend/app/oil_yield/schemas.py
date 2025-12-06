@@ -21,3 +21,12 @@ class DistillationTimeInput(BaseModel):
 class DistillationTimeOutput(BaseModel):
     predicted_time_hours: float = Field(..., description="Predicted distillation time in hours")
     input_summary: dict = Field(..., description="Summary of input parameters")
+
+class PriceForecastInput(BaseModel):
+    oil_type: Literal["Leaf", "Bark"] = Field(..., description="Type of cinnamon oil")
+    time_range: Literal["days", "months", "years"] = Field(..., description="Forecast time range")
+
+class PriceForecastOutput(BaseModel):
+    forecast: list[float] = Field(..., description="List of forecasted prices")
+    dates: list[str] = Field(..., description="List of forecast dates")
+    statistics: dict = Field(..., description="Forecast statistics (mean, min, max)")

@@ -8,9 +8,18 @@ import {
   ScrollView,
   Animated,
   StatusBar,
+  Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import apiConfig from '../../config/api';
+
+// Use localhost for web platform, otherwise use the configured API URL
+const API_BASE_URL = Platform.OS === 'web' 
+  ? 'http://localhost:8000/api/v1'
+  : apiConfig.API_BASE_URL;
 
 export default function DistillationProcess() {
   const [plantPart, setPlantPart] = useState('');
@@ -20,46 +29,87 @@ export default function DistillationProcess() {
   const [isRunning, setIsRunning] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [loading, setLoading] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Calculation Logic
-  const calculateOptimalTime = () => {
+  // API-based Calculation Logic
+  const calculateOptimalTime = async () => {
+    console.log('🔍 calculateOptimalTime called');
+    console.log('API_BASE_URL:', API_BASE_URL);
+
     if (!plantPart || !cinnamonType || !distillCapacity) {
+      console.log('❌ Validation failed - missing fields');
+      Alert.alert('Missing Information', 'Please fill in all required fields.');
       return;
     }
 
     const capacity = parseFloat(distillCapacity);
     if (isNaN(capacity) || capacity <= 0) {
+      console.log('❌ Invalid capacity value');
+      Alert.alert('Invalid Input', 'Please enter a valid capacity value.');
       return;
     }
 
-    // Base times (in hours) by plant part
-    // Steam distillation is the main industrial method
-    let baseTime = 0;
-    switch (plantPart) {
-      case 'Bark':
-        baseTime = 7; // Bark oil: 0.5-4% oil content
-        break;
-      case 'Leaf':
-        baseTime = 5.5; // Leaf oil: up to 4% oil content, 5-6 hours process
-        break;
-      case 'Twigs':
-        baseTime = 6;
-        break;
-      default:
-        baseTime = 6;
+    setLoading(true);
+    setOptimalTime(null);
+    setShowResults(false);
+
+    // Map plant part to API expected values
+    const plantPartMap: { [key: string]: string } = {
+      'Bark': 'Featherings & Chips',
+      'Leaf': 'Leaves & Twigs',
+    };
+
+    const requestBody = {
+      plant_part: plantPartMap[plantPart] || plantPart,
+      cinnamon_type: cinnamonType,
+      distillation_capacity_liters: capacity,
+    };
+
+    console.log('📤 Sending request to:', `${API_BASE_URL}/oil_yield/predict_distillation_time`);
+    console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/oil_yield/predict_distillation_time`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response ok:', response.ok);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ API Response data:', JSON.stringify(data, null, 2));
+
+      const predictedTime = data.predicted_time_hours;
+      console.log('📊 Predicted time:', predictedTime, 'hours');
+
+      setOptimalTime(parseFloat(predictedTime.toFixed(1)));
+      setRemainingTime(Math.round(predictedTime * 60)); // convert to minutes
+      setShowResults(true);
+
+      console.log('✅ Calculation completed successfully');
+    } catch (error: any) {
+      console.error('❌ Prediction error:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      Alert.alert(
+        'Prediction Failed',
+        `Unable to connect to the prediction service.\n\nError: ${error.message}\n\nAPI URL: ${API_BASE_URL}/oil_yield/predict_distillation_time\n\nPlease check your connection and try again.`
+      );
+    } finally {
+      setLoading(false);
+      console.log('🏁 calculateOptimalTime finished');
     }
-
-    // Cinnamon variety adjustment
-    if (cinnamonType === 'Sri Gamunu') baseTime += 0.5;
-    if (cinnamonType === 'Sri Wijaya') baseTime -= 0.3;
-
-    // Capacity factor
-    const adjustedTime = baseTime + capacity * 0.05;
-
-    setOptimalTime(parseFloat(adjustedTime.toFixed(1)));
-    setRemainingTime(Math.round(adjustedTime * 60)); // convert to minutes
-    setShowResults(true);
   };
 
   // Countdown timer
@@ -364,13 +414,20 @@ export default function DistillationProcess() {
         </View>
 
         {/* Calculate Button */}
-        <ControlButton
-          onPress={calculateOptimalTime}
-          isPrimary={true}
-          icon="calculator"
-          text="Calculate Optimal Time"
-          disabled={!plantPart || !cinnamonType || !distillCapacity}
-        />
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#0A84FF" />
+            <Text style={styles.loadingText}>Calculating optimal time...</Text>
+          </View>
+        ) : (
+          <ControlButton
+            onPress={calculateOptimalTime}
+            isPrimary={true}
+            icon="calculator"
+            text="Calculate Optimal Time"
+            disabled={!plantPart || !cinnamonType || !distillCapacity}
+          />
+        )}
 
         {/* Results Section */}
         {showResults && optimalTime && (
@@ -1320,5 +1377,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FF9F0A',
     letterSpacing: -0.08,
+  },
+  loadingContainer: {
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: 'rgba(10, 132, 255, 0.08)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 16,
+    borderWidth: 0.5,
+    borderColor: 'rgba(10, 132, 255, 0.15)',
+  },
+  loadingText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#0A84FF',
+    letterSpacing: -0.41,
   },
 });

@@ -7,11 +7,12 @@ import {
   ScrollView,
   Animated,
   StatusBar,
+  Linking,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function OilQualityGuide() {
+export default function PreliminaryOilQualityAssessment() {
   const [color, setColor] = useState('');
   const [clarity, setClarity] = useState('');
   const [aroma, setAroma] = useState('');
@@ -20,73 +21,70 @@ export default function OilQualityGuide() {
   const [label, setLabel] = useState('');
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [predictedPrice, setPredictedPrice] = useState('');
+  const [labAdvice, setLabAdvice] = useState('');
 
   const plantPartLabels: Record<string, string> = {
-    leaves: 'Leaves',
+    leaves: 'Leaves & Twigs',
     bark: 'Bark',
-    // roots: 'Roots',
-    // flowers: 'Flowers',
-    // fruit: 'Fruit',
-    // seeds: 'Seeds',
-    // whole_plant: 'Whole plant',
   };
 
   const calculateQuality = () => {
-    if (!plantPart || !color || !clarity || !aroma) {
-      return;
-    }
+    if (!plantPart || !color || !clarity || !aroma) return;
 
     const colorScoreMap: Record<string, number> = {
-      'pale_yellow': 90,
-      'amber': 75,
-      'golden': 80,
-      'dark': 50,
+      pale_yellow: 90,
+      golden: 80,
+      amber: 75,
+      dark: 50,
     };
+
     const clarityScoreMap: Record<string, number> = {
-      'clear': 90,
-      'slightly_cloudy': 70,
-      'cloudy': 40,
+      clear: 90,
+      slightly_cloudy: 70,
+      cloudy: 40,
     };
+
     const aromaScoreMap: Record<string, number> = {
-      'mild': 60,
-      'aromatic': 90,
-      'pungent': 75,
+      mild: 60,
+      aromatic: 90,
+      pungent: 75,
     };
 
-    const colorScore = colorScoreMap[color] ?? 60;
-    const clarityScore = clarityScoreMap[clarity] ?? 60;
-    const aromaScore = aromaScoreMap[aroma] ?? 60;
-
-    const finalScore = Math.round((colorScore + clarityScore + aromaScore) / 3);
+    const finalScore = Math.round(
+      (colorScoreMap[color] +
+        clarityScoreMap[clarity] +
+        aromaScoreMap[aroma]) / 3
+    );
 
     let qualityLabel = '';
-    const recs: string[] = [];
     let priceRange = '';
+    const recs: string[] = [];
 
     if (finalScore >= 85) {
       qualityLabel = 'Excellent';
-      recs.push('Ready for commercial use with premium market value');
-      recs.push('Store in dark, cool place to preserve aromatic properties');
-      recs.push('Ideal for pharmaceutical and high-end cosmetic applications');
-      priceRange = '$120 - $200 / L';
+      priceRange = '$120 – $200 / L';
+      recs.push('Suitable for premium markets and export preparation');
+      recs.push('Highly recommended for laboratory certification');
+      recs.push('Maintain controlled storage to preserve volatile compounds');
+      setLabAdvice('Proceed with full laboratory analysis for certification and export.');
     } else if (finalScore >= 70) {
       qualityLabel = 'Good';
-      recs.push('Consider mild purification for enhanced quality');
-      recs.push('Monitor storage conditions to maintain integrity');
-      recs.push('Suitable for food flavoring and aromatherapy markets');
-      priceRange = '$70 - $120 / L';
+      priceRange = '$70 – $120 / L';
+      recs.push('Minor purification may improve market value');
+      recs.push('Recommended to refine distillation parameters');
+      setLabAdvice('Improve quality slightly before investing in laboratory testing.');
     } else if (finalScore >= 50) {
       qualityLabel = 'Fair';
-      recs.push('May require filtering or light refinement process');
-      recs.push('Check raw materials and distillation parameters');
-      recs.push('Best suited for industrial applications');
-      priceRange = '$30 - $70 / L';
+      priceRange = '$30 – $70 / L';
+      recs.push('Filtering or redistillation is advised');
+      recs.push('Review raw material handling and drying process');
+      setLabAdvice('Laboratory testing not cost-effective at this stage.');
     } else {
       qualityLabel = 'Poor';
-      recs.push('Perform comprehensive quality control steps');
-      recs.push('Investigate distillation and drying issues thoroughly');
-      recs.push('Discard if contamination is detected');
-      priceRange = '$5 - $30 / L';
+      priceRange = '$5 – $30 / L';
+      recs.push('Do not proceed with laboratory testing');
+      recs.push('Investigate contamination or processing failures');
+      setLabAdvice('Resolve quality issues before any certification attempts.');
     }
 
     setScore(finalScore);
@@ -104,10 +102,10 @@ export default function OilQualityGuide() {
     setLabel('');
     setRecommendations([]);
     setPredictedPrice('');
+    setLabAdvice('');
   };
 
   const getQualityColor = () => {
-    if (!label) return '#8E8E93';
     if (label === 'Excellent') return '#30D158';
     if (label === 'Good') return '#0A84FF';
     if (label === 'Fair') return '#FF9F0A';
@@ -235,24 +233,26 @@ export default function OilQualityGuide() {
         <View style={styles.headerContainer}>
           <View style={styles.headerIconContainer}>
             <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="test-tube" size={28} color="#5E5CE6" />
+              <MaterialCommunityIcons name="flask-outline" size={28} color="#5E5CE6" />
             </View>
           </View>
-          <Text style={styles.header}>Oil Quality Guide</Text>
+          <Text style={styles.header}>Preliminary Oil Quality Assessment</Text>
           <Text style={styles.headerSubtitle}>
-            Evaluate and assess your cinnamon oil quality
+            Field & sensory evaluation for cinnamon oil (non-laboratory)
           </Text>
         </View>
 
-        {/* Quick Info Banner */}
-        <View style={styles.infoBanner}>
-          <BlurView intensity={50} tint="light" style={styles.infoBannerBlur}>
-            <View style={styles.infoBannerContent}>
-              <MaterialCommunityIcons name="information" size={20} color="#5E5CE6" />
-              <Text style={styles.infoBannerText}>
-                Select all attributes for quality assessment
-              </Text>
+        {/* Scientific Context Card */}
+        <View style={styles.infoCard}>
+          <BlurView intensity={70} tint="light" style={styles.infoCardBlur}>
+            <View style={styles.infoCardHeader}>
+              <MaterialCommunityIcons name="flask-outline" size={20} color="#5E5CE6" />
+              <Text style={styles.infoCardTitle}>Scientific Context</Text>
             </View>
+            <Text style={styles.infoCardText}>
+              This assessment is based on visual and sensory indicators commonly used
+              in preliminary screening of essential oils before laboratory confirmation.
+            </Text>
           </BlurView>
         </View>
 
@@ -422,41 +422,6 @@ export default function OilQualityGuide() {
                 onSelect={() => setPlantPart('leaves')}
                 icon="leaf"
               />
-              {/* <RadioOption
-                label="Roots"
-                value="roots"
-                selected={plantPart === 'roots'}
-                onSelect={() => setPlantPart('roots')}
-                icon="tree"
-              />
-              <RadioOption
-                label="Flowers"
-                value="flowers"
-                selected={plantPart === 'flowers'}
-                onSelect={() => setPlantPart('flowers')}
-                icon="flower-tulip"
-              />
-              <RadioOption
-                label="Fruit"
-                value="fruit"
-                selected={plantPart === 'fruit'}
-                onSelect={() => setPlantPart('fruit')}
-                icon="fruit-cherries"
-              />
-              <RadioOption
-                label="Seeds"
-                value="seeds"
-                selected={plantPart === 'seeds'}
-                onSelect={() => setPlantPart('seeds')}
-                icon="seed"
-              />
-              <RadioOption
-                label="Whole Plant"
-                value="whole_plant"
-                selected={plantPart === 'whole_plant'}
-                onSelect={() => setPlantPart('whole_plant')}
-                icon="sprout"
-              /> */}
             </View>
           </BlurView>
         </View>
@@ -467,21 +432,10 @@ export default function OilQualityGuide() {
             onPress={calculateQuality}
             isPrimary={true}
             icon="check-decagram"
-            text="Evaluate Quality"
+            text="Evaluate Preliminary Quality"
             disabled={!plantPart || !color || !clarity || !aroma}
           />
         </View>
-
-        {score !== null && (
-          <View style={styles.actionsRow}>
-            <ControlButton
-              onPress={clearForm}
-              isPrimary={false}
-              icon="refresh"
-              text="Clear Form"
-            />
-          </View>
-        )}
 
         {/* Results Section */}
         {score !== null && (
@@ -570,6 +524,19 @@ export default function OilQualityGuide() {
               </BlurView>
             </View>
 
+            {/* Lab Decision Card */}
+            <View style={styles.decisionCard}>
+              <BlurView intensity={70} tint="light" style={styles.decisionBlur}>
+                <View style={styles.decisionHeader}>
+                  <View style={styles.decisionIconCircle}>
+                    <MaterialCommunityIcons name="clipboard-check-outline" size={24} color="#5E5CE6" />
+                  </View>
+                  <Text style={styles.decisionTitle}>Laboratory Testing Recommendation</Text>
+                </View>
+                <Text style={styles.decisionText}>{labAdvice}</Text>
+              </BlurView>
+            </View>
+
             {/* Recommendations Card */}
             <View style={styles.recommendationCard}>
               <BlurView intensity={70} tint="light" style={styles.recommendationBlur}>
@@ -603,6 +570,64 @@ export default function OilQualityGuide() {
                 </View>
               </BlurView>
             </View>
+
+            {/* Lab Parameters Card */}
+            <View style={styles.labCard}>
+              <BlurView intensity={70} tint="light" style={styles.labBlur}>
+                <View style={styles.labHeader}>
+                  <View style={styles.labIconCircle}>
+                    <MaterialCommunityIcons name="microscope" size={24} color="#FF9F0A" />
+                  </View>
+                  <Text style={styles.labTitle}>Laboratory Parameters (Not Included)</Text>
+                </View>
+                {[
+                  'Cinnamaldehyde percentage',
+                  'Eugenol percentage',
+                  'Moisture content',
+                  'Specific gravity',
+                  'Optical rotation',
+                  'GC–MS chemical profile',
+                ].map((p, i) => (
+                  <View key={i} style={styles.labItem}>
+                    <View style={styles.labItemBullet} />
+                    <Text style={styles.labItemText}>{p}</Text>
+                  </View>
+                ))}
+              </BlurView>
+            </View>
+
+            {/* Disclaimer Card */}
+            <View style={styles.disclaimerCard}>
+              <BlurView intensity={70} tint="light" style={styles.disclaimerBlur}>
+                <View style={styles.disclaimerHeader}>
+                  <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#FF9F0A" />
+                  <Text style={styles.disclaimerTitle}>Important Notice</Text>
+                </View>
+                <Text style={styles.disclaimerText}>
+                  This assessment does not replace certified laboratory analysis.
+                  Official grading and export approval require accredited laboratory testing.
+                </Text>
+              </BlurView>
+            </View>
+
+            {/* Contact Button */}
+            <TouchableOpacity
+              style={styles.contactButton}
+              onPress={() => Linking.openURL('tel:+94XXXXXXXXX')}
+              activeOpacity={0.7}
+            >
+              <BlurView intensity={100} tint="dark" style={styles.contactBlur}>
+                <MaterialCommunityIcons name="office-building" size={20} color="#FFFFFF" />
+                <Text style={styles.contactButtonText}>
+                  Contact Cinnamon Research Center
+                </Text>
+              </BlurView>
+            </TouchableOpacity>
+
+            {/* Clear Button */}
+            <TouchableOpacity onPress={clearForm} style={styles.clearButton} activeOpacity={0.7}>
+              <Text style={styles.clearText}>Clear Assessment</Text>
+            </TouchableOpacity>
           </>
         )}
 
@@ -653,35 +678,39 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     letterSpacing: -0.24,
   },
-  infoBanner: {
-    height: 48,
-    borderRadius: 12,
+  infoCard: {
+    borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 28,
-    shadowColor: '#5E5CE6',
+    marginBottom: 24,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  infoBannerBlur: {
-    flex: 1,
-    backgroundColor: 'rgba(94, 92, 230, 0.08)',
+  infoCardBlur: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 0.5,
     borderColor: 'rgba(94, 92, 230, 0.15)',
+    padding: 16,
   },
-  infoBannerContent: {
-    flex: 1,
+  infoCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
+    marginBottom: 10,
   },
-  infoBannerText: {
+  infoCardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: -0.32,
+  },
+  infoCardText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#5E5CE6',
-    letterSpacing: -0.08,
+    color: '#3C3C43',
+    lineHeight: 20,
+    letterSpacing: -0.24,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -1144,5 +1173,179 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 18,
     letterSpacing: -0.08,
+  },
+  decisionCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#5E5CE6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  decisionBlur: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(94, 92, 230, 0.2)',
+    padding: 20,
+  },
+  decisionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(60, 60, 67, 0.18)',
+  },
+  decisionIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(94, 92, 230, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  decisionTitle: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: -0.41,
+  },
+  decisionText: {
+    fontSize: 15,
+    color: '#3C3C43',
+    lineHeight: 22,
+    letterSpacing: -0.24,
+  },
+  labCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  labBlur: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 159, 10, 0.2)',
+    padding: 18,
+  },
+  labHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(60, 60, 67, 0.18)',
+  },
+  labIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 159, 10, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  labTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: -0.32,
+  },
+  labItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 10,
+  },
+  labItemBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FF9F0A',
+    marginTop: 6,
+  },
+  labItemText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#3C3C43',
+    lineHeight: 20,
+    letterSpacing: -0.24,
+  },
+  disclaimerCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#FF9F0A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  disclaimerBlur: {
+    backgroundColor: 'rgba(255, 159, 10, 0.08)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 159, 10, 0.2)',
+    padding: 16,
+  },
+  disclaimerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  disclaimerTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FF9F0A',
+    letterSpacing: -0.24,
+  },
+  disclaimerText: {
+    fontSize: 14,
+    color: '#3C3C43',
+    lineHeight: 20,
+    letterSpacing: -0.24,
+  },
+  contactButton: {
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#5E5CE6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  contactBlur: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  contactButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: -0.41,
+  },
+  clearButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  clearText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#5E5CE6',
+    letterSpacing: -0.24,
   },
 });

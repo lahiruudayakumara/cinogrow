@@ -8,110 +8,167 @@ import {
   ScrollView,
   Animated,
   StatusBar,
+  Alert,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import apiConfig from '../../config/api';
+
+// Use localhost for web platform, otherwise use the configured API URL
+const API_BASE_URL = Platform.OS === 'web' 
+  ? 'http://localhost:8000/api/v1'
+  : apiConfig.API_BASE_URL;
 
 export default function OilYieldPredictorSecond() {
   const [cinnamonType, setCinnamonType] = useState('');
   const [plantPart, setPlantPart] = useState('');
   const [mass, setMass] = useState('');
+  const [age, setAge] = useState('');
+  const [harvestingSeason, setHarvestingSeason] = useState('');
   const [predictedYield, setPredictedYield] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<string | null>(null);
-  const [efficiency, setEfficiency] = useState<number | null>(null);
-  const [qualityScore, setQualityScore] = useState<number | null>(null);
-  const [estimatedValue, setEstimatedValue] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [inputSummary, setInputSummary] = useState<any>(null);
 
-  const handlePredict = () => {
-    if (!cinnamonType || !plantPart || !mass) {
-      setPredictedYield(null);
-      setRecommendation(null);
-      setEfficiency(null);
-      setQualityScore(null);
-      setEstimatedValue(null);
+  const handlePredict = async () => {
+    console.log('🔍 handlePredict called');
+    console.log('API_BASE_URL:', API_BASE_URL);
+    
+    // Validation
+    if (!cinnamonType || !plantPart || !mass || !age || !harvestingSeason) {
+      console.log('❌ Validation failed - missing fields');
+      Alert.alert('Missing Information', 'Please fill in all required fields.');
       return;
     }
 
     const massNum = parseFloat(mass);
+    const ageNum = parseFloat(age);
+    
+    console.log('📊 Input values:', { cinnamonType, plantPart, mass: massNum, age: ageNum, harvestingSeason });
+    
     if (isNaN(massNum) || massNum <= 0) {
-      setPredictedYield(null);
-      setRecommendation(null);
+      console.log('❌ Invalid mass value');
+      Alert.alert('Invalid Input', 'Please enter a valid mass value.');
       return;
     }
 
-    // Local calculation logic
-    let baseYield = 0;
-    let efficiencyPercent = 0;
-    let quality = 0;
-    let pricePerML = 0;
-
-    // Calculate based on cinnamon type and plant part
-    if (cinnamonType === 'Sri Gamunu') {
-      if (plantPart === 'Bark') {
-        baseYield = massNum * 0.85; // 0.85% yield
-        efficiencyPercent = 85;
-        quality = 92;
-        pricePerML = 0.45;
-      } else { // Leaf
-        baseYield = massNum * 1.2; // 1.2% yield
-        efficiencyPercent = 78;
-        quality = 76;
-        pricePerML = 0.28;
-      }
-    } else { // Sri Wijaya
-      if (plantPart === 'Bark') {
-        baseYield = massNum * 0.75; // 0.75% yield
-        efficiencyPercent = 82;
-        quality = 88;
-        pricePerML = 0.42;
-      } else { // Leaf
-        baseYield = massNum * 1.05; // 1.05% yield
-        efficiencyPercent = 75;
-        quality = 72;
-        pricePerML = 0.25;
-      }
+    if (isNaN(ageNum) || ageNum <= 0) {
+      console.log('❌ Invalid age value');
+      Alert.alert('Invalid Input', 'Please enter a valid age value.');
+      return;
     }
 
-    const yieldML = (baseYield * 10).toFixed(2); // Convert to mL
-    const valueUSD = (parseFloat(yieldML) * pricePerML).toFixed(2);
+    setLoading(true);
+    setPredictedYield(null);
+    setRecommendation(null);
+    setInputSummary(null);
 
-    setPredictedYield(yieldML);
-    setEfficiency(efficiencyPercent);
-    setQualityScore(quality);
-    setEstimatedValue(valueUSD);
+    const requestBody = {
+      dried_mass_kg: massNum,
+      species_variety: cinnamonType,
+      plant_part: plantPart,
+      age_years: ageNum,
+      harvesting_season: harvestingSeason,
+    };
 
-    // Generate structured recommendations
-    let recommendations = {
+    console.log('📤 Sending request to:', `${API_BASE_URL}/oil_yield/predict`);
+    console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/oil_yield/predict`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response ok:', response.ok);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ API Response data:', JSON.stringify(data, null, 2));
+      
+      // Set prediction results
+      const yieldInML = (data.predicted_yield_liters * 1000).toFixed(2);
+      console.log('📊 Calculated yield in mL:', yieldInML);
+      
+      setPredictedYield(yieldInML);
+      setInputSummary(data.input_summary);
+
+      // Generate recommendations based on results
+      const recommendations = generateRecommendations(
+        data.predicted_yield_liters,
+        plantPart,
+        cinnamonType,
+        harvestingSeason
+      );
+      console.log('💡 Generated recommendations:', recommendations);
+      setRecommendation(JSON.stringify(recommendations));
+
+      console.log('✅ Prediction completed successfully');
+
+    } catch (error: any) {
+      console.error('❌ Prediction error:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      Alert.alert(
+        'Prediction Failed',
+        `Unable to connect to the prediction service.\n\nError: ${error.message}\n\nAPI URL: ${API_BASE_URL}/oil_yield/predict\n\nPlease check your connection and try again.`
+      );
+    } finally {
+      setLoading(false);
+      console.log('🏁 handlePredict finished');
+    }
+  };
+
+  const generateRecommendations = (
+    yieldLiters: number,
+    plantPart: string,
+    variety: string,
+    season: string
+  ) => {
+    const recommendations = {
       primary: '',
       tips: [] as string[],
       quality: '',
     };
 
-    if (plantPart === 'Bark') {
-      recommendations.primary = `Excellent choice! Bark extracts produce high-quality oil with strong aromatic properties.`;
+    if (plantPart === 'Leaves & Twigs') {
+      recommendations.primary = `Good yield potential! Leaves & Twigs typically produce higher oil volumes.`;
       recommendations.tips = [
         'Maintain distillation temperature at 100-105°C',
         'Ensure consistent steam flow throughout process',
-        'Your ' + cinnamonType + ' variety is ideal for premium oil',
+        `Your ${variety} variety is well-suited for this extraction`,
+        'Leaves & Twigs are rich in eugenol content',
       ];
     } else {
-      recommendations.primary = `Leaf extraction offers good yields and cost-effectiveness.`;
+      recommendations.primary = `Quality-focused extraction from Featherings & Chips.`;
       recommendations.tips = [
-        'Extend distillation time by 15-20% for maximum extraction',
-        'Produces valuable eugenol-rich oil',
-        'Optimal for industrial applications and blending',
+        'Extend distillation time for optimal extraction',
+        'Featherings & Chips produce concentrated oil',
+        'Monitor moisture content carefully',
+        `Ideal for processing during ${season}`,
       ];
     }
 
-    if (quality >= 85) {
-      recommendations.quality = 'Premium quality grade achieved - suitable for pharmaceutical and high-end cosmetic applications.';
-    } else if (quality >= 75) {
-      recommendations.quality = 'Good quality grade - ideal for food flavoring and aromatherapy markets.';
+    if (yieldLiters >= 5.0) {
+      recommendations.quality = 'Excellent yield - Premium quality grade achieved, suitable for high-end applications.';
+    } else if (yieldLiters >= 2.0) {
+      recommendations.quality = 'Good yield - Standard commercial grade, ideal for food flavoring and aromatherapy.';
     } else {
-      recommendations.quality = 'Standard quality grade - best for industrial and cleaning product applications.';
+      recommendations.quality = 'Moderate yield - Consider optimizing parameters for better results.';
     }
 
-    setRecommendation(JSON.stringify(recommendations));
+    return recommendations;
   };
 
   const RadioOption = ({ label, value, selected, onSelect, color }: {
@@ -164,11 +221,21 @@ export default function OilYieldPredictorSecond() {
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           activeOpacity={1}
+          disabled={loading}
         >
           <BlurView intensity={100} tint="dark" style={styles.predictButtonBlur}>
-            <MaterialCommunityIcons name="chart-line" size={20} color="#FFFFFF" />
-            <Text style={styles.predictText}>Predict Yield</Text>
-            <MaterialCommunityIcons name="arrow-right" size={20} color="#FFFFFF" />
+            {loading ? (
+              <>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+                <Text style={styles.predictText}>Predicting...</Text>
+              </>
+            ) : (
+              <>
+                <MaterialCommunityIcons name="chart-line" size={20} color="#FFFFFF" />
+                <Text style={styles.predictText}>Predict Yield</Text>
+                <MaterialCommunityIcons name="arrow-right" size={20} color="#FFFFFF" />
+              </>
+            )}
           </BlurView>
         </TouchableOpacity>
       </Animated.View>
@@ -261,17 +328,17 @@ export default function OilYieldPredictorSecond() {
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Sri Gamunu"
-                value="Sri Gamunu"
-                selected={cinnamonType === 'Sri Gamunu'}
-                onSelect={() => setCinnamonType('Sri Gamunu')}
+                label="Sri Gemunu"
+                value="Sri Gemunu"
+                selected={cinnamonType === 'Sri Gemunu'}
+                onSelect={() => setCinnamonType('Sri Gemunu')}
                 color="#30D158"
               />
               <RadioOption
-                label="Sri Wijaya"
-                value="Sri Wijaya"
-                selected={cinnamonType === 'Sri Wijaya'}
-                onSelect={() => setCinnamonType('Sri Wijaya')}
+                label="Sri Vijaya"
+                value="Sri Vijaya"
+                selected={cinnamonType === 'Sri Vijaya'}
+                onSelect={() => setCinnamonType('Sri Vijaya')}
                 color="#30D158"
               />
             </View>
@@ -292,17 +359,17 @@ export default function OilYieldPredictorSecond() {
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Bark"
-                value="Bark"
-                selected={plantPart === 'Bark'}
-                onSelect={() => setPlantPart('Bark')}
+                label="Featherings & Chips"
+                value="Featherings & Chips"
+                selected={plantPart === 'Featherings & Chips'}
+                onSelect={() => setPlantPart('Featherings & Chips')}
                 color="#FF9F0A"
               />
               <RadioOption
-                label="Leaf & Twigs"
-                value="Leaf"
-                selected={plantPart === 'Leaf'}
-                onSelect={() => setPlantPart('Leaf')}
+                label="Leaves & Twigs"
+                value="Leaves & Twigs"
+                selected={plantPart === 'Leaves & Twigs'}
+                onSelect={() => setPlantPart('Leaves & Twigs')}
                 color="#FF9F0A"
               />
             </View>
@@ -324,7 +391,7 @@ export default function OilYieldPredictorSecond() {
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Enter mass (e.g., 15)"
+                placeholder="Enter mass (e.g., 150)"
                 placeholderTextColor="#C7C7CC"
                 keyboardType="numeric"
                 value={mass}
@@ -333,6 +400,65 @@ export default function OilYieldPredictorSecond() {
               <View style={styles.inputSuffix}>
                 <Text style={styles.inputSuffixText}>kg</Text>
               </View>
+            </View>
+          </BlurView>
+        </View>
+
+        {/* Age Input Card */}
+        <View style={styles.inputCard}>
+          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardIconCircle}>
+                <MaterialCommunityIcons name="calendar-clock" size={24} color="#FF453A" />
+              </View>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.label}>Plant Age</Text>
+                <Text style={styles.labelSubtext}>In years</Text>
+              </View>
+            </View>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter age (e.g., 4.5)"
+                placeholderTextColor="#C7C7CC"
+                keyboardType="numeric"
+                value={age}
+                onChangeText={setAge}
+              />
+              <View style={styles.inputSuffix}>
+                <Text style={styles.inputSuffixText}>years</Text>
+              </View>
+            </View>
+          </BlurView>
+        </View>
+
+        {/* Harvesting Season Card */}
+        <View style={styles.inputCard}>
+          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardIconCircle}>
+                <MaterialCommunityIcons name="weather-sunny" size={24} color="#FFD60A" />
+              </View>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.label}>Harvesting Season</Text>
+                <Text style={styles.labelSubtext}>Select period</Text>
+              </View>
+            </View>
+            <View style={styles.radioGroup}>
+              <RadioOption
+                label="May–August"
+                value="May–August"
+                selected={harvestingSeason === 'May–August'}
+                onSelect={() => setHarvestingSeason('May–August')}
+                color="#FFD60A"
+              />
+              <RadioOption
+                label="Oct–Dec/Jan"
+                value="October–December/January"
+                selected={harvestingSeason === 'October–December/January'}
+                onSelect={() => setHarvestingSeason('October–December/January')}
+                color="#FFD60A"
+              />
             </View>
           </BlurView>
         </View>
@@ -377,6 +503,45 @@ export default function OilYieldPredictorSecond() {
                 </View>
               </BlurView>
             </View>
+
+            {/* Input Summary Card */}
+            {inputSummary && (
+              <View style={styles.inputSummaryCard}>
+                <BlurView intensity={70} tint="light" style={styles.cardBlur}>
+                  <View style={styles.cardHeader}>
+                    <View style={styles.cardIconCircle}>
+                      <MaterialCommunityIcons name="information" size={20} color="#0A84FF" />
+                    </View>
+                    <View style={styles.cardHeaderText}>
+                      <Text style={styles.label}>Input Summary</Text>
+                      <Text style={styles.labelSubtext}>Parameters used</Text>
+                    </View>
+                  </View>
+                  <View style={styles.summaryContent}>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Dried Mass:</Text>
+                      <Text style={styles.summaryValue}>{inputSummary.dried_mass_kg} kg</Text>
+                    </View>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Species:</Text>
+                      <Text style={styles.summaryValue}>{inputSummary.species_variety}</Text>
+                    </View>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Plant Part:</Text>
+                      <Text style={styles.summaryValue}>{inputSummary.plant_part}</Text>
+                    </View>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Age:</Text>
+                      <Text style={styles.summaryValue}>{inputSummary.age_years} years</Text>
+                    </View>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Season:</Text>
+                      <Text style={styles.summaryValue}>{inputSummary.harvesting_season}</Text>
+                    </View>
+                  </View>
+                </BlurView>
+              </View>
+            )}
 
             {/* Metrics Grid */}
             {/* <View style={styles.metricsGrid}>
@@ -1104,5 +1269,39 @@ const styles = StyleSheet.create({
   recommendationFooter: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+  },
+  inputSummaryCard: {
+    marginTop: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  summaryContent: {
+    paddingTop: 12,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(60, 60, 67, 0.12)',
+  },
+  summaryLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#8E8E93',
+    letterSpacing: -0.24,
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    letterSpacing: -0.24,
   },
 });

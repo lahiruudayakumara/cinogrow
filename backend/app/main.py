@@ -36,9 +36,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include the oil yield router
-app.include_router(oil_yield_router)
-
 # Create upload directories if they don't exist
 Path('uploads/fertilizer_analysis').mkdir(parents=True, exist_ok=True)
 
@@ -52,6 +49,7 @@ async def startup_event():
     Base.metadata.create_all(bind=engine)
 
 # Include routers
+app.include_router(oil_yield_router, prefix='/api/v1')  # Oil yield prediction
 app.include_router(roboflow_simple_router, prefix='/api/v1')  # Roboflow deficiency detection
 app.include_router(weather.router, prefix="/api/v1")
 app.include_router(farm.router, prefix="/api/v1")

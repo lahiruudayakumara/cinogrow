@@ -202,7 +202,8 @@ export default function OilScreen() {
 
           {/* Grid Layout Title */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Features</Text>
+            <Text style={styles.sectionTitle}>Oil Production</Text>
+            <Text style={styles.sectionCount}>5 tools</Text>
           </View>
 
           {/* Grid Cards - 2 Column Layout */}
@@ -250,6 +251,60 @@ export default function OilScreen() {
               title="Oil Price Predictor"
               subtitle="Market forecast"
               onPress={() => navigation.navigate('OilPricePredictor')}
+            />
+          </View>
+
+          {/* Research Center Section */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Research Center</Text>
+            <View style={styles.newBadge}>
+              <Text style={styles.newBadgeText}>NEW</Text>
+            </View>
+          </View>
+
+          {/* Research Center Info Card */}
+          <View style={styles.researchInfoCard}>
+            <BlurView intensity={60} tint="light" style={styles.researchInfoBlur}>
+              <View style={styles.researchInfoHeader}>
+                <View style={styles.researchIconLarge}>
+                  <MaterialCommunityIcons name="school" size={32} color="#5E5CE6" />
+                </View>
+                <View style={styles.researchInfoTextContainer}>
+                  <Text style={styles.researchInfoTitle}>National Cinnamon Research</Text>
+                  <Text style={styles.researchInfoSubtitle}>Palolpitiya, Thihagoda, Matara</Text>
+                  <View style={styles.researchBadgesRow}>
+                    <View style={styles.researchMicroBadge}>
+                      <MaterialCommunityIcons name="certificate" size={12} color="#30D158" />
+                      <Text style={styles.researchMicroBadgeText}>Free Training</Text>
+                    </View>
+                    <View style={styles.researchMicroBadge}>
+                      <MaterialCommunityIcons name="account-group" size={12} color="#0A84FF" />
+                      <Text style={styles.researchMicroBadgeText}>All Ages</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </BlurView>
+          </View>
+
+          {/* Research Center Feature Cards */}
+          <View style={styles.gridContainer}>
+            <GridCard
+              icon="school-outline"
+              iconColor="#5E5CE6"
+              backgroundColor="rgba(94, 92, 230, 0.15)"
+              title="Training Modules"
+              subtitle="Free courses • 1-5 days"
+              onPress={() => navigation.navigate('TrainingModules')}
+            />
+            
+            <GridCard
+              icon="flask-outline"
+              iconColor="#FF9F0A"
+              backgroundColor="rgba(255, 159, 10, 0.15)"
+              title="Lab Certification"
+              subtitle="Export standards"
+              onPress={() => navigation.navigate('LabCertification')}
             />
           </View>
 
@@ -576,5 +631,84 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     fontWeight: '500',
     letterSpacing: -0.08,
+  },
+  newBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: 'rgba(94, 92, 230, 0.15)',
+  },
+  newBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#5E5CE6',
+    letterSpacing: 0.2,
+  },
+  researchInfoCard: {
+    width: '100%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 20,
+    shadowColor: '#5E5CE6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  researchInfoBlur: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(94, 92, 230, 0.2)',
+  },
+  researchInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 20,
+  },
+  researchIconLarge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(94, 92, 230, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  researchInfoTextContainer: {
+    flex: 1,
+    gap: 6,
+  },
+  researchInfoTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: -0.24,
+  },
+  researchInfoSubtitle: {
+    fontSize: 13,
+    color: '#3C3C43',
+    opacity: 0.6,
+    letterSpacing: -0.08,
+  },
+  researchBadgesRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  researchMicroBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+  },
+  researchMicroBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#3C3C43',
+    letterSpacing: -0.06,
   },
 });

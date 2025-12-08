@@ -1,4 +1,4 @@
-# app/oil_yield/model.py
+# app/oil_yield/distillation_time_model.py
 import pandas as pd
 import joblib
 from xgboost import XGBRegressor
@@ -7,36 +7,30 @@ from sklearn.metrics import mean_absolute_error, r2_score
 from pathlib import Path
 
 # Paths
-MODEL_PATH = Path(__file__).resolve().parent / "oil_yield_model.pkl"
-DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "cinnamon_oil_yield_dataset.csv"
+MODEL_PATH = Path(__file__).resolve().parent / "distillation_time_model.pkl"
+DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "cinnamon_distillation_dataset.csv"
 
 def encode_features(df):
     """
     Encode categorical features to numeric values.
     """
-    # Encode Species & Variety: Sri Gemunu = 0, Sri Vijaya = 1
-    df['species_encoded'] = df['Species & Variety'].map({
-        'Sri Gemunu': 0,
-        'Sri Vijaya': 1
+    # Encode cinnamon_type: Sri Gamunu = 0, Sri Wijaya = 1
+    df['cinnamon_type_encoded'] = df['cinnamon_type'].map({
+        'Sri Gamunu': 0,
+        'Sri Wijaya': 1
     })
     
-    # Encode Plant Part: Featherings & Chips = 0, Leaves & Twigs = 1
-    df['plant_part_encoded'] = df['Plant Part'].map({
+    # Encode plant_part: Featherings & Chips = 0, Leaves & Twigs = 1
+    df['plant_part_encoded'] = df['plant_part'].map({
         'Featherings & Chips': 0,
         'Leaves & Twigs': 1
-    })
-    
-    # Encode Harvesting Season: May–August = 0, October–December/January = 1
-    df['season_encoded'] = df['Harvesting Season'].map({
-        'May–August': 0,
-        'October–December/January': 1
     })
     
     return df
 
 def train_model():
     """
-    Train an XGBoost model on real cinnamon oil yield data and save it as a .pkl file.
+    Train an XGBoost model to predict distillation time and save it as a .pkl file.
     """
     # Load dataset
     data = pd.read_csv(DATA_PATH)
@@ -45,9 +39,8 @@ def train_model():
     data = encode_features(data)
     
     # Prepare features and target
-    X = data[['Dried Mass (kg)', 'species_encoded', 'plant_part_encoded', 
-              'Age (years)', 'season_encoded']]
-    y = data['Oil Yield (L)']
+    X = data[['plant_part_encoded', 'cinnamon_type_encoded', 'distillation_capacity_liters']]
+    y = data['distillation_time_hours']
     
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
@@ -70,9 +63,9 @@ def train_model():
     
     # Save model
     joblib.dump(model, MODEL_PATH)
-    print(f"✅ Model trained and saved at {MODEL_PATH}")
+    print(f"✅ Distillation time model trained and saved at {MODEL_PATH}")
     print(f"📊 Model Performance:")
-    print(f"   - Mean Absolute Error: {mae:.3f} L")
+    print(f"   - Mean Absolute Error: {mae:.3f} hours")
     print(f"   - R² Score: {r2:.3f}")
     print(f"   - Training samples: {len(X_train)}")
     print(f"   - Test samples: {len(X_test)}")

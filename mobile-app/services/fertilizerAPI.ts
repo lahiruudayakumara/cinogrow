@@ -13,9 +13,38 @@ export interface RoboflowPrediction {
   confidence: number;
 }
 
+export interface FertilizerRecommendation {
+  summary: string;
+  plant_information: {
+    age_category: string;
+    ring_distance: string;
+  };
+  fertilizer_recommendation: {
+    primary_nutrient: string;
+    nutrient_amount: string;
+    fertilizer_name: string;
+    fertilizer_composition: string;
+    actual_fertilizer_amount: string;
+  };
+  application_guidelines: {
+    timing: string;
+    placement: string;
+    coverage: string;
+  };
+  symptoms_identified: string[];
+  additional_notes?: string;
+  organic_alternatives?: string;
+}
+
 export interface RoboflowAnalysisResponse {
   success: boolean;
   message: string;
+  primary_deficiency?: string;
+  confidence?: number;
+  severity?: string;
+  plant_age?: number;
+  recommendations?: FertilizerRecommendation;
+  history_id?: number;
   roboflow_output: Array<{
     predictions: {
       predictions: RoboflowPrediction[];
@@ -26,8 +55,6 @@ export interface RoboflowAnalysisResponse {
   metadata: {
     filename: string;
     content_type: string;
-    size_bytes: number;
-    image_dimensions: string;
     model_type: string;
     workflow_id: string;
     workspace: string;
@@ -84,8 +111,8 @@ class FertilizerAPI {
   /**
    * Analyze leaf image using Roboflow workflow
    */
-  async analyzeLeafWithRoboflow(imageUri: string): Promise<RoboflowAnalysisResponse> {
-    const analyzeUrl = `${ROBOFLOW_ENDPOINT}/analyze`;
+  async analyzeLeafWithRoboflow(imageUri: string, plantAge: number = 1): Promise<RoboflowAnalysisResponse> {
+    const analyzeUrl = `${ROBOFLOW_ENDPOINT}/analyze?plant_age=${plantAge}`;
     
     try {
       console.log('🤖 Starting Roboflow analysis via backend...');

@@ -41,17 +41,29 @@ def get_logger(
     if logger.hasHandlers():
         logger.handlers.clear()
 
-    # Console handler
+    # Console handler with UTF-8 encoding support
+    # On Windows, reconfigure stdout to use UTF-8 to handle emoji
+    if sys.platform == 'win32':
+        try:
+            import io
+            # Force UTF-8 encoding for console output on Windows
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+        except Exception as e:
+            # Fallback: if reconfiguration fails, continue without UTF-8
+            pass
+    
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.DEBUG)
+    console_handler.stream.reconfigure(encoding='utf-8', errors='replace') if hasattr(console_handler.stream, 'reconfigure') else None
     console_format = EmojiFormatter(
         "[%(asctime)s] %(levelname)s - %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
     console_handler.setFormatter(console_format)
 
-    # File handler with rotation
-    file_handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=3)
+    # File handler with rotation and UTF-8 encoding
+    file_handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=3, encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(console_format)
 

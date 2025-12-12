@@ -1,0 +1,42 @@
+{
+  "tabs": {
+    "fertilizer": "Fertilizers",
+    "oil": "Oil",
+    "weather": "Weather",
+    "pests": "Pests & Diseases",
+    "profile": "Profile"
+  },
+  "profile": {
+    "title": "Profile",
+    "subscription_plan": "Subscription Plan",
+    "manage_subscription": "Manage Subscription",
+    "language": "Language",
+    "change_language": "Change Language",
+    "help_support": "Help & Support",
+    "faqs": "FAQs",
+    "contact_us": "Contact Us",
+    "logout": "Logout",
+    "current_plan": "Current Plan",
+    "free_plan": "Free Plan",
+    "premium_plan": "Premium Plan",
+    "upgrade_to_premium": "Upgrade to Premium",
+    "select": "Select",
+    "notifications": "Notifications",
+    "enable": "Enable",
+    "disable": "Disable",
+    "edit_profile": "Edit Profile",
+    "update_info": "Update Information",
+    "privacy": "Privacy Policy",
+    "settings": "Settings",
+    "select_language": "Select Language"
+  },
+  "pest_disease": {
+    "recommendations": "Pest & Disease Recommendations",
+    "upload_photo": "Upload Photo",
+    "upload_instructions": "Capture the entire affected leaf in good natural light. Avoid shadows or glare and focus on visible symptoms like spots, holes, discoloration, or insects.",
+    "choose_file": "Choose File",
+    "process_image": "Process Image",
+    "remove": "Remove",
+    "get_recommendations": "Get Complete Disease and Pest Recommendations"
+  }
+}

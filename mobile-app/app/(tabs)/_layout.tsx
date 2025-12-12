@@ -20,20 +20,22 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
+        sceneContainerStyle: {
+          paddingTop: insets.top,
+        },
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect
-            height: 50, // removed safe area bottom inset
-            paddingBottom: 10, // removed bottom padding
+            height: 60 + insets.bottom,
+            paddingBottom: insets.bottom,
             paddingTop: 8,
-            marginBottom: 10,
             paddingHorizontal: 20
           },
           default: {
             // Add specific Android styling if needed
             elevation: 4,
-            height: 60, // removed safe area bottom inset for Android
-            paddingBottom: 0, // removed bottom padding
+            height: 60 + insets.bottom,
+            paddingBottom: insets.bottom,
             paddingTop: 8,
             backgroundColor: '#fff', // White background for Android
           },

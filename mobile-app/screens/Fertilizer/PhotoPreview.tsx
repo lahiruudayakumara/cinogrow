@@ -11,6 +11,7 @@ import {
     Platform,
     ActivityIndicator,
     Alert,
+    Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -309,6 +310,68 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
                                     ? 'Real-time ML analysis in progress. This will provide accurate fertilizer recommendations based on your leaf sample.'
                                     : 'Tap "Get ML Recommendations" for AI-powered fertilizer advice based on real leaf analysis. Enhanced with soil data for better results.'
                                 : 'Enhanced analysis with both leaf and soil samples for comprehensive recommendations.'}
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Contact Section - National Cinnamon Research and Training Centre */}
+                <View style={styles.contactSection}>
+                    <View style={styles.contactCard}>
+                        <View style={styles.contactHeader}>
+                            <View style={styles.contactIconCircle}>
+                                <Ionicons name="call-outline" size={24} color="#4CAF50" />
+                            </View>
+                            <View style={styles.contactHeaderText}>
+                                <Text style={styles.contactTitle}>Need Expert Guidance?</Text>
+                                <Text style={styles.contactSubtitle}>Get Professional Support</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.contactInfoBox}>
+                            <View style={styles.contactInfoRow}>
+                                <Ionicons name="business-outline" size={18} color="#6B7280" />
+                                <Text style={styles.contactInfoText}>
+                                    National Cinnamon Research and Training Centre
+                                </Text>
+                            </View>
+                            <View style={styles.contactInfoRow}>
+                                <Ionicons name="location-outline" size={18} color="#6B7280" />
+                                <Text style={styles.contactInfoText}>
+                                    Palolpitiya, Thihagoda, Matara, Sri Lanka
+                                </Text>
+                            </View>
+                            <View style={styles.contactInfoRow}>
+                                <Ionicons name="call-outline" size={18} color="#6B7280" />
+                                <Text style={styles.contactInfoText}>
+                                    +94 41 2250113 / +94 41 2250274
+                                </Text>
+                            </View>
+                            <View style={styles.contactInfoRow}>
+                                <Ionicons name="mail-outline" size={18} color="#6B7280" />
+                                <Text style={styles.contactInfoText}>
+                                    cinnamoncentre@doa.gov.lk
+                                </Text>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.contactButton}
+                            onPress={() => Linking.openURL('tel:+94412250113')}
+                            activeOpacity={0.8}
+                        >
+                            <LinearGradient
+                                colors={['#4CAF50', '#45A049']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.contactButtonGradient}
+                            >
+                                <Ionicons name="call" size={20} color="#FFFFFF" />
+                                <Text style={styles.contactButtonText}>Contact Research Centre</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <Text style={styles.contactNote}>
+                            💡 Expert agronomists are available to provide personalized advice for your cinnamon cultivation
                         </Text>
                     </View>
                 </View>
@@ -703,6 +766,99 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
         flex: 1,
+    },
+    // Contact Section Styles
+    contactSection: {
+        marginBottom: 24,
+    },
+    contactCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    contactHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: 16,
+        paddingBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    contactIconCircle: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#E7F5E7',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    contactHeaderText: {
+        flex: 1,
+    },
+    contactTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 4,
+    },
+    contactSubtitle: {
+        fontSize: 14,
+        color: '#6B7280',
+    },
+    contactInfoBox: {
+        backgroundColor: '#F9FAFB',
+        padding: 16,
+        borderRadius: 12,
+        gap: 12,
+        marginBottom: 16,
+    },
+    contactInfoRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 10,
+    },
+    contactInfoText: {
+        fontSize: 13,
+        color: '#374151',
+        flex: 1,
+        lineHeight: 20,
+    },
+    contactButton: {
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginBottom: 12,
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    contactButtonGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        gap: 8,
+    },
+    contactButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#FFFFFF',
+    },
+    contactNote: {
+        fontSize: 12,
+        color: '#6B7280',
+        fontStyle: 'italic',
+        textAlign: 'center',
+        lineHeight: 18,
     },
 });
 

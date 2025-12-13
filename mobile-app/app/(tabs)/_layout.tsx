@@ -6,6 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { t } from 'i18next';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -47,16 +48,12 @@ export default function TabLayout() {
           paddingVertical: 4,
           marginHorizontal: 5, // create a horizontal gap of ~10 between items
         },
-        tabBarIndicatorStyle: {
-          backgroundColor: '#2E7D32',
-          height: 3,
-        },
       }}>
 
       <Tabs.Screen
         name="fertilizer"
         options={{
-          title: 'Fertilizer',
+          title: t("tabs.fertilizer"),
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons 
               name={focused ? "leaf" : "leaf-outline"} 
@@ -70,7 +67,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="oil"
         options={{
-          title: 'Oil',
+          title: t("tabs.oil"),
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons 
               name={focused ? "flask" : "flask-outline"} 
@@ -84,7 +81,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Weather',
+          title: t("tabs.weather"),
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons 
               name={focused ? "partly-sunny" : "partly-sunny-outline"} 
@@ -98,7 +95,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="pests"
         options={{
-          title: 'Pests',
+          title: t("tabs.pests"),
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons 
               name={focused ? "bug" : "bug-outline"} 
@@ -112,7 +109,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t("tabs.profile"),
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons 
               name={focused ? "person" : "person-outline"} 

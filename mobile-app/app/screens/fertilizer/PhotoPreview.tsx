@@ -16,26 +16,17 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
-import { fertilizerAPI, FertilizerAnalysisResponse } from '../../services/fertilizerAPI';
-import PlantAgeSelector from '../../components/PlantAgeSelector';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { fertilizerAPI } from '../../../services/fertilizerAPI';
+import PlantAgeSelector from '../../../components/PlantAgeSelector';
 
-type PhotoPreviewNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerPhotoPreview'
->;
-
-type PhotoPreviewRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerPhotoPreview'>;
-
-interface PhotoPreviewProps {
-    navigation: PhotoPreviewNavigationProp;
-    route: PhotoPreviewRouteProp;
-}
-
-const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
-    const { imageUri, imageType, leafImage, soilImage, leafMetadata } = route.params;
+const PhotoPreview: React.FC = () => {
+    const router = useRouter();
+    const params = useLocalSearchParams();
+    const imageUri = params.imageUri as string;
+    const imageType = params.imageType as 'leaf' | 'soil';
+    const leafImage = params.leafImage as string | undefined;
+    const soilImage = params.soilImage as string | undefined;
     const insets = useSafeAreaInsets();
 
     // State for ML analysis
@@ -60,7 +51,7 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
     ];
 
     const handleRetakePhoto = () => {
-        navigation.goBack();
+        router.back();
     };
 
     const handleContinue = async () => {
@@ -70,10 +61,13 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
         } else if (imageType === 'soil') {
             // For now, go to results with basic soil analysis
             // TODO: Implement soil analysis API
-            navigation.navigate('FertilizerResult', {
-                leafImage: leafImage,
-                soilImage: imageUri,
-                analysisType: 'comprehensive'
+            router.push({
+                pathname: '/screens/fertilizer/FertilizerResultScreen',
+                params: {
+                    leafImage: leafImage,
+                    soilImage: imageUri,
+                    analysisType: 'comprehensive'
+                }
             });
         }
     };
@@ -96,11 +90,14 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
             setIsAnalyzing(false);
 
             // Navigate directly to results with the analysis data
-            navigation.navigate('FertilizerResult', {
-                leafImage: imageUri,
-                analysisType: 'leaf-only' as const,
-                roboflowAnalysis: roboflowResult,
-                plantAge: plantAge
+            router.push({
+                pathname: '/screens/fertilizer/FertilizerResultScreen',
+                params: {
+                    leafImage: imageUri,
+                    analysisType: 'leaf-only',
+                    roboflowAnalysis: JSON.stringify(roboflowResult),
+                    plantAge: plantAge
+                }
             });
 
         } catch (error) {
@@ -128,9 +125,12 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
                         onPress: () => {
                             console.log('👤 User chose basic analysis fallback');
                             // Continue with basic analysis if ML fails
-                            navigation.navigate('FertilizerResult', {
-                                leafImage: imageUri,
-                                analysisType: 'leaf-only'
+                            router.push({
+                                pathname: '/screens/fertilizer/FertilizerResultScreen',
+                                params: {
+                                    leafImage: imageUri,
+                                    analysisType: 'leaf-only'
+                                }
                             });
                         }
                     }
@@ -152,9 +152,12 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
 
     const handleAddSoilAnalysis = () => {
         // Navigate to soil upload to enhance the analysis
-        navigation.navigate('FertilizerUploadSoil', {
-            fromLeaf: true,
-            leafImage: imageUri
+        router.push({
+            pathname: '/screens/fertilizer/UploadSoilScreen',
+            params: {
+                fromLeaf: 'true',
+                leafImage: imageUri
+            }
         });
     };
 
@@ -229,6 +232,13 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
             >
                 {/* Header */}
                 <View style={styles.header}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => router.back()}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#111827" />
+                    </TouchableOpacity>
                     <Text style={styles.headerTitle}>
                         {imageType === 'leaf' ? 'Leaf Sample Preview' : 'Soil Sample Preview'}
                     </Text>
@@ -314,67 +324,7 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
                     </View>
                 </View>
 
-                {/* Contact Section - National Cinnamon Research and Training Centre */}
-                <View style={styles.contactSection}>
-                    <View style={styles.contactCard}>
-                        <View style={styles.contactHeader}>
-                            <View style={styles.contactIconCircle}>
-                                <Ionicons name="call-outline" size={24} color="#4CAF50" />
-                            </View>
-                            <View style={styles.contactHeaderText}>
-                                <Text style={styles.contactTitle}>Need Expert Guidance?</Text>
-                                <Text style={styles.contactSubtitle}>Get Professional Support</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.contactInfoBox}>
-                            <View style={styles.contactInfoRow}>
-                                <Ionicons name="business-outline" size={18} color="#6B7280" />
-                                <Text style={styles.contactInfoText}>
-                                    National Cinnamon Research and Training Centre
-                                </Text>
-                            </View>
-                            <View style={styles.contactInfoRow}>
-                                <Ionicons name="location-outline" size={18} color="#6B7280" />
-                                <Text style={styles.contactInfoText}>
-                                    Palolpitiya, Thihagoda, Matara, Sri Lanka
-                                </Text>
-                            </View>
-                            <View style={styles.contactInfoRow}>
-                                <Ionicons name="call-outline" size={18} color="#6B7280" />
-                                <Text style={styles.contactInfoText}>
-                                    +94 41 2250113 / +94 41 2250274
-                                </Text>
-                            </View>
-                            <View style={styles.contactInfoRow}>
-                                <Ionicons name="mail-outline" size={18} color="#6B7280" />
-                                <Text style={styles.contactInfoText}>
-                                    cinnamoncentre@doa.gov.lk
-                                </Text>
-                            </View>
-                        </View>
-
-                        <TouchableOpacity
-                            style={styles.contactButton}
-                            onPress={() => Linking.openURL('tel:+94412250113')}
-                            activeOpacity={0.8}
-                        >
-                            <LinearGradient
-                                colors={['#4CAF50', '#45A049']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={styles.contactButtonGradient}
-                            >
-                                <Ionicons name="call" size={20} color="#FFFFFF" />
-                                <Text style={styles.contactButtonText}>Contact Research Centre</Text>
-                            </LinearGradient>
-                        </TouchableOpacity>
-
-                        <Text style={styles.contactNote}>
-                            💡 Expert agronomists are available to provide personalized advice for your cinnamon cultivation
-                        </Text>
-                    </View>
-                </View>
+                
 
                 {/* Action Buttons */}
                 <View style={styles.actionButtonsContainer}>
@@ -473,6 +423,21 @@ const styles = StyleSheet.create({
         marginTop: 20,
         marginBottom: 24,
         alignItems: 'center',
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+        alignSelf: 'flex-start',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     headerTitle: {
         fontSize: 28,

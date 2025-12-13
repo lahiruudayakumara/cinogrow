@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -14,28 +14,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
-import { imageAnalysisService } from '../../services/imageAnalysisService';
-import { metadataStorageService } from '../../services/metadataStorageService';
-import { SoilAnalysisMetadata } from '../../services/imageAnalysisService';
+import { useRouter } from 'expo-router';
 
-type UploadSoilScreenNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerUploadSoil'
->;
-
-type UploadSoilScreenRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerUploadSoil'>;
-
-interface UploadSoilScreenProps {
-    navigation: UploadSoilScreenNavigationProp;
-    route: UploadSoilScreenRouteProp;
-}
-
-const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }) => {
+const UploadLeafScreen: React.FC = () => {
+    const router = useRouter();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const { fromLeaf, leafImage } = route.params || {};
     const insets = useSafeAreaInsets();
 
     const requestCameraPermission = async () => {
@@ -93,31 +76,15 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
                 const imageUri = result.assets[0].uri;
                 setSelectedImage(imageUri);
 
-                // Extract metadata for ML analysis
-                try {
-                    // Create new analysis session
-                    const sessionId = await metadataStorageService.createSession();
-
-                    // Extract soil-specific metadata
-                    const soilMetadata = await imageAnalysisService.extractImageMetadata(
-                        imageUri,
-                        'soil',
-                        'camera'
-                    ) as SoilAnalysisMetadata;
-
-                    // Store metadata for future ML training
-                    await metadataStorageService.storeSoilMetadata(sessionId, soilMetadata);
-                } catch (metadataError) {
-                    console.log('Metadata extraction failed:', metadataError);
-                    // Continue with navigation even if metadata fails
-                }
-
-                // Auto-navigate to PhotoPreview
-                navigation.navigate('FertilizerPhotoPreview', {
-                    imageUri: imageUri,
-                    imageType: 'soil',
-                    soilImage: imageUri,
-                    leafImage: leafImage, // Pass the leaf image from route params
+                // Navigate directly to PhotoPreview for Roboflow analysis
+                console.log('📸 Photo captured, navigating to preview...');
+                router.push({
+                    pathname: '/screens/fertilizer/PhotoPreview',
+                    params: {
+                        imageUri: imageUri,
+                        imageType: 'leaf',
+                        leafImage: imageUri,
+                    }
                 });
             }
         } catch (error) {
@@ -142,31 +109,15 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
                 const imageUri = result.assets[0].uri;
                 setSelectedImage(imageUri);
 
-                // Extract metadata for ML analysis
-                try {
-                    // Create new analysis session
-                    const sessionId = await metadataStorageService.createSession();
-
-                    // Extract soil-specific metadata
-                    const soilMetadata = await imageAnalysisService.extractImageMetadata(
-                        imageUri,
-                        'soil',
-                        'library'
-                    ) as SoilAnalysisMetadata;
-
-                    // Store metadata for future ML training
-                    await metadataStorageService.storeSoilMetadata(sessionId, soilMetadata);
-                } catch (metadataError) {
-                    console.log('Metadata extraction failed:', metadataError);
-                    // Continue with navigation even if metadata fails
-                }
-
-                // Auto-navigate to PhotoPreview
-                navigation.navigate('FertilizerPhotoPreview', {
-                    imageUri: imageUri,
-                    imageType: 'soil',
-                    soilImage: imageUri,
-                    leafImage: leafImage, // Pass the leaf image from route params
+                // Navigate directly to PhotoPreview for Roboflow analysis
+                console.log('🖼️ Image selected from library, navigating to preview...');
+                router.push({
+                    pathname: '/screens/fertilizer/PhotoPreview',
+                    params: {
+                        imageUri: imageUri,
+                        imageType: 'leaf',
+                        leafImage: imageUri,
+                    }
                 });
             }
         } catch (error) {
@@ -175,24 +126,26 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
         }
     };
 
-    const handleUploadSoilSample = () => {
+    const handleUploadLeafSample = () => {
         if (!selectedImage) {
-            Alert.alert('No Image Selected', 'Please select a soil image first.');
+            Alert.alert('No Image Selected', 'Please select a leaf image first.');
             return;
         }
 
-        // Navigate to PhotoPreview for soil image, passing both images
-        navigation.navigate('FertilizerPhotoPreview', {
-            imageUri: selectedImage,
-            imageType: 'soil',
-            leafImage: leafImage,
-            soilImage: selectedImage,
+        // Navigate to PhotoPreview for leaf image
+        router.push({
+            pathname: '/screens/fertilizer/PhotoPreview',
+            params: {
+                imageUri: selectedImage,
+                imageType: 'leaf',
+                leafImage: selectedImage,
+            }
         });
     };
 
     const renderGuidelineItem = (iconName: keyof typeof Ionicons.glyphMap, text: string) => (
         <View style={styles.guidelineItem}>
-            <Ionicons name={iconName} size={16} color="#8B7355" style={styles.guidelineIcon} />
+            <Ionicons name={iconName} size={16} color="#4CAF50" style={styles.guidelineIcon} />
             <Text style={styles.guidelineText}>{text}</Text>
         </View>
     );
@@ -225,36 +178,6 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
         </TouchableOpacity>
     );
 
-    const renderProgressCard = () => {
-        if (!leafImage) return null;
-
-        return (
-            <View style={styles.progressCard}>
-                <LinearGradient
-                    colors={['#F0F9FF', '#E0F2FE']}
-                    style={styles.progressGradient}
-                >
-                    <View style={styles.progressHeader}>
-                        <View style={styles.progressIconContainer}>
-                            <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-                        </View>
-                        <Text style={styles.progressTitle}>Leaf Sample Complete</Text>
-                    </View>
-                    <Text style={styles.progressSubtitle}>
-                        Great! Now upload your soil sample to complete the analysis.
-                    </Text>
-                    <View style={styles.progressBar}>
-                        <LinearGradient
-                            colors={['#4CAF50', '#45A049']}
-                            style={[styles.progressFill, { width: '50%' }]}
-                        />
-                    </View>
-                    <Text style={styles.progressText}>Step 2 of 2</Text>
-                </LinearGradient>
-            </View>
-        );
-    };
-
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView
@@ -269,29 +192,33 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Upload Soil Sample</Text>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => router.back()}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#111827" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Upload Leaf Sample</Text>
                     <Text style={styles.headerSubtitle}>
-                        Optional Step 2: Add soil photo to enhance your fertilizer recommendations
+                        Step 1: Take a clear photo of your cinnamon leaf for instant fertilizer recommendations
                     </Text>
                 </View>
-
-                {/* Progress Card */}
-                {renderProgressCard()}
 
                 {/* Guidelines Card */}
                 <View style={styles.guidelinesCard}>
                     <View style={styles.guidelinesHeader}>
                         <View style={styles.guidelinesIconContainer}>
-                            <Ionicons name="earth" size={24} color="#8B7355" />
+                            <Ionicons name="information-circle" size={24} color="#4CAF50" />
                         </View>
-                        <Text style={styles.guidelinesTitle}>Soil Photography Guidelines</Text>
+                        <Text style={styles.guidelinesTitle}>Photography Guidelines</Text>
                     </View>
 
                     <View style={styles.guidelinesList}>
-                        {renderGuidelineItem('sunny', 'Take photo in natural daylight')}
-                        {renderGuidelineItem('earth-outline', 'Show topsoil surface clearly')}
-                        {renderGuidelineItem('leaf-outline', 'Clear away debris and vegetation')}
-                        {renderGuidelineItem('water-outline', 'Ensure soil is moist, not waterlogged')}
+                        {renderGuidelineItem('sunny', 'Use natural daylight when possible')}
+                        {renderGuidelineItem('leaf-outline', 'Include the entire leaf in frame')}
+                        {renderGuidelineItem('eye-outline', 'Ensure the leaf is flat and well-lit')}
+                        {renderGuidelineItem('ban-outline', 'Avoid shadows and reflections')}
                     </View>
                 </View>
 
@@ -303,9 +230,9 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
                         {renderActionButton(
                             'camera',
                             'Take Photo',
-                            'Use your camera to capture soil',
+                            'Use your camera to capture a leaf',
                             openCamera,
-                            ['#8B7355', '#7A5F47']
+                            ['#4CAF50', '#45A049']
                         )}
 
                         {renderActionButton(
@@ -329,7 +256,7 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
                                     style={styles.changeImageButton}
                                     onPress={handleChooseFile}
                                 >
-                                    <Ionicons name="refresh" size={16} color="#8B7355" />
+                                    <Ionicons name="refresh" size={16} color="#4CAF50" />
                                     <Text style={styles.changeImageText}>Change Image</Text>
                                 </TouchableOpacity>
                             </View>
@@ -352,7 +279,21 @@ const styles = StyleSheet.create({
     },
     header: {
         marginTop: 20,
-        marginBottom: 24,
+        marginBottom: 32,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     headerTitle: {
         fontSize: 28,
@@ -366,73 +307,13 @@ const styles = StyleSheet.create({
         color: '#6B7280',
         lineHeight: 22,
     },
-    progressCard: {
-        borderRadius: 16,
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    progressGradient: {
-        borderRadius: 16,
-        padding: 20,
-        borderWidth: 1,
-        borderColor: '#E0F2FE',
-    },
-    progressHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    progressIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        backgroundColor: '#FFFFFF',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-        shadowColor: '#4CAF50',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    progressTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#0F172A',
-    },
-    progressSubtitle: {
-        fontSize: 14,
-        color: '#374151',
-        marginBottom: 16,
-    },
-    progressBar: {
-        height: 6,
-        backgroundColor: '#E5E7EB',
-        borderRadius: 3,
-        overflow: 'hidden',
-        marginBottom: 8,
-    },
-    progressFill: {
-        height: '100%',
-        borderRadius: 3,
-    },
-    progressText: {
-        fontSize: 12,
-        color: '#6B7280',
-        fontWeight: '600',
-    },
     guidelinesCard: {
-        backgroundColor: '#FEF7ED',
+        backgroundColor: '#F0FDF4',
         borderRadius: 12,
         padding: 16,
         marginBottom: 24,
         borderLeftWidth: 3,
-        borderLeftColor: '#8B7355',
+        borderLeftColor: '#4CAF50',
     },
     guidelinesHeader: {
         flexDirection: 'row',
@@ -443,7 +324,7 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: '#FED7AA',
+        backgroundColor: '#DCFCE7',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -451,7 +332,7 @@ const styles = StyleSheet.create({
     guidelinesTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#92400E',
+        color: '#166534',
     },
     guidelinesList: {
         gap: 12,
@@ -466,7 +347,7 @@ const styles = StyleSheet.create({
     },
     guidelineText: {
         fontSize: 13,
-        color: '#92400E',
+        color: '#166534',
         fontWeight: '500',
         flex: 1,
         lineHeight: 18,
@@ -548,19 +429,19 @@ const styles = StyleSheet.create({
     changeImageButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FEF7ED',
+        backgroundColor: '#F3F4F6',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: '#FED7AA',
+        borderColor: '#E5E7EB',
         gap: 6,
     },
     changeImageText: {
         fontSize: 14,
-        color: '#8B7355',
+        color: '#4CAF50',
         fontWeight: '600',
     },
 });
 
-export default UploadSoilScreen;
+export default UploadLeafScreen;

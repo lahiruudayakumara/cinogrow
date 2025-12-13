@@ -1,5 +1,43 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ImageMetadata, LeafAnalysisMetadata, SoilAnalysisMetadata } from './imageAnalysisService';
+
+// Type definitions for metadata (moved from imageAnalysisService)
+export interface ImageMetadata {
+  uri: string;
+  width: number;
+  height: number;
+  fileSize: number;
+  fileName: string;
+  mimeType: string;
+  timestamp: string;
+  location?: { latitude?: number; longitude?: number };
+  quality: { brightness: number; contrast: number; sharpness: number; colorfulness: number };
+  dominantColors: string[];
+  averageColor: string;
+  sampleType: 'leaf' | 'soil';
+  analysisRegion: { x: number; y: number; width: number; height: number };
+  captureMethod: 'camera' | 'library';
+  deviceInfo: { platform: string; model?: string };
+}
+
+export interface LeafAnalysisMetadata extends ImageMetadata {
+  sampleType: 'leaf';
+  leafFeatures: {
+    estimatedLeafArea: number;
+    leafShape: 'oval' | 'elongated' | 'round' | 'irregular';
+    visibleDefects: string[];
+    colorDistribution: { green: number; yellow: number; brown: number; other: number };
+  };
+}
+
+export interface SoilAnalysisMetadata extends ImageMetadata {
+  sampleType: 'soil';
+  soilFeatures: {
+    texture: 'clay' | 'sandy' | 'loam' | 'mixed';
+    moisture: 'dry' | 'moist' | 'wet';
+    organicMatter: 'low' | 'medium' | 'high';
+    colorProfile: { lightness: number; redness: number; yellowness: number };
+  };
+}
 
 export interface AnalysisSession {
   id: string;

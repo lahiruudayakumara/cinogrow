@@ -1,6 +1,6 @@
 import React from 'react';
-import FertilizerNavigator from '../../navigation/FertilizerNavigator';
+import FertilizerHomeScreen from '../screens/fertilizer';
 
 export default function FertilizerTab() {
-  return <FertilizerNavigator />;
+  return <FertilizerHomeScreen />;
 }

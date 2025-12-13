@@ -3,19 +3,8 @@ from .yield_weather.farm import Farm, Plot, FarmActivity, PlantingRecord, UserYi
 from .yield_weather.weather import WeatherRecord, WeatherResponse, LocationRequest, WeatherData
 from .yield_weather.farm_assistance import ActivityHistory
 
-# Import fertilizer prediction models
-from .fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis
-
-# Import fertilizer history model
+# Import fertilizer history model (Roboflow only)
 from .fertilizer_history import FertilizerHistory, FertilizerHistoryCreate, FertilizerHistoryResponse
-
-# Import fertilizer models from fertilizer package
-from .fertilizer.fertilizer import (
-    FertilizerType,
-    FertilizerApplication,
-    FertilizerSchedule,
-    FertilizerRecommendation
-)
 
 from .user import User
 
@@ -31,14 +20,8 @@ __all__ = [
     "LocationRequest",
     "WeatherData",
     "ActivityHistory",
-    # Fertilizer models
-    "FertilizerPrediction",
-    "FertilizerAnalysis",
+    # Fertilizer models (Roboflow only)
     "FertilizerHistory",
     "FertilizerHistoryCreate",
-    "FertilizerHistoryResponse",
-    "FertilizerType",
-    "FertilizerApplication",
-    "FertilizerSchedule",
-    "FertilizerRecommendation"
+    "FertilizerHistoryResponse"
 ]

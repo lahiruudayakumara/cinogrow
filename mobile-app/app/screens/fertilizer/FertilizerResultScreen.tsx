@@ -9,27 +9,14 @@ import {
     SafeAreaView,
     Platform,
     ActivityIndicator,
+    Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
-import apiConfig from '../../config/api';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import apiConfig from '../../../config/api';
 import axios from 'axios';
-
-type FertilizerResultScreenNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerResult'
->;
-
-type FertilizerResultScreenRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerResult'>;
-
-interface FertilizerResultScreenProps {
-    navigation: FertilizerResultScreenNavigationProp;
-    route: FertilizerResultScreenRouteProp;
-}
 
 interface RoboflowDetection {
     deficiency: string;
@@ -82,11 +69,12 @@ interface FertilizerRecommendation {
     };
 }
 
-const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
-    navigation,
-    route,
-}) => {
-    const { leafImage, roboflowAnalysis, plantAge } = route.params;
+const FertilizerResultScreen: React.FC = () => {
+    const router = useRouter();
+    const params = useLocalSearchParams();
+    const leafImage = params.leafImage as string | undefined;
+    const plantAge = params.plantAge ? parseInt(params.plantAge as string) : undefined;
+    const roboflowAnalysisStr = params.roboflowAnalysis as string | undefined;
     const insets = useSafeAreaInsets();
     const [detections, setDetections] = useState<RoboflowDetection[]>([]);
     const [recommendations, setRecommendations] = useState<FertilizerRecommendation | null>(null);
@@ -94,7 +82,8 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
     const isHistoryView = !leafImage; // If no image, it's from history
 
     useEffect(() => {
-        if (roboflowAnalysis) {
+        if (roboflowAnalysisStr) {
+            const roboflowAnalysis = JSON.parse(roboflowAnalysisStr);
             console.log('🔄 Processing Roboflow output:', roboflowAnalysis);
 
             // Extract predictions from roboflow_output array
@@ -133,7 +122,7 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
                 fetchRecommendations(allDetections[0]);
             }
         }
-    }, [roboflowAnalysis, plantAge]);
+    }, [roboflowAnalysisStr, plantAge]);
 
     const fetchRecommendations = async (detection: RoboflowDetection) => {
         try {
@@ -189,7 +178,7 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
                 <View style={styles.header}>
                     <TouchableOpacity
                         style={styles.backButton}
-                        onPress={() => navigation.goBack()}
+                        onPress={() => router.back()}
                         activeOpacity={0.7}
                     >
                         <Ionicons name="arrow-back" size={24} color="#111827" />
@@ -473,7 +462,7 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
                 <View style={styles.actionsContainer}>
                     <TouchableOpacity
                         style={styles.primaryButton}
-                        onPress={() => navigation.navigate('FertilizerHome')}
+                        onPress={() => router.push('/(tabs)/fertilizer')}
                         activeOpacity={0.8}
                     >
                         <Ionicons name="home" size={20} color="#FFFFFF" />
@@ -482,12 +471,74 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
 
                     <TouchableOpacity
                         style={styles.secondaryButton}
-                        onPress={() => navigation.navigate('FertilizerUploadLeaf')}
+                        onPress={() => router.push('/screens/fertilizer/UploadLeafScreen')}
                         activeOpacity={0.8}
                     >
                         <Ionicons name="camera" size={20} color="#4CAF50" />
                         <Text style={styles.secondaryButtonText}>Analyze Another</Text>
                     </TouchableOpacity>
+                </View>
+
+                {/* Contact Section - National Cinnamon Research and Training Centre */}
+                <View style={styles.contactSection}>
+                    <View style={styles.contactCard}>
+                        <View style={styles.contactHeader}>
+                            <View style={styles.contactIconCircle}>
+                                <Ionicons name="call-outline" size={24} color="#4CAF50" />
+                            </View>
+                            <View style={styles.contactHeaderText}>
+                                <Text style={styles.contactTitle}>Need Expert Guidance?</Text>
+                                <Text style={styles.contactSubtitle}>Get Professional Support</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.contactInfoBox}>
+                            <View style={styles.contactInfoRow}>
+                                <Ionicons name="business-outline" size={18} color="#6B7280" />
+                                <Text style={styles.contactInfoText}>
+                                    National Cinnamon Research and Training Centre
+                                </Text>
+                            </View>
+                            <View style={styles.contactInfoRow}>
+                                <Ionicons name="location-outline" size={18} color="#6B7280" />
+                                <Text style={styles.contactInfoText}>
+                                    Palolpitiya, Thihagoda, Matara, Sri Lanka
+                                </Text>
+                            </View>
+                            <View style={styles.contactInfoRow}>
+                                <Ionicons name="call-outline" size={18} color="#6B7280" />
+                                <Text style={styles.contactInfoText}>
+                                    +94 41 2250113 / +94 41 2250274
+                                </Text>
+                            </View>
+                            <View style={styles.contactInfoRow}>
+                                <Ionicons name="mail-outline" size={18} color="#6B7280" />
+                                <Text style={styles.contactInfoText}>
+                                    cinnamoncentre@doa.gov.lk
+                                </Text>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.contactButton}
+                            onPress={() => Linking.openURL('tel:+94412250113')}
+                            activeOpacity={0.8}
+                        >
+                            <LinearGradient
+                                colors={['#4CAF50', '#45A049']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.contactButtonGradient}
+                            >
+                                <Ionicons name="call" size={20} color="#FFFFFF" />
+                                <Text style={styles.contactButtonText}>Contact Research Centre</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <Text style={styles.contactNote}>
+                            💡 Expert agronomists are available to provide personalized advice for your cinnamon cultivation
+                        </Text>
+                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -969,6 +1020,90 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#374151',
         flex: 1,
+        lineHeight: 20,
+    },
+    contactSection: {
+        marginTop: 24,
+        paddingBottom: 16,
+    },
+    contactCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    contactHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    contactIconCircle: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#E8F5E9',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    contactHeaderText: {
+        flex: 1,
+    },
+    contactTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1F2937',
+        marginBottom: 2,
+    },
+    contactSubtitle: {
+        fontSize: 14,
+        color: '#6B7280',
+    },
+    contactInfoBox: {
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+    },
+    contactInfoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    contactInfoText: {
+        fontSize: 14,
+        color: '#374151',
+        marginLeft: 10,
+        flex: 1,
+        lineHeight: 20,
+    },
+    contactButton: {
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginBottom: 12,
+    },
+    contactButtonGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+    },
+    contactButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        marginLeft: 8,
+    },
+    contactNote: {
+        fontSize: 13,
+        color: '#6B7280',
+        textAlign: 'center',
+        fontStyle: 'italic',
         lineHeight: 20,
     },
 });

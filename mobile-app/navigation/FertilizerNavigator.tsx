@@ -5,14 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Import types
 import { FertilizerAnalysisResponse } from '../services/fertilizerAPI';
-import { LeafAnalysisMetadata } from '../services/imageAnalysisService';
 
 // Import screens
-import FertilizerHomeScreen from '../screens/Fertilizer/FertilizerHomeScreen';
-import UploadLeafScreen from '../screens/Fertilizer/UploadLeafScreen';
-import UploadSoilScreen from '../screens/Fertilizer/UploadSoilScreen';
-import PhotoPreview from '../screens/Fertilizer/PhotoPreview';
-import FertilizerResultScreen from '../screens/Fertilizer/FertilizerResultScreen';
+import FertilizerHomeScreen from '../screens/Fertilizer';
+import UploadLeafScreen from '../app/screens/fertilizer/UploadLeafScreen';
+import UploadSoilScreen from '../app/screens/fertilizer/UploadSoilScreen';
+import PhotoPreview from '../app/screens/fertilizer/PhotoPreview';
+import FertilizerResultScreen from '../app/screens/fertilizer/FertilizerResultScreen';
 
 // Define the navigation parameter types for the Fertilizer stack
 export type FertilizerStackParamList = {
@@ -24,7 +23,6 @@ export type FertilizerStackParamList = {
         imageType: 'leaf' | 'soil';
         leafImage?: string;
         soilImage?: string;
-        leafMetadata?: LeafAnalysisMetadata;
     };
     FertilizerResult: {
         leafImage?: string;

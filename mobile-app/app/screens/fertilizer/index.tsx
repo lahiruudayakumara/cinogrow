@@ -10,34 +10,25 @@ import {
     ActivityIndicator,
     RefreshControl,
     Alert,
+    Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import {
     fetchFertilizerHistory,
     formatAnalysisDate,
     getSeverityColor,
     formatConfidence,
     FertilizerHistoryRecord,
-} from '../../services/fertilizerHistoryService';
+} from '../../../services/fertilizerHistoryService';
 
-type FertilizerHomeScreenNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerHome'
->;
-
-type FertilizerHomeScreenRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerHome'>;
-
-interface FertilizerHomeScreenProps {
-    navigation: FertilizerHomeScreenNavigationProp;
-    route: FertilizerHomeScreenRouteProp;
-}
-
-const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) => {
+const FertilizerHomeScreen: React.FC = () => {
+    const { t } = useTranslation();
+    const router = useRouter();
+    const params = useLocalSearchParams();
     const [leafImage, setLeafImage] = useState<string | null>(null);
     const [soilImage, setSoilImage] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
@@ -48,13 +39,13 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
     const insets = useSafeAreaInsets();
 
     useEffect(() => {
-        if (route.params?.leafImage) {
-            setLeafImage(route.params.leafImage);
+        if (params?.leafImage && typeof params.leafImage === 'string') {
+            setLeafImage(params.leafImage);
         }
-        if (route.params?.soilImage) {
-            setSoilImage(route.params.soilImage);
+        if (params?.soilImage && typeof params.soilImage === 'string') {
+            setSoilImage(params.soilImage);
         }
-    }, [route.params]);
+    }, [params]);
 
     // Load recent fertilizer history
     useEffect(() => {
@@ -75,12 +66,13 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
     };
 
     const handleUploadLeafSample = () => {
-        navigation.navigate('FertilizerUploadLeaf');
+        router.push('/screens/fertilizer/UploadLeafScreen');
     };
 
     const handleUploadSoilSample = () => {
-        navigation.navigate('FertilizerUploadSoil', {
-            leafImage: leafImage || undefined
+        router.push({
+            pathname: '/screens/fertilizer/UploadSoilScreen',
+            params: { leafImage: leafImage || undefined }
         });
     };
 
@@ -90,19 +82,23 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
             // Simulate API call
             setTimeout(() => {
                 setLoading(false);
-                navigation.navigate('FertilizerResult', {
-                    leafImage,
-                    soilImage,
+                router.push({
+                    pathname: '/screens/fertilizer/FertilizerResultScreen',
+                    params: {
+                        leafImage,
+                        soilImage,
+                    }
                 });
             }, 1500);
         } else {
             if (!leafImage && !soilImage) {
-                navigation.navigate('FertilizerUploadLeaf');
+                router.push('/screens/fertilizer/UploadLeafScreen');
             } else if (!leafImage) {
-                navigation.navigate('FertilizerUploadLeaf');
+                router.push('/screens/fertilizer/UploadLeafScreen');
             } else if (!soilImage) {
-                navigation.navigate('FertilizerUploadSoil', {
-                    leafImage: leafImage || undefined
+                router.push({
+                    pathname: '/screens/fertilizer/UploadSoilScreen',
+                    params: { leafImage: leafImage || undefined }
                 });
             }
         }
@@ -110,37 +106,40 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
 
     const handleHistoryPress = (item: FertilizerHistoryRecord) => {
         // Navigate to result screen with history data
-        navigation.navigate('FertilizerResult', {
-            roboflowAnalysis: {
-                success: true,
-                primary_deficiency: item.primary_deficiency,
-                confidence: item.confidence,
-                severity: item.severity,
-                plant_age: item.plant_age,
-                recommendations: item.recommendations,
-                history_id: item.id,
-                detections: [{
-                    class: item.primary_deficiency || 'Unknown',
-                    confidence: item.confidence || 0,
-                    deficiency: item.primary_deficiency || 'Unknown',
-                    severity: item.severity || 'Low'
-                }],
-                roboflow_output: [{
-                    predictions: {
-                        predictions: [{
-                            class: item.primary_deficiency || 'Unknown',
-                            confidence: item.confidence || 0
-                        }]
-                    }
-                }]
-            },
-            plantAge: item.plant_age || 1,
+        router.push({
+            pathname: '/screens/fertilizer/FertilizerResultScreen',
+            params: {
+                roboflowAnalysis: JSON.stringify({
+                    success: true,
+                    primary_deficiency: item.primary_deficiency,
+                    confidence: item.confidence,
+                    severity: item.severity,
+                    plant_age: item.plant_age,
+                    recommendations: item.recommendations,
+                    history_id: item.id,
+                    detections: [{
+                        class: item.primary_deficiency || 'Unknown',
+                        confidence: item.confidence || 0,
+                        deficiency: item.primary_deficiency || 'Unknown',
+                        severity: item.severity || 'Low'
+                    }],
+                    roboflow_output: [{
+                        predictions: {
+                            predictions: [{
+                                class: item.primary_deficiency || 'Unknown',
+                                confidence: item.confidence || 0
+                            }]
+                        }
+                    }]
+                }),
+                plantAge: item.plant_age || 1,
+            }
         });
     };
 
     const handleViewAllHistory = () => {
         // Navigate to full history screen
-        // navigation.navigate('FertilizerHistory');
+        // router.push('/screens/fertilizer/FertilizerHistory');
         console.log('View all history');
     };
 
@@ -180,7 +179,7 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
                     <View style={styles.completedOverlay}>
                         <View style={styles.completedBadge}>
                             <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                            <Text style={styles.completedText}>Uploaded</Text>
+                            <Text style={styles.completedText}>{t('fertilizer.uploaded')}</Text>
                         </View>
                     </View>
                 )}
@@ -254,9 +253,9 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.welcomeSection}>
-                        <Text style={styles.title}>Fertilizer Analysis</Text>
+                        <Text style={styles.title}>{t('fertilizer.home_title')}</Text>
                         <Text style={styles.subtitle}>
-                            Get AI-powered fertilizer recommendations for your cinnamon crops
+                            {t('fertilizer.home_subtitle')}
                         </Text>
                     </View>
 
@@ -283,16 +282,16 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
                     <View style={styles.uploadRow}>
                         {renderUploadCard(
                             'leaf-outline',
-                            'Leaf Sample',
-                            'Detect nutrient deficiencies',
+                            t('fertilizer.upload_leaf'),
+                            t('fertilizer.upload_leaf_subtitle'),
                             handleUploadLeafSample,
                             ['#4CAF50', '#45A049'],
                             !!leafImage
                         )}
                         {renderUploadCard(
                             'earth-outline',
-                            'Soil Sample',
-                            'Analyze soil conditions',
+                            t('fertilizer.upload_soil'),
+                            t('fertilizer.upload_soil_subtitle'),
                             handleUploadSoilSample,
                             ['#8B7355', '#7A5F47'],
                             !!soilImage
@@ -312,7 +311,7 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
                         </View>
                         <Text style={styles.progressText}>
                             {leafImage && soilImage ? 'Ready for Analysis' :
-                                leafImage || soilImage ? '1 of 2 samples uploaded' : 'Upload samples to begin analysis'}
+                                leafImage || soilImage ? '1 of 2 samples uploaded' : t('fertilizer.start_analysis')}
                         </Text>
                     </View>
                 </View>
@@ -322,13 +321,13 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
                     <View style={styles.sectionHeader}>
                         <View style={styles.sectionTitleContainer}>
                             <Ionicons name="time-outline" size={20} color="#4CAF50" />
-                            <Text style={styles.sectionTitle}>Recent Analysis</Text>
+                            <Text style={styles.sectionTitle}>{t('fertilizer.recent_analyses')}</Text>
                         </View>
                         <TouchableOpacity
                             style={styles.viewAllButton}
                             onPress={handleViewAllHistory}
                         >
-                            <Text style={styles.viewAllText}>View All</Text>
+                            <Text style={styles.viewAllText}>{t('fertilizer.view_details')}</Text>
                             <Ionicons name="chevron-forward" size={16} color="#4CAF50" />
                         </TouchableOpacity>
                     </View>
@@ -336,16 +335,16 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
                     {loadingHistory ? (
                         <View style={styles.historyLoadingContainer}>
                             <ActivityIndicator size="small" color="#4CAF50" />
-                            <Text style={styles.historyLoadingText}>Loading recent analyses...</Text>
+                            <Text style={styles.historyLoadingText}>{t('fertilizer.loading_analyses')}</Text>
                         </View>
                     ) : recentAnalyses.length > 0 ? (
                         recentAnalyses.map((item) => renderHistoryCard(item))
                     ) : (
                         <View style={styles.emptyHistoryContainer}>
                             <Ionicons name="flask-outline" size={48} color="#D1D5DB" />
-                            <Text style={styles.emptyHistoryText}>No analysis history yet</Text>
+                            <Text style={styles.emptyHistoryText}>{t('fertilizer.no_recent_analyses')}</Text>
                             <Text style={styles.emptyHistorySubtext}>
-                                Start by analyzing a leaf sample
+                                {t('fertilizer.start_analysis')}
                             </Text>
                         </View>
                     )}
@@ -630,4 +629,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Fertilizer;
+export default FertilizerHomeScreen;

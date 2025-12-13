@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -14,20 +14,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
-type UploadLeafScreenNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerUploadLeaf'
->;
-
-interface UploadLeafScreenProps {
-    navigation: UploadLeafScreenNavigationProp;
-}
-
-const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
+const UploadSoilScreen: React.FC = () => {
+    const router = useRouter();
+    const params = useLocalSearchParams();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const leafImage = params.leafImage as string | undefined;
     const insets = useSafeAreaInsets();
 
     const requestCameraPermission = async () => {
@@ -85,12 +78,15 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                 const imageUri = result.assets[0].uri;
                 setSelectedImage(imageUri);
 
-                // Navigate directly to PhotoPreview for Roboflow analysis
-                console.log('📸 Photo captured, navigating to preview...');
-                navigation.navigate('FertilizerPhotoPreview', {
-                    imageUri: imageUri,
-                    imageType: 'leaf',
-                    leafImage: imageUri,
+                // Auto-navigate to PhotoPreview
+                router.push({
+                    pathname: '/screens/fertilizer/PhotoPreview',
+                    params: {
+                        imageUri: imageUri,
+                        imageType: 'soil',
+                        soilImage: imageUri,
+                        leafImage: leafImage, // Pass the leaf image from route params
+                    }
                 });
             }
         } catch (error) {
@@ -115,12 +111,15 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                 const imageUri = result.assets[0].uri;
                 setSelectedImage(imageUri);
 
-                // Navigate directly to PhotoPreview for Roboflow analysis
-                console.log('🖼️ Image selected from library, navigating to preview...');
-                navigation.navigate('FertilizerPhotoPreview', {
-                    imageUri: imageUri,
-                    imageType: 'leaf',
-                    leafImage: imageUri,
+                // Auto-navigate to PhotoPreview
+                router.push({
+                    pathname: '/screens/fertilizer/PhotoPreview',
+                    params: {
+                        imageUri: imageUri,
+                        imageType: 'soil',
+                        soilImage: imageUri,
+                        leafImage: leafImage, // Pass the leaf image from route params
+                    }
                 });
             }
         } catch (error) {
@@ -129,23 +128,27 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
         }
     };
 
-    const handleUploadLeafSample = () => {
+    const handleUploadSoilSample = () => {
         if (!selectedImage) {
-            Alert.alert('No Image Selected', 'Please select a leaf image first.');
+            Alert.alert('No Image Selected', 'Please select a soil image first.');
             return;
         }
 
-        // Navigate to PhotoPreview for leaf image
-        navigation.navigate('FertilizerPhotoPreview', {
-            imageUri: selectedImage,
-            imageType: 'leaf',
-            leafImage: selectedImage,
+        // Navigate to PhotoPreview for soil image, passing both images
+        router.push({
+            pathname: '/screens/fertilizer/PhotoPreview',
+            params: {
+                imageUri: selectedImage,
+                imageType: 'soil',
+                leafImage: leafImage,
+                soilImage: selectedImage,
+            }
         });
     };
 
     const renderGuidelineItem = (iconName: keyof typeof Ionicons.glyphMap, text: string) => (
         <View style={styles.guidelineItem}>
-            <Ionicons name={iconName} size={16} color="#4CAF50" style={styles.guidelineIcon} />
+            <Ionicons name={iconName} size={16} color="#8B7355" style={styles.guidelineIcon} />
             <Text style={styles.guidelineText}>{text}</Text>
         </View>
     );
@@ -178,6 +181,36 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
     );
 
+    const renderProgressCard = () => {
+        if (!leafImage) return null;
+
+        return (
+            <View style={styles.progressCard}>
+                <LinearGradient
+                    colors={['#F0F9FF', '#E0F2FE']}
+                    style={styles.progressGradient}
+                >
+                    <View style={styles.progressHeader}>
+                        <View style={styles.progressIconContainer}>
+                            <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                        </View>
+                        <Text style={styles.progressTitle}>Leaf Sample Complete</Text>
+                    </View>
+                    <Text style={styles.progressSubtitle}>
+                        Great! Now upload your soil sample to complete the analysis.
+                    </Text>
+                    <View style={styles.progressBar}>
+                        <LinearGradient
+                            colors={['#4CAF50', '#45A049']}
+                            style={[styles.progressFill, { width: '50%' }]}
+                        />
+                    </View>
+                    <Text style={styles.progressText}>Step 2 of 2</Text>
+                </LinearGradient>
+            </View>
+        );
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView
@@ -192,26 +225,36 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Upload Leaf Sample</Text>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => router.back()}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#111827" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Upload Soil Sample</Text>
                     <Text style={styles.headerSubtitle}>
-                        Step 1: Take a clear photo of your cinnamon leaf for instant fertilizer recommendations
+                        Optional Step 2: Add soil photo to enhance your fertilizer recommendations
                     </Text>
                 </View>
+
+                {/* Progress Card */}
+                {renderProgressCard()}
 
                 {/* Guidelines Card */}
                 <View style={styles.guidelinesCard}>
                     <View style={styles.guidelinesHeader}>
                         <View style={styles.guidelinesIconContainer}>
-                            <Ionicons name="information-circle" size={24} color="#4CAF50" />
+                            <Ionicons name="earth" size={24} color="#8B7355" />
                         </View>
-                        <Text style={styles.guidelinesTitle}>Photography Guidelines</Text>
+                        <Text style={styles.guidelinesTitle}>Soil Photography Guidelines</Text>
                     </View>
 
                     <View style={styles.guidelinesList}>
-                        {renderGuidelineItem('sunny', 'Use natural daylight when possible')}
-                        {renderGuidelineItem('leaf-outline', 'Include the entire leaf in frame')}
-                        {renderGuidelineItem('eye-outline', 'Ensure the leaf is flat and well-lit')}
-                        {renderGuidelineItem('ban-outline', 'Avoid shadows and reflections')}
+                        {renderGuidelineItem('sunny', 'Take photo in natural daylight')}
+                        {renderGuidelineItem('earth-outline', 'Show topsoil surface clearly')}
+                        {renderGuidelineItem('leaf-outline', 'Clear away debris and vegetation')}
+                        {renderGuidelineItem('water-outline', 'Ensure soil is moist, not waterlogged')}
                     </View>
                 </View>
 
@@ -223,9 +266,9 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                         {renderActionButton(
                             'camera',
                             'Take Photo',
-                            'Use your camera to capture a leaf',
+                            'Use your camera to capture soil',
                             openCamera,
-                            ['#4CAF50', '#45A049']
+                            ['#8B7355', '#7A5F47']
                         )}
 
                         {renderActionButton(
@@ -249,7 +292,7 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
                                     style={styles.changeImageButton}
                                     onPress={handleChooseFile}
                                 >
-                                    <Ionicons name="refresh" size={16} color="#4CAF50" />
+                                    <Ionicons name="refresh" size={16} color="#8B7355" />
                                     <Text style={styles.changeImageText}>Change Image</Text>
                                 </TouchableOpacity>
                             </View>
@@ -272,7 +315,21 @@ const styles = StyleSheet.create({
     },
     header: {
         marginTop: 20,
-        marginBottom: 32,
+        marginBottom: 24,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     headerTitle: {
         fontSize: 28,
@@ -286,13 +343,73 @@ const styles = StyleSheet.create({
         color: '#6B7280',
         lineHeight: 22,
     },
+    progressCard: {
+        borderRadius: 16,
+        marginBottom: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    progressGradient: {
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#E0F2FE',
+    },
+    progressHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    progressIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    progressTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#0F172A',
+    },
+    progressSubtitle: {
+        fontSize: 14,
+        color: '#374151',
+        marginBottom: 16,
+    },
+    progressBar: {
+        height: 6,
+        backgroundColor: '#E5E7EB',
+        borderRadius: 3,
+        overflow: 'hidden',
+        marginBottom: 8,
+    },
+    progressFill: {
+        height: '100%',
+        borderRadius: 3,
+    },
+    progressText: {
+        fontSize: 12,
+        color: '#6B7280',
+        fontWeight: '600',
+    },
     guidelinesCard: {
-        backgroundColor: '#F0FDF4',
+        backgroundColor: '#FEF7ED',
         borderRadius: 12,
         padding: 16,
         marginBottom: 24,
         borderLeftWidth: 3,
-        borderLeftColor: '#4CAF50',
+        borderLeftColor: '#8B7355',
     },
     guidelinesHeader: {
         flexDirection: 'row',
@@ -303,7 +420,7 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: '#DCFCE7',
+        backgroundColor: '#FED7AA',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -311,7 +428,7 @@ const styles = StyleSheet.create({
     guidelinesTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#166534',
+        color: '#92400E',
     },
     guidelinesList: {
         gap: 12,
@@ -326,7 +443,7 @@ const styles = StyleSheet.create({
     },
     guidelineText: {
         fontSize: 13,
-        color: '#166534',
+        color: '#92400E',
         fontWeight: '500',
         flex: 1,
         lineHeight: 18,
@@ -408,19 +525,19 @@ const styles = StyleSheet.create({
     changeImageButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F3F4F6',
+        backgroundColor: '#FEF7ED',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: '#FED7AA',
         gap: 6,
     },
     changeImageText: {
         fontSize: 14,
-        color: '#4CAF50',
+        color: '#8B7355',
         fontWeight: '600',
     },
 });
 
-export default UploadLeafScreen;
+export default UploadSoilScreen;

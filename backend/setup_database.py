@@ -1,57 +1,46 @@
 #!/usr/bin/env python3
 """
 Comprehensive database setup script
-Connects to postgres database first, creates mydb if needed, then initializes tables
+Connects to AWS RDS PostgreSQL database and initializes tables
 """
 import psycopg2
 import os
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from parent directory
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 def setup_database():
-    """Setup database and create mydb if it doesn't exist"""
-    print("🔧 Setting up database...")
+    """Setup database and create tables on AWS RDS PostgreSQL"""
+    print("🔧 Setting up database on AWS RDS...")
     
-    # First connect to postgres database to check/create mydb
+    # Get database connection details from environment
+    host = os.getenv('POSTGRES_HOST', 'localhost')
+    port = os.getenv('POSTGRES_PORT', '5432')
+    user = os.getenv('POSTGRES_USER', 'postgres')
+    password = os.getenv('POSTGRES_PASSWORD', 'password')
+    database = os.getenv('POSTGRES_DB', 'postgres')
+    
+    print(f"📡 Connecting to database: {user}@{host}:{port}/{database}")
+    
+    # Connect directly to the AWS RDS database
     try:
         conn = psycopg2.connect(
-            host="127.0.0.1",
-            port="5432",
-            database="postgres",
-            user="postgres", 
-            password="password"
+            host=host,
+            port=port,
+            database=database,
+            user=user, 
+            password=password,
+            sslmode='require'  # AWS RDS requires SSL
         )
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cursor = conn.cursor()
         
-        # Check if mydb exists
-        cursor.execute("SELECT 1 FROM pg_database WHERE datname='mydb'")
-        exists = cursor.fetchone()
+        print("✅ Connected to AWS RDS PostgreSQL database")
         
-        if not exists:
-            print("📦 Creating database 'mydb'...")
-            cursor.execute("CREATE DATABASE mydb")
-            print("✅ Database 'mydb' created successfully")
-        else:
-            print("✅ Database 'mydb' already exists")
-            
-        cursor.close()
-        conn.close()
-        
-        # Now connect to mydb and create tables
-        print("🏗️  Creating tables in mydb...")
-        conn = psycopg2.connect(
-            host="127.0.0.1", 
-            port="5432",
-            database="mydb",
-            user="postgres",
-            password="password"
-        )
-        
-        cursor = conn.cursor()
+        # Create tables directly (no need to create a separate database on RDS)
+        print("🏗️  Creating tables in AWS RDS database...")
         
         # Create a simple test table
         cursor.execute("""

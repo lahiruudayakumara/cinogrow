@@ -15,8 +15,7 @@ class UserRead(UserBase):
     id: uuid.UUID
     is_active: bool
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class UserLogin(BaseModel):
     email: EmailStr

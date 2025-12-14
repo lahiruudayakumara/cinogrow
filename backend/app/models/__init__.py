@@ -2,6 +2,7 @@
 from .yield_weather.farm import Farm, Plot, FarmActivity, PlantingRecord, UserYieldRecord, YieldPrediction
 from .yield_weather.weather import WeatherRecord, WeatherResponse, LocationRequest, WeatherData
 from .yield_weather.farm_assistance import ActivityHistory
+from .yield_weather.hybrid_yield import HybridYieldResult
 
 # Import fertilizer prediction models
 from .fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis

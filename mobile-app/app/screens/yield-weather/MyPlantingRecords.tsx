@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -13,14 +12,17 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import type { YieldWeatherStackParamList } from '../../navigation/YieldWeatherNavigator';
-import { plantingRecordsAPI, PlantingRecord, Plot } from '../../services/yield_weather/plantingRecordsAPI';
-import DatePicker from '../../components/ui/DatePicker';
-import { CinnamonVarietyPicker } from '../../components/CinnamonVarietyPicker';
-import { DEFAULT_CINNAMON_VARIETY } from '../../constants/CinnamonVarieties';
+import type { YieldWeatherStackParamList } from '../../../navigation/YieldWeatherNavigator';
+import { plantingRecordsAPI, PlantingRecord, Plot } from '../../../services/yield_weather/plantingRecordsAPI';
+import { farmAPI } from '../../../services/yield_weather/farmAPI';
+import DatePicker from '../../../components/ui/DatePicker';
+import { CinnamonVarietyPicker } from '../../../components/CinnamonVarietyPicker';
+import { DEFAULT_CINNAMON_VARIETY } from '../../../constants/CinnamonVarieties';
 
 type NavigationProp = StackNavigationProp<YieldWeatherStackParamList>;
 
@@ -32,6 +34,7 @@ interface DropdownItem {
 
 const MyPlantingRecords = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [plantingRecords, setPlantingRecords] = useState<PlantingRecord[]>([]);
@@ -74,9 +77,9 @@ const MyPlantingRecords = () => {
         console.error('Backend connection failed:', error);
         setBackendAvailable(false);
         Alert.alert(
-          'Connection Error', 
-          'Unable to connect to the server. Please check your internet connection and ensure the backend server is running.',
-          [{ text: 'OK' }]
+          t('yield_weather.planting_records.connection_error'), 
+          t('yield_weather.planting_records.connection_error_message'),
+          [{ text: t('yield_weather.common.ok') }]
         );
       }
     } catch (error) {
@@ -118,8 +121,23 @@ const MyPlantingRecords = () => {
     }
     
     try {
-      const records = await plantingRecordsAPI.getUserPlantingRecords(USER_ID);
-      setPlantingRecords(records || []);
+      // Get all farms and then load planting records for each farm
+      const farms = await farmAPI.getFarms();
+      let allRecords: any[] = [];
+      
+      for (const farm of farms) {
+        if (farm.id) {
+          try {
+            const farmRecords = await plantingRecordsAPI.getFarmPlantingRecords(farm.id);
+            allRecords = [...allRecords, ...farmRecords];
+          } catch (farmError) {
+            console.warn(`Failed to get planting records for farm ${farm.id}:`, farmError);
+            // Continue with other farms
+          }
+        }
+      }
+      
+      setPlantingRecords(allRecords || []);
     } catch (error) {
       console.error('Failed to load planting records from backend:', error);
       setPlantingRecords([]);
@@ -144,12 +162,12 @@ const MyPlantingRecords = () => {
     const existingRecord = plantingRecords.find(record => record.plot_id === plot.id);
     if (existingRecord && !isEditing) {
       Alert.alert(
-        'Plot Already Has Record',
-        `Plot ${plot.name} already has a planting record. Do you want to edit it?`,
+        t('yield_weather.planting_records.plot_already_has_record'),
+        `Plot ${plot.name} ${t('yield_weather.planting_records.plot_has_existing_record')}`,
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: t('yield_weather.common.cancel'), style: 'cancel' },
           {
-            text: 'Edit Record',
+            text: t('yield_weather.planting_records.edit_existing'),
             onPress: () => handleEditRecord(existingRecord),
           },
         ]
@@ -161,7 +179,7 @@ const MyPlantingRecords = () => {
     try {
       // Validate form
       if (!selectedPlot || !variety.trim() || !seedlingCount.trim() || !plantedDate) {
-        Alert.alert('Error', 'Please fill in all required fields');
+        Alert.alert(t('yield_weather.common.error'), t('yield_weather.planting_records.errors.fill_required'));
         return;
       }
 
@@ -169,12 +187,12 @@ const MyPlantingRecords = () => {
       const areaValue = parseFloat(plotArea);
       
       if (isNaN(seedlingValue) || seedlingValue <= 0) {
-        Alert.alert('Error', 'Please enter a valid seedling count');
+        Alert.alert(t('yield_weather.common.error'), t('yield_weather.planting_records.errors.invalid_seedlings'));
         return;
       }
 
       if (isNaN(areaValue) || areaValue <= 0) {
-        Alert.alert('Error', 'Please enter a valid plot area');
+        Alert.alert(t('yield_weather.common.error'), t('yield_weather.planting_records.errors.invalid_area'));
         return;
       }
 
@@ -230,7 +248,7 @@ const MyPlantingRecords = () => {
             );
           }
         }
-        Alert.alert('Success', 'Planting record updated successfully');
+        Alert.alert(t('yield_weather.common.success'), t('yield_weather.planting_records.success.record_updated'));
       } else {
         // Create new record
         const createdRecord = await saveRecordToBackend(recordData, false);
@@ -245,7 +263,7 @@ const MyPlantingRecords = () => {
           recordData.is_local_only = true;
           setPlantingRecords(prev => [...prev, recordData]);
         }
-        Alert.alert('Success', 'Planting record saved successfully');
+        Alert.alert(t('yield_weather.common.success'), t('yield_weather.planting_records.success.record_saved'));
       }
 
       setModalVisible(false);
@@ -254,7 +272,7 @@ const MyPlantingRecords = () => {
       setEditingRecord(null);
     } catch (error) {
       console.error('Error saving record:', error);
-      Alert.alert('Error', 'Failed to save planting record');
+      Alert.alert(t('yield_weather.common.error'), t('yield_weather.planting_records.errors.save_failed'));
     } finally {
       setLoading(false);
     }
@@ -313,12 +331,12 @@ const MyPlantingRecords = () => {
 
   const handleDeleteRecord = (record: PlantingRecord) => {
     Alert.alert(
-      'Delete Record',
-      `Are you sure you want to delete the planting record for ${record.plot_name}?`,
+      t('yield_weather.planting_records.delete_record_title'),
+      t('yield_weather.planting_records.delete_record_message', { plotName: record.plot_name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('yield_weather.common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('yield_weather.planting_records.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -341,9 +359,9 @@ const MyPlantingRecords = () => {
                 prev.filter(r => r.record_id !== record.record_id)
               );
               
-              Alert.alert('Success', 'Planting record deleted successfully');
+              Alert.alert(t('yield_weather.planting_records.success_deleted'), t('yield_weather.planting_records.record_deleted_message'));
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete record');
+              Alert.alert(t('yield_weather.common.error'), t('yield_weather.planting_records.errors.delete_failed'));
             } finally {
               setLoading(false);
             }
@@ -425,7 +443,7 @@ const MyPlantingRecords = () => {
           <Text style={styles.plotName}>{item.plot_name}</Text>
           {item.is_local_only && (
             <View style={styles.localOnlyBadge}>
-              <Text style={styles.localOnlyText}>Local Only</Text>
+              <Text style={styles.localOnlyText}>{t('yield_weather.planting_records.local_only')}</Text>
             </View>
           )}
         </View>
@@ -447,20 +465,20 @@ const MyPlantingRecords = () => {
       
       <View style={styles.recordDetails}>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Variety:</Text>
+          <Text style={styles.detailLabel}>{t('yield_weather.my_farm.variety')}:</Text>
           <Text style={styles.detailValue}>{item.cinnamon_variety}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Planted Date:</Text>
+          <Text style={styles.detailLabel}>{t('yield_weather.planting_records.planted_on')}:</Text>
           <Text style={styles.detailValue}>{formatDate(item.planted_date)}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Seedling Count:</Text>
+          <Text style={styles.detailLabel}>{t('yield_weather.planting_records.seedling_count')}:</Text>
           <Text style={styles.detailValue}>{item.seedling_count.toLocaleString()}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Plot Area:</Text>
-          <Text style={styles.detailValue}>{item.plot_area} ha</Text>
+          <Text style={styles.detailLabel}>{t('yield_weather.planting_records.plot_area')}:</Text>
+          <Text style={styles.detailValue}>{item.plot_area} {t('yield_weather.common.ha')}</Text>
         </View>
       </View>
     </View>
@@ -471,7 +489,7 @@ const MyPlantingRecords = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4CAF50" />
-          <Text style={styles.loadingText}>Loading planting records...</Text>
+          <Text style={styles.loadingText}>{t('yield_weather.common.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -488,7 +506,7 @@ const MyPlantingRecords = () => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>My Planting Records</Text>
+          <Text style={styles.title}>{t('yield_weather.planting_records.title')}</Text>
           <TouchableOpacity
             style={styles.addButton}
             onPress={handleAddRecord}
@@ -500,7 +518,7 @@ const MyPlantingRecords = () => {
         {/* Records List */}
         {plantingRecords.length > 0 ? (
           <View style={styles.recordsSection}>
-            <Text style={styles.sectionTitle}>Planting History</Text>
+            <Text style={styles.sectionTitle}>{t('yield_weather.planting_records.planting_history')}</Text>
             <FlatList
               data={plantingRecords}
               renderItem={renderRecordItem}
@@ -513,15 +531,15 @@ const MyPlantingRecords = () => {
         ) : (
           <View style={styles.noRecordsContainer}>
             <Ionicons name="leaf-outline" size={64} color="#6B7280" />
-            <Text style={styles.noRecordsText}>No planting records yet</Text>
+            <Text style={styles.noRecordsText}>{t('yield_weather.planting_records.no_records')}</Text>
             <Text style={styles.noRecordsSubtext}>
-              Add your first planting record to track your cinnamon cultivation
+              {t('yield_weather.planting_records.start_tracking')}
             </Text>
             <TouchableOpacity
               style={styles.addRecordButton}
               onPress={handleAddRecord}
             >
-              <Text style={styles.addRecordButtonText}>Add Planting Record</Text>
+              <Text style={styles.addRecordButtonText}>{t('yield_weather.planting_records.add_record')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -537,26 +555,26 @@ const MyPlantingRecords = () => {
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Text style={styles.modalCancelText}>{t('yield_weather.common.cancel')}</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle}>
-              {isEditing ? 'Edit Record' : 'Add Planting Record'}
+              {isEditing ? t('yield_weather.planting_records.edit_record') : t('yield_weather.planting_records.add_record')}
             </Text>
             <TouchableOpacity onPress={handleSaveRecord}>
-              <Text style={styles.modalSaveText}>Save</Text>
+              <Text style={styles.modalSaveText}>{t('yield_weather.common.save')}</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
             {/* Plot Dropdown */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Select Plot *</Text>
+              <Text style={styles.label}>{t('yield_weather.planting_records.select_plot')} *</Text>
               <TouchableOpacity
                 style={styles.dropdown}
                 onPress={() => setDropdownVisible(true)}
               >
                 <Text style={[styles.dropdownText, !selectedPlot && styles.placeholderText]}>
-                  {selectedPlot ? selectedPlot.name : 'Choose a plot'}
+                  {selectedPlot ? selectedPlot.name : t('yield_weather.planting_records.choose_plot')}
                 </Text>
                 <Ionicons name="chevron-down" size={20} color="#6B7280" />
               </TouchableOpacity>
@@ -564,12 +582,12 @@ const MyPlantingRecords = () => {
 
             {/* Plot Area */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Plot Area (ha) *</Text>
+              <Text style={styles.label}>{t('yield_weather.planting_records.plot_area')} ({t('yield_weather.common.ha')}) *</Text>
               <TextInput
                 style={styles.input}
                 value={plotArea}
                 onChangeText={setPlotArea}
-                placeholder="Enter plot area"
+                placeholder={t('yield_weather.planting_records.enter_plot_area')}
                 placeholderTextColor="#9CA3AF"
                 keyboardType="decimal-pad"
                 editable={!!selectedPlot}
@@ -581,19 +599,19 @@ const MyPlantingRecords = () => {
             <CinnamonVarietyPicker
               value={variety}
               onValueChange={setVariety}
-              label="Cinnamon Variety *"
+              label={t('yield_weather.planting_records.cinnamon_variety')}
               showDescription={true}
               style={styles.formGroup}
             />
 
             {/* Seedling Count */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Seedling Count *</Text>
+              <Text style={styles.label}>{t('yield_weather.planting_records.seedling_count')} *</Text>
               <TextInput
                 style={styles.input}
                 value={seedlingCount}
                 onChangeText={setSeedlingCount}
-                placeholder="Enter number of seedlings"
+                placeholder={t('yield_weather.planting_records.enter_seedlings')}
                 placeholderTextColor="#9CA3AF"
                 keyboardType="number-pad"
               />
@@ -601,15 +619,15 @@ const MyPlantingRecords = () => {
 
             {/* Planted Date */}
             <DatePicker
-              label="Planted Date *"
+              label={t('yield_weather.planting_records.planting_date')}
               value={plantedDate}
               onChange={setPlantedDate}
-              placeholder="Select planting date"
+              placeholder={t('yield_weather.planting_records.select_planting_date')}
               maximumDate={new Date()} // Can't plant in the future
               style={styles.formGroup}
             />
 
-            <Text style={styles.requiredNote}>* Required fields</Text>
+            <Text style={styles.requiredNote}>{t('yield_weather.planting_records.required_fields')}</Text>
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -627,7 +645,7 @@ const MyPlantingRecords = () => {
           onPress={() => setDropdownVisible(false)}
         >
           <View style={styles.dropdownModal}>
-            <Text style={styles.dropdownTitle}>Select Plot</Text>
+            <Text style={styles.dropdownTitle}>{t('yield_weather.planting_records.select_plot')}</Text>
             <FlatList
               data={plots.map(plot => ({ id: plot.id, name: plot.name, area: plot.area }))}
               keyExtractor={(item) => item.id.toString()}
@@ -637,7 +655,7 @@ const MyPlantingRecords = () => {
                   onPress={() => handlePlotSelect(item)}
                 >
                   <Text style={styles.dropdownItemText}>{item.name}</Text>
-                  <Text style={styles.dropdownItemSubtext}>{item.area} ha</Text>
+                  <Text style={styles.dropdownItemSubtext}>{item.area} {t('yield_weather.common.ha')}</Text>
                 </TouchableOpacity>
               )}
             />

@@ -8,6 +8,7 @@ from .farm import (
 from .tree import Tree, TreeCreate, TreeRead, TreeUpdate, TreeMeasurement, TreeMeasurementCreate
 from .weather import WeatherRecord, WeatherResponse, LocationRequest, WeatherData
 from .farm_assistance import ActivityHistory
+from .hybrid_yield import HybridYieldResult, HybridYieldResultCreate, HybridYieldResultRead, HybridYieldPredictionRequest
 
 __all__ = [
     "Farm", 
@@ -33,5 +34,9 @@ __all__ = [
     "WeatherResponse", 
     "LocationRequest",
     "WeatherData",
-    "ActivityHistory"
+    "ActivityHistory",
+    "HybridYieldResult",
+    "HybridYieldResultCreate", 
+    "HybridYieldResultRead",
+    "HybridYieldPredictionRequest"
 ]

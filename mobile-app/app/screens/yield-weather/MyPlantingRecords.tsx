@@ -77,8 +77,8 @@ const MyPlantingRecords = () => {
         console.error('Backend connection failed:', error);
         setBackendAvailable(false);
         Alert.alert(
-          'Connection Error', 
-          'Unable to connect to the server. Please check your internet connection and ensure the backend server is running.',
+          t('yield_weather.planting_records.connection_error'), 
+          t('yield_weather.planting_records.connection_error_message'),
           [{ text: t('yield_weather.common.ok') }]
         );
       }
@@ -331,12 +331,12 @@ const MyPlantingRecords = () => {
 
   const handleDeleteRecord = (record: PlantingRecord) => {
     Alert.alert(
-      'Delete Record',
-      `Are you sure you want to delete the planting record for ${record.plot_name}?`,
+      t('yield_weather.planting_records.delete_record_title'),
+      t('yield_weather.planting_records.delete_record_message', { plotName: record.plot_name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('yield_weather.common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('yield_weather.planting_records.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -359,9 +359,9 @@ const MyPlantingRecords = () => {
                 prev.filter(r => r.record_id !== record.record_id)
               );
               
-              Alert.alert('Success', 'Planting record deleted successfully');
+              Alert.alert(t('yield_weather.planting_records.success_deleted'), t('yield_weather.planting_records.record_deleted_message'));
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete record');
+              Alert.alert(t('yield_weather.common.error'), t('yield_weather.planting_records.errors.delete_failed'));
             } finally {
               setLoading(false);
             }
@@ -443,7 +443,7 @@ const MyPlantingRecords = () => {
           <Text style={styles.plotName}>{item.plot_name}</Text>
           {item.is_local_only && (
             <View style={styles.localOnlyBadge}>
-              <Text style={styles.localOnlyText}>Local Only</Text>
+              <Text style={styles.localOnlyText}>{t('yield_weather.planting_records.local_only')}</Text>
             </View>
           )}
         </View>
@@ -518,7 +518,7 @@ const MyPlantingRecords = () => {
         {/* Records List */}
         {plantingRecords.length > 0 ? (
           <View style={styles.recordsSection}>
-            <Text style={styles.sectionTitle}>Planting History</Text>
+            <Text style={styles.sectionTitle}>{t('yield_weather.planting_records.planting_history')}</Text>
             <FlatList
               data={plantingRecords}
               renderItem={renderRecordItem}
@@ -574,7 +574,7 @@ const MyPlantingRecords = () => {
                 onPress={() => setDropdownVisible(true)}
               >
                 <Text style={[styles.dropdownText, !selectedPlot && styles.placeholderText]}>
-                  {selectedPlot ? selectedPlot.name : 'Choose a plot'}
+                  {selectedPlot ? selectedPlot.name : t('yield_weather.planting_records.choose_plot')}
                 </Text>
                 <Ionicons name="chevron-down" size={20} color="#6B7280" />
               </TouchableOpacity>
@@ -587,7 +587,7 @@ const MyPlantingRecords = () => {
                 style={styles.input}
                 value={plotArea}
                 onChangeText={setPlotArea}
-                placeholder="Enter plot area"
+                placeholder={t('yield_weather.planting_records.enter_plot_area')}
                 placeholderTextColor="#9CA3AF"
                 keyboardType="decimal-pad"
                 editable={!!selectedPlot}
@@ -611,7 +611,7 @@ const MyPlantingRecords = () => {
                 style={styles.input}
                 value={seedlingCount}
                 onChangeText={setSeedlingCount}
-                placeholder="Enter number of seedlings"
+                placeholder={t('yield_weather.planting_records.enter_seedlings')}
                 placeholderTextColor="#9CA3AF"
                 keyboardType="number-pad"
               />
@@ -622,12 +622,12 @@ const MyPlantingRecords = () => {
               label={t('yield_weather.planting_records.planting_date')}
               value={plantedDate}
               onChange={setPlantedDate}
-              placeholder="Select planting date"
+              placeholder={t('yield_weather.planting_records.select_planting_date')}
               maximumDate={new Date()} // Can't plant in the future
               style={styles.formGroup}
             />
 
-            <Text style={styles.requiredNote}>* Required fields</Text>
+            <Text style={styles.requiredNote}>{t('yield_weather.planting_records.required_fields')}</Text>
           </ScrollView>
         </SafeAreaView>
       </Modal>

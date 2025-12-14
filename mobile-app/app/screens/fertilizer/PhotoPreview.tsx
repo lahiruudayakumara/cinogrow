@@ -17,10 +17,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { fertilizerAPI } from '../../../services/fertilizerAPI';
 import PlantAgeSelector from '../../../components/PlantAgeSelector';
 
 const PhotoPreview: React.FC = () => {
+    const { t } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams();
     const imageUri = params.imageUri as string;
@@ -240,7 +242,7 @@ const PhotoPreview: React.FC = () => {
                         <Ionicons name="arrow-back" size={24} color="#111827" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>
-                        {imageType === 'leaf' ? 'Leaf Sample Preview' : 'Soil Sample Preview'}
+                        {t('fertilizer.photo_preview')}
                     </Text>
                     <Text style={styles.headerSubtitle}>
                         Review your {imageType} sample before proceeding
@@ -293,7 +295,7 @@ const PhotoPreview: React.FC = () => {
                         {isAnalyzing ? (
                             <View style={styles.aiProcessingBadge}>
                                 <ActivityIndicator size="small" color="#D97706" />
-                                <Text style={styles.aiProcessingText}>Analyzing</Text>
+                                <Text style={styles.aiProcessingText}>{t('fertilizer.analyzing')}</Text>
                             </View>
                         ) : (
                             <View style={styles.aiProcessingBadge}>
@@ -324,7 +326,7 @@ const PhotoPreview: React.FC = () => {
                     </View>
                 </View>
 
-                
+
 
                 {/* Action Buttons */}
                 <View style={styles.actionButtonsContainer}>
@@ -335,7 +337,7 @@ const PhotoPreview: React.FC = () => {
                     >
                         <View style={styles.retakeButtonContent}>
                             <Ionicons name="refresh" size={20} color="#6B7280" />
-                            <Text style={styles.retakeButtonText}>Retake Photo</Text>
+                            <Text style={styles.retakeButtonText}>{t('fertilizer.retake_photo')}</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -355,7 +357,7 @@ const PhotoPreview: React.FC = () => {
                                         <>
                                             <ActivityIndicator size="small" color="#FFFFFF" />
                                             <Text style={styles.continueButtonText}>
-                                                Analyzing...
+                                                {t('fertilizer.analyzing')}
                                             </Text>
                                         </>
                                     ) : (

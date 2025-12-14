@@ -15,8 +15,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 const UploadLeafScreen: React.FC = () => {
+    const { t } = useTranslation();
     const router = useRouter();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const insets = useSafeAreaInsets();
@@ -199,9 +201,9 @@ const UploadLeafScreen: React.FC = () => {
                     >
                         <Ionicons name="arrow-back" size={24} color="#111827" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Upload Leaf Sample</Text>
+                    <Text style={styles.headerTitle}>{t('fertilizer.capture_leaf')}</Text>
                     <Text style={styles.headerSubtitle}>
-                        Step 1: Take a clear photo of your cinnamon leaf for instant fertilizer recommendations
+                        {t('fertilizer.capture_instructions')}
                     </Text>
                 </View>
 
@@ -229,7 +231,7 @@ const UploadLeafScreen: React.FC = () => {
                     <View style={styles.actionButtonsContainer}>
                         {renderActionButton(
                             'camera',
-                            'Take Photo',
+                            t('fertilizer.take_photo'),
                             'Use your camera to capture a leaf',
                             openCamera,
                             ['#4CAF50', '#45A049']
@@ -237,7 +239,7 @@ const UploadLeafScreen: React.FC = () => {
 
                         {renderActionButton(
                             'images',
-                            'Photo Library',
+                            t('fertilizer.choose_gallery'),
                             'Choose from your gallery',
                             openImageLibrary,
                             ['#2196F3', '#1976D2']

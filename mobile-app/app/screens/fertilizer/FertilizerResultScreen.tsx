@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 import axios from 'axios';
 
@@ -70,6 +71,7 @@ interface FertilizerRecommendation {
 }
 
 const FertilizerResultScreen: React.FC = () => {
+    const { t } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams();
     const leafImage = params.leafImage as string | undefined;
@@ -466,7 +468,7 @@ const FertilizerResultScreen: React.FC = () => {
                         activeOpacity={0.8}
                     >
                         <Ionicons name="home" size={20} color="#FFFFFF" />
-                        <Text style={styles.primaryButtonText}>Back to Home</Text>
+                        <Text style={styles.primaryButtonText}>{t('fertilizer.back_to_home')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -475,7 +477,7 @@ const FertilizerResultScreen: React.FC = () => {
                         activeOpacity={0.8}
                     >
                         <Ionicons name="camera" size={20} color="#4CAF50" />
-                        <Text style={styles.secondaryButtonText}>Analyze Another</Text>
+                        <Text style={styles.secondaryButtonText}>{t('fertilizer.analyze_another')}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -487,8 +489,8 @@ const FertilizerResultScreen: React.FC = () => {
                                 <Ionicons name="call-outline" size={24} color="#4CAF50" />
                             </View>
                             <View style={styles.contactHeaderText}>
-                                <Text style={styles.contactTitle}>Need Expert Guidance?</Text>
-                                <Text style={styles.contactSubtitle}>Get Professional Support</Text>
+                                <Text style={styles.contactTitle}>{t('fertilizer.need_guidance')}</Text>
+                                <Text style={styles.contactSubtitle}>{t('fertilizer.professional_support')}</Text>
                             </View>
                         </View>
 
@@ -496,13 +498,13 @@ const FertilizerResultScreen: React.FC = () => {
                             <View style={styles.contactInfoRow}>
                                 <Ionicons name="business-outline" size={18} color="#6B7280" />
                                 <Text style={styles.contactInfoText}>
-                                    National Cinnamon Research and Training Centre
+                                    {t('fertilizer.research_center')}
                                 </Text>
                             </View>
                             <View style={styles.contactInfoRow}>
                                 <Ionicons name="location-outline" size={18} color="#6B7280" />
                                 <Text style={styles.contactInfoText}>
-                                    Palolpitiya, Thihagoda, Matara, Sri Lanka
+                                    {t('fertilizer.location')}
                                 </Text>
                             </View>
                             <View style={styles.contactInfoRow}>
@@ -531,12 +533,12 @@ const FertilizerResultScreen: React.FC = () => {
                                 style={styles.contactButtonGradient}
                             >
                                 <Ionicons name="call" size={20} color="#FFFFFF" />
-                                <Text style={styles.contactButtonText}>Contact Research Centre</Text>
+                                <Text style={styles.contactButtonText}>{t('fertilizer.contact_research_center')}</Text>
                             </LinearGradient>
                         </TouchableOpacity>
 
                         <Text style={styles.contactNote}>
-                            💡 Expert agronomists are available to provide personalized advice for your cinnamon cultivation
+                            💡 {t('fertilizer.expert_note')}
                         </Text>
                     </View>
                 </View>

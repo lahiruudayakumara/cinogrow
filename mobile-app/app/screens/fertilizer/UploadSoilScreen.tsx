@@ -15,8 +15,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 const UploadSoilScreen: React.FC = () => {
+    const { t } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -232,9 +234,9 @@ const UploadSoilScreen: React.FC = () => {
                     >
                         <Ionicons name="arrow-back" size={24} color="#111827" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Upload Soil Sample</Text>
+                    <Text style={styles.headerTitle}>{t('fertilizer.capture_soil')}</Text>
                     <Text style={styles.headerSubtitle}>
-                        Optional Step 2: Add soil photo to enhance your fertilizer recommendations
+                        {t('fertilizer.comprehensive_analysis')}
                     </Text>
                 </View>
 
@@ -265,7 +267,7 @@ const UploadSoilScreen: React.FC = () => {
                     <View style={styles.actionButtonsContainer}>
                         {renderActionButton(
                             'camera',
-                            'Take Photo',
+                            t('fertilizer.take_photo'),
                             'Use your camera to capture soil',
                             openCamera,
                             ['#8B7355', '#7A5F47']
@@ -273,7 +275,7 @@ const UploadSoilScreen: React.FC = () => {
 
                         {renderActionButton(
                             'images',
-                            'Photo Library',
+                            t('fertilizer.choose_gallery'),
                             'Choose from your gallery',
                             openImageLibrary,
                             ['#2196F3', '#1976D2']

@@ -12,13 +12,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import type { YieldWeatherStackParamList } from '../../navigation/YieldWeatherNavigator';
+import type { YieldWeatherStackParamList } from '../../../navigation/YieldWeatherNavigator';
 
-import { weatherAPI, WeatherData } from '../../services/yield_weather/weatherAPI';
-import { farmAPI, Farm, Plot } from '../../services/yield_weather/farmAPI';
-import locationService from '../../services/locationService';
+import { weatherAPI, WeatherData } from '../../../services/yield_weather/weatherAPI';
+import { farmAPI, Farm, Plot } from '../../../services/yield_weather/farmAPI';
+import locationService from '../../../services/locationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Farm Assistance API imports
@@ -26,7 +27,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 let farmAssistanceAPI: any;
 try {
   // Dynamic import as fallback for module resolution issues
-  const farmAssistanceModule = require('../../services/yield_weather/farmAssistanceAPI');
+  const farmAssistanceModule = require('../../../services/yield_weather/farmAssistanceAPI');
   farmAssistanceAPI = farmAssistanceModule.farmAssistanceAPI;
 } catch (error) {
   console.warn('Failed to import farmAssistanceAPI, using fallback:', error);
@@ -89,6 +90,7 @@ interface PlotWithRecommendations extends Plot {
 const FarmAssistance = () => {
   const navigation = useNavigation<NavigationProp>();
   const router = useRouter();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [farms, setFarms] = useState<Farm[]>([]);
@@ -753,9 +755,9 @@ const FarmAssistance = () => {
         
         // Don't prevent UI update, but show warning
         Alert.alert(
-          'Partial Success ⚠️',
-          `Activity completed but could not save to server: ${errorMessage}\n\nThe activity is marked as done in your current session.`,
-          [{ text: 'OK' }]
+          t('yield_weather.farm_assistance.partial_success'),
+          t('yield_weather.farm_assistance.partial_success_message', { error: errorMessage }),
+          [{ text: t('yield_weather.common.ok') }]
         );
       }
 
@@ -782,15 +784,15 @@ const FarmAssistance = () => {
         await loadRecentActivities();
       }
 
-      const saveStatus = saveSuccessful ? 'and saved to your activity history' : '(saved locally)';
+      const saveStatus = saveSuccessful ? t('yield_weather.farm_assistance.saved_to_history') : t('yield_weather.farm_assistance.saved_locally');
       
       Alert.alert(
-        'Activity Completed! ✅', 
-        `"${recommendation.activityName}" for ${plot.name} has been marked as completed ${saveStatus}.`
+        t('yield_weather.farm_assistance.activity_completed'), 
+        t('yield_weather.farm_assistance.activity_completed_message', { activity: recommendation.activityName, plot: plot.name, status: saveStatus })
       );
     } catch (error) {
       console.error('❌ Unexpected error in handleActivityDone:', error);
-      Alert.alert('Error', `Failed to mark activity as completed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      Alert.alert(t('yield_weather.common.error'), t('yield_weather.farm_assistance.errors.mark_done_failed', { error: error instanceof Error ? error.message : t('yield_weather.common.unknown_error') }));
     }
   };
 
@@ -896,11 +898,11 @@ const FarmAssistance = () => {
                           <Text style={styles.ageDays}>
                             {plot.growthStage?.daysOld || (plot.growthStage as any)?.days_old || 0}
                           </Text>
-                          <Text style={styles.ageLabel}>days old</Text>
+                          <Text style={styles.ageLabel}>{t('yield_weather.farm_assistance.days_old')}</Text>
                         </View>
                         <View style={styles.plotDetailsContainer}>
                           <Text style={styles.plotStage}>{plot.growthStage?.name}</Text>
-                          <Text style={styles.plotArea}>{plot.area} hectares</Text>
+                          <Text style={styles.plotArea}>{plot.area} {t('yield_weather.common.hectares')}</Text>
                         </View>
                       </View>
                       {plot.weatherData && (
@@ -909,7 +911,7 @@ const FarmAssistance = () => {
                         </Text>
                       )}
                       <Text style={styles.progressInfo}>
-                        Progress: {plot.progress_percentage}% • {plot.crop_type}
+                        {t('yield_weather.farm_assistance.progress')}: {plot.progress_percentage}% • {plot.crop_type}
                       </Text>
                     </View>
 
@@ -919,7 +921,7 @@ const FarmAssistance = () => {
                   <View style={styles.noRecommendations}>
                     <Ionicons name="checkmark-circle" size={24} color="#10B981" />
                     <Text style={styles.noRecommendationsText}>
-                      No immediate actions required based on current conditions.
+                      {t('yield_weather.farm_assistance.no_actions_required')}
                     </Text>
                   </View>
                 ) : (
@@ -942,24 +944,24 @@ const FarmAssistance = () => {
                       <Text style={styles.recommendedAction}>{recommendation.recommendedAction}</Text>
                       
                       <View style={styles.conditionContainer}>
-                        <Text style={styles.conditionLabel}>Trigger:</Text>
+                        <Text style={styles.conditionLabel}>{t('yield_weather.farm_assistance.trigger')}:</Text>
                         <Text style={styles.conditionText}>{recommendation.triggerCondition}</Text>
                       </View>
 
                       <View style={styles.reasonContainer}>
-                        <Text style={styles.reasonLabel}>Why:</Text>
+                        <Text style={styles.reasonLabel}>{t('yield_weather.farm_assistance.why')}:</Text>
                         <Text style={styles.reasonText}>{recommendation.reason}</Text>
                       </View>
 
                       <View style={styles.recommendationFooter}>
                         <Text style={styles.suggestedDate}>
-                          Suggested: {new Date(recommendation.suggestedDate).toLocaleDateString()}
+                          {t('yield_weather.farm_assistance.suggested')}: {new Date(recommendation.suggestedDate).toLocaleDateString()}
                         </Text>
                         <TouchableOpacity
                           style={styles.doneButton}
                           onPress={() => handleActivityDone(plot.id!, recommendation)}
                         >
-                          <Text style={styles.doneButtonText}>Mark as Done</Text>
+                          <Text style={styles.doneButtonText}>{t('yield_weather.farm_assistance.mark_done')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -974,7 +976,7 @@ const FarmAssistance = () => {
         {/* Recent Activities Section */}
         {recentActivities.length > 0 && (
           <View style={styles.recentActivitiesSection}>
-            <Text style={styles.sectionTitle}>Recent Activities</Text>
+            <Text style={styles.sectionTitle}>{t('yield_weather.farm_assistance.recent_activities')}</Text>
             {(() => {
               const groupedActivities = groupActivitiesByPlot(recentActivities.slice(0, 10));
               

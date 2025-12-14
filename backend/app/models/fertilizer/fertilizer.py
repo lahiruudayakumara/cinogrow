@@ -82,8 +82,8 @@ class FertilizerApplication(SQLModel, table=True):
     __tablename__ = "fertilizer_applications"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    farm_id: int = Field(foreign_key="farms.id")
-    plot_id: Optional[int] = Field(default=None, foreign_key="plots.id")
+    farm_id: int = Field(foreign_key="farms.id", ondelete="CASCADE")
+    plot_id: Optional[int] = Field(default=None, foreign_key="plots.id", ondelete="CASCADE")
     fertilizer_type_id: int = Field(foreign_key="fertilizer_types.id")
     user_id: int  # Remove foreign key constraint until users table is implemented
     
@@ -127,8 +127,8 @@ class FertilizerSchedule(SQLModel, table=True):
     __tablename__ = "fertilizer_schedules"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    farm_id: int = Field(foreign_key="farms.id")
-    plot_id: Optional[int] = Field(default=None, foreign_key="plots.id")
+    farm_id: int = Field(foreign_key="farms.id", ondelete="CASCADE")
+    plot_id: Optional[int] = Field(default=None, foreign_key="plots.id", ondelete="CASCADE")
     fertilizer_type_id: int = Field(foreign_key="fertilizer_types.id")
     user_id: int  # Remove foreign key constraint until users table is implemented
     
@@ -174,8 +174,8 @@ class FertilizerRecommendation(SQLModel, table=True):
     __tablename__ = "fertilizer_recommendations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    farm_id: int = Field(foreign_key="farms.id")
-    plot_id: Optional[int] = Field(default=None, foreign_key="plots.id")
+    farm_id: int = Field(foreign_key="farms.id", ondelete="CASCADE")
+    plot_id: Optional[int] = Field(default=None, foreign_key="plots.id", ondelete="CASCADE")
     fertilizer_type_id: int = Field(foreign_key="fertilizer_types.id")
     user_id: int  # Remove foreign key constraint until users table is implemented
     

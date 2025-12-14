@@ -566,6 +566,50 @@ class YieldAPI {
       throw new Error('Backend connection failed. Please check if the server is running.');
     }
   }
+
+  // Save hybrid prediction to database
+  async saveHybridPrediction(prediction: {
+    plot_id: number;
+    total_trees: number;
+    ml_yield_tree_level: number;
+    ml_yield_farm_level: number;
+    final_hybrid_yield: number;
+    confidence_score?: number;
+    tree_model_confidence?: number;
+    farm_model_confidence?: number;
+    blending_weight_tree?: number;
+    blending_weight_farm?: number;
+    model_versions?: any;
+    features_used?: any;
+  }): Promise<any> {
+    return this.request('/yield-weather/hybrid-predictions', {
+      method: 'POST',
+      body: JSON.stringify(prediction),
+    });
+  }
+
+  // Get hybrid predictions
+  async getHybridPredictions(plotId?: number, limit: number = 10): Promise<any[]> {
+    const params = new URLSearchParams();
+    if (plotId) {
+      params.append('plot_id', plotId.toString());
+    }
+    params.append('limit', limit.toString());
+
+    return this.request(`/yield-weather/hybrid-predictions?${params.toString()}`);
+  }
+
+  // Get a specific hybrid prediction
+  async getHybridPrediction(predictionId: number): Promise<any> {
+    return this.request(`/yield-weather/hybrid-predictions/${predictionId}`);
+  }
+
+  // Delete a hybrid prediction
+  async deleteHybridPrediction(predictionId: number): Promise<{ message: string }> {
+    return this.request(`/yield-weather/hybrid-predictions/${predictionId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const yieldAPI = new YieldAPI();

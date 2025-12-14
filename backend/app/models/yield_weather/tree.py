@@ -33,7 +33,7 @@ class Tree(SQLModel, table=True):
     __tablename__ = "trees"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    plot_id: int = Field(foreign_key="plots.id")
+    plot_id: int = Field(foreign_key="plots.id", ondelete="CASCADE")
     tree_code: str = Field(max_length=50)  # Unique identifier within plot (e.g., "A1", "B3")
     location_x: Optional[float] = Field(default=None)  # X coordinate within plot
     location_y: Optional[float] = Field(default=None)  # Y coordinate within plot

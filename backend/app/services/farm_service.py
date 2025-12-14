@@ -86,22 +86,14 @@ class FarmService(BaseService):
     def delete_farm(self, farm_id: int) -> Dict[str, str]:
         """Delete a farm (cascade handled by database FK constraints)"""
         farm = self.get_farm(farm_id)
+        farm_name = farm.name
         
-        # Get related data before deletion for cascade event
-        plots = self.db.exec(select(Plot).where(Plot.farm_id == farm_id)).all()
-        
-        # Trigger pre-delete cascade event
-        event = CascadeEvent('DELETE', Farm, farm.id, {
-            'farm': farm,
-            'affected_plots': [{'id': p.id, 'name': p.name} for p in plots]
-        })
-        self.cascade_manager.trigger_cascade(event)
-        
-        # Database CASCADE will handle related records
+        # Database CASCADE will handle related records automatically
+        # No need to trigger cascade events or manually delete related data
         self.db.delete(farm)
         self.db.commit()
         
-        return {"message": f"Farm '{farm.name}' and all associated data deleted successfully"}
+        return {"message": f"Farm '{farm_name}' and all associated data deleted successfully"}
     
     def recalculate_farm_statistics(self, farm_id: int):
         """Recalculate computed fields for a farm"""

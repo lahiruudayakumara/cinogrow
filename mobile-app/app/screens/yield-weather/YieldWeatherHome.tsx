@@ -13,23 +13,17 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-import { useNavigation } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import type { YieldWeatherStackParamList } from '../../navigation/YieldWeatherNavigator';
-import { weatherAPI, WeatherData } from '../../services/yield_weather/weatherAPI';
-import { farmAPI } from '../../services/yield_weather/farmAPI';
-import { plantingRecordsAPI } from '../../services/yield_weather/plantingRecordsAPI';
-import locationService from '../../services/locationService';
-import LocationInputModal from '../../components/LocationInputModal';
-import APIDebugger from '../../services/apiDebugger';
-
-
-
-type NavigationProp = StackNavigationProp<YieldWeatherStackParamList>;
+import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
+import { weatherAPI, WeatherData } from '../../../services/yield_weather/weatherAPI';
+import { farmAPI } from '../../../services/yield_weather/farmAPI';
+import { plantingRecordsAPI } from '../../../services/yield_weather/plantingRecordsAPI';
+import locationService from '../../../services/locationService';
+import LocationInputModal from '../../../components/LocationInputModal';
+import APIDebugger from '../../../services/apiDebugger';
 
 const YieldWeatherHome = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [location, setLocation] = useState<string>('Unknown Location');
   const [loading, setLoading] = useState(true);
@@ -247,7 +241,7 @@ const YieldWeatherHome = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4CAF50" />
-          <Text style={styles.loadingText}>Loading weather data...</Text>
+          <Text style={styles.loadingText}>{t('yield_weather.home.loading_weather')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -271,14 +265,14 @@ const YieldWeatherHome = () => {
         {/* Cinnamon Plant Banner */}
         <View style={styles.bannerContainer}>
           <Image 
-            source={require('../../assets/images/cinnamonheader.webp')}
+            source={require('../../../assets/images/cinnamonheader.webp')}
             style={styles.bannerImage}
             resizeMode="cover"
           />
           <View style={styles.bannerOverlay}>
             <View style={styles.bannerContent}>
               <Image 
-                source={require('../../assets/images/CinoGrow logo.webp')}
+                source={require('../../../assets/images/CinoGrow logo.webp')}
                 style={styles.bannerLogo}
                 resizeMode="contain"
               />
@@ -293,9 +287,9 @@ const YieldWeatherHome = () => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.welcomeSection}>
-            <Text style={styles.greeting}>Hello Udari! 👋</Text>
+            <Text style={styles.greeting}>{t('yield_weather.home.greeting')} Udari! 👋</Text>
             <Text style={styles.subtitle}>
-              Let's check your farm's progress today
+              {t('yield_weather.home.subtitle')}
             </Text>
           </View>
           <TouchableOpacity onPress={handleLocationSettings} style={styles.locationButton}>
@@ -317,12 +311,12 @@ const YieldWeatherHome = () => {
         {/* Weather Card */}
         <View style={styles.weatherCard}>
           <View style={styles.weatherLeft}>
-            <Text style={styles.weatherTitle}>Current Weather</Text>
+            <Text style={styles.weatherTitle}>{t('yield_weather.home.current_weather')}</Text>
             <Text style={styles.weatherTemp}>
-              {weatherData ? `${formatTemperature(weatherData.temperature)} - ${weatherData.weather_description}` : 'Loading...'}
+              {weatherData ? `${formatTemperature(weatherData.temperature)} - ${weatherData.weather_description}` : t('yield_weather.common.loading')}
             </Text>
             <Text style={styles.weatherDesc}>
-              Humidity {weatherData ? `${weatherData.humidity}%` : '--'} | Rain {weatherData ? formatRainfall(weatherData.rainfall) : '--'}
+              {t('yield_weather.home.humidity')} {weatherData ? `${weatherData.humidity}%` : '--'} | {t('yield_weather.home.rain')} {weatherData ? formatRainfall(weatherData.rainfall) : '--'}
             </Text>
           </View>
           <View style={styles.weatherRight}>
@@ -356,69 +350,69 @@ const YieldWeatherHome = () => {
             <View style={[styles.statIconContainer, { backgroundColor: '#E8F5E9' }]}>
               <Ionicons name="leaf" size={28} color="#22C55E" />
             </View>
-            <Text style={styles.statTitle}>Total Area</Text>
+            <Text style={styles.statTitle}>{t('yield_weather.home.total_area')}</Text>
             <Text style={styles.statValue}>
-              {farmStatsLoading ? '...' : `${farmStats.totalArea} ha`}
+              {farmStatsLoading ? '...' : `${farmStats.totalArea} ${t('yield_weather.common.ha')}`}
             </Text>
-            <Text style={styles.statChange}>+0.5 ha this year</Text>
+            <Text style={styles.statChange}>{t('yield_weather.home.this_year')}</Text>
           </View>
           <View style={styles.statCard}>
             <View style={[styles.statIconContainer, { backgroundColor: '#EEF2FF' }]}>
               <Ionicons name="grid" size={28} color="#6366F1" />
             </View>
-            <Text style={styles.statTitle}>Active Plots</Text>
+            <Text style={styles.statTitle}>{t('yield_weather.home.active_plots')}</Text>
             <Text style={styles.statValue}>
               {farmStatsLoading ? '...' : farmStats.activePlots.toString().padStart(2, '0')}
             </Text>
             <Text style={styles.statChange}>
-              {farmStatsLoading ? '...' : `${farmStats.plotsReadyToHarvest} ready to harvest`}
+              {farmStatsLoading ? '...' : `${farmStats.plotsReadyToHarvest} ${t('yield_weather.home.ready_to_harvest')}`}
             </Text>
           </View>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.quickActionsSection}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>{t('yield_weather.home.quick_actions')}</Text>
           <View style={styles.actionGrid}>
-            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('MyFarm')}>
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/MyFarm')}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#E3F2FD' }]}>
                 <Ionicons name="business" size={24} color="#1976D2" />
               </View>
-              <Text style={styles.actionCardTitle}>My Farm</Text>
-              <Text style={styles.actionCardSubtitle}>Manage your plots</Text>
+              <Text style={styles.actionCardTitle}>{t('yield_weather.home.my_farm')}</Text>
+              <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.manage_plots')}</Text>
               <View style={styles.actionCardArrow}>
                 <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
               </View>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('MyPlantingRecords')}>
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/MyPlantingRecords')}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#F3E5F5' }]}>
                 <Ionicons name="flower" size={24} color="#7B1FA2" />
               </View>
-              <Text style={styles.actionCardTitle}>Records</Text>
-              <Text style={styles.actionCardSubtitle}>Planting history</Text>
+              <Text style={styles.actionCardTitle}>{t('yield_weather.home.records')}</Text>
+              <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.planting_history')}</Text>
               <View style={styles.actionCardArrow}>
                 <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
               </View>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('MyYield')}>
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/MyYield')}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#FFF3E0' }]}>
                 <Ionicons name="bar-chart" size={24} color="#F57C00" />
               </View>
-              <Text style={styles.actionCardTitle}>My Yield</Text>
-              <Text style={styles.actionCardSubtitle}>Track harvest</Text>
+              <Text style={styles.actionCardTitle}>{t('yield_weather.home.my_yield')}</Text>
+              <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.track_harvest')}</Text>
               <View style={styles.actionCardArrow}>
                 <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
               </View>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('FarmAssistance')}>
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/FarmAssistance')}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#E8F5E9' }]}>
                 <Ionicons name="leaf" size={24} color="#22C55E" />
               </View>
-              <Text style={styles.actionCardTitle}>Farm Assistant</Text>
-              <Text style={styles.actionCardSubtitle}>Smart recommendations</Text>
+              <Text style={styles.actionCardTitle}>{t('yield_weather.home.farm_assistant')}</Text>
+              <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.smart_recommendations')}</Text>
               <View style={styles.actionCardArrow}>
                 <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
               </View>
@@ -775,8 +769,6 @@ const styles = StyleSheet.create({
     top: 16,
     right: 16,
   },
-
-
 });
 
 export default YieldWeatherHome;

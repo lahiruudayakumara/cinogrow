@@ -13,7 +13,7 @@ class HybridYieldResult(SQLModel, table=True):
     __tablename__ = "hybrid_yield_results"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    plot_id: int = Field(foreign_key="plots.id")
+    plot_id: int = Field(foreign_key="plots.id", ondelete="CASCADE")
     
     # Tree and scaling info
     total_trees: int = Field(description="Total number of trees in the plot")

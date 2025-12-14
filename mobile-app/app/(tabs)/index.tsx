@@ -1,12 +1,11 @@
 import React from 'react';
 import { View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import YieldWeatherNavigator from '../../navigation/YieldWeatherNavigator';
+import YieldWeatherHome from '@/app/screens/yield-weather/YieldWeatherHome';
 
 const Weather = () => {
   return (
     <View style={{ flex: 1 }}>
-      <YieldWeatherNavigator />
+      <YieldWeatherHome />
     </View>
   );
 };

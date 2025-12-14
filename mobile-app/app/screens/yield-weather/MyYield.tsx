@@ -14,14 +14,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import type { YieldWeatherStackParamList } from '../../navigation/YieldWeatherNavigator';
-import DatePicker from '../../components/ui/DatePicker';
+import type { YieldWeatherStackParamList } from '../../../navigation/YieldWeatherNavigator';
+import DatePicker from '../../../components/ui/DatePicker';
 
 // API imports
-import { yieldAPI, UserYieldRecord } from '../../services/yield_weather/yieldAPI';
-import { farmAPI, Farm, Plot } from '../../services/yield_weather/farmAPI';
+import { yieldAPI, UserYieldRecord } from '../../../services/yield_weather/yieldAPI';
+import { farmAPI, Farm, Plot } from '../../../services/yield_weather/farmAPI';
 
 // Extended Plot interface with farm context
 interface PlotWithFarmInfo extends Plot {
@@ -29,10 +30,18 @@ interface PlotWithFarmInfo extends Plot {
   farm_location?: string;
 }
 
+// Cinnamon variety pricing data (LKR per kg) - Source: Tridge Mar 2025
+const VARIETY_PRICES = {
+  'Sri Gemunu': 3804,
+  'Sri Vijaya': 3567,
+  'Default': 3685 // Average of both varieties
+};
+
 type NavigationProp = StackNavigationProp<YieldWeatherStackParamList>;
 
 const MyYieldScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
   
   // State management
   const [loading, setLoading] = useState(true);
@@ -58,6 +67,9 @@ const MyYieldScreen = () => {
   const [treesCompletedForPlot, setTreesCompletedForPlot] = useState<number | null>(null);
   const [hybridYieldResult, setHybridYieldResult] = useState<any>(null);
   const [totalTreesInPlot, setTotalTreesInPlot] = useState<string>(''); // New field for total trees
+  const [isEnteringTotalTrees, setIsEnteringTotalTrees] = useState<boolean>(true); // New state to track if we're on the "total trees" step
+  const [recentPredictions, setRecentPredictions] = useState<any[]>([]);
+  const [loadingPredictions, setLoadingPredictions] = useState(false);
 
   // Tree input interface
   interface TreeInputData {
@@ -73,10 +85,10 @@ const MyYieldScreen = () => {
   // Constants
   const USER_ID = 1; // TODO: Get from auth context
 
-  // Initialize tree data with 10 empty tree forms
+  // Initialize tree data with 3 empty tree forms (for demonstration)
   const initializeTreeData = () => {
     const trees: TreeInputData[] = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 3; i++) {
       trees.push({
         treeCode: `TREE_${i + 1}`,
         stem_diameter_mm: '',
@@ -87,6 +99,20 @@ const MyYieldScreen = () => {
     }
     setTreeData(trees);
     setCurrentTreeIndex(0);
+  };
+
+  const loadRecentPredictions = async () => {
+    try {
+      setLoadingPredictions(true);
+      const predictions = await yieldAPI.getHybridPredictions(undefined, 5); // Get 5 most recent predictions
+      setRecentPredictions(predictions);
+      console.log('📊 Loaded recent predictions:', predictions);
+    } catch (error) {
+      console.error('Failed to load recent predictions:', error);
+      // Don't show error to user, just log it
+    } finally {
+      setLoadingPredictions(false);
+    }
   };
 
   const loadData = async (showRefreshIndicator = false) => {
@@ -178,6 +204,9 @@ const MyYieldScreen = () => {
       setAvailablePlots(allPlots);
       setUserYieldRecords(userYieldsData);
 
+      // Load recent hybrid predictions
+      await loadRecentPredictions();
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load yield data';
       setError(errorMessage);
@@ -190,13 +219,13 @@ const MyYieldScreen = () => {
 
   const handleAddYield = async () => {
     if (!selectedPlotId || !yieldAmount.trim()) {
-      Alert.alert('Error', 'Please select a plot and enter yield amount');
+      Alert.alert(t('yield_weather.common.error'), t('yield_weather.my_yield.errors.select_plot_farm'));
       return;
     }
 
     const yieldAmountNum = parseFloat(yieldAmount);
     if (isNaN(yieldAmountNum) || yieldAmountNum <= 0) {
-      Alert.alert('Error', 'Please enter a valid yield amount');
+      Alert.alert(t('yield_weather.common.error'), t('yield_weather.my_yield.errors.invalid_amount'));
       return;
     }
 
@@ -235,10 +264,10 @@ const MyYieldScreen = () => {
       // Reload data to get the new record
       await loadData();
 
-      Alert.alert('Success', 'Yield record added successfully!');
+      Alert.alert(t('yield_weather.common.success'), t('yield_weather.my_yield.success.yield_added'));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add yield record';
-      Alert.alert('Error', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : t('yield_weather.my_yield.errors.save_failed');
+      Alert.alert(t('yield_weather.common.error'), errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -319,7 +348,7 @@ const MyYieldScreen = () => {
   };
 
   const nextTree = () => {
-    if (currentTreeIndex < 9) {
+    if (currentTreeIndex < 2) {
       setCurrentTreeIndex(currentTreeIndex + 1);
     }
   };
@@ -334,7 +363,7 @@ const MyYieldScreen = () => {
     // Validate current tree data
     const currentTree = treeData[currentTreeIndex];
     if (!currentTree.stem_diameter_mm || !currentTree.num_existing_stems) {
-      Alert.alert('Error', 'Please fill stem diameter and existing stems count.');
+      Alert.alert(t('yield_weather.common.error'), 'Please fill stem diameter and existing stems count.');
       return;
     }
 
@@ -358,18 +387,18 @@ const MyYieldScreen = () => {
       // TODO: Implement actual API call
       // const treeResponse = await yieldAPI.createTree(treePayload);
       
-      Alert.alert('Success', `Tree ${currentTreeIndex + 1} data saved!`);
+      Alert.alert(t('yield_weather.common.success'), `Tree ${currentTreeIndex + 1} data saved!`);
       
       // Move to next tree or trigger hybrid prediction if all trees are done
-      if (currentTreeIndex < 9) {
+      if (currentTreeIndex < 2) {
         nextTree();
       } else {
-        // All 10 trees are added, now run hybrid prediction
+        // All 3 trees are added, now run hybrid prediction
         await runHybridPrediction();
       }
     } catch (error) {
       console.error('Error submitting tree data:', error);
-      Alert.alert('Error', 'Failed to save tree data. Please try again.');
+      Alert.alert(t('yield_weather.common.error'), 'Failed to save tree data. Please try again.');
     } finally {
       setTreeSubmitting(false);
     }
@@ -379,7 +408,7 @@ const MyYieldScreen = () => {
     try {
       setTreeSubmitting(true);
       
-      // Run hybrid prediction for the selected plot with all 10 trees
+      // Run hybrid prediction for the selected plot with all 3 trees
       console.log('Running hybrid prediction for plot:', selectedPlotId);
       console.log('Tree data to submit:', treeData.map((tree, index) => ({
         tree_code: tree.treeCode,
@@ -400,8 +429,8 @@ const MyYieldScreen = () => {
         tree_age_years: 4.0 // Default age for mobile predictions
       })).filter(tree => tree.stem_diameter_mm > 0 && tree.num_existing_stems > 0); // Only include valid trees
       
-      if (sampleTrees.length < 5) {
-        Alert.alert('Error', 'At least 5 trees with valid data are required for hybrid prediction.');
+      if (sampleTrees.length < 3) {
+        Alert.alert('Error', 'At least 3 trees with valid data are required for hybrid prediction.');
         return;
       }
 
@@ -429,6 +458,11 @@ const MyYieldScreen = () => {
       );
       
       console.log('🎯 Real Hybrid Prediction Result:', hybridResult);
+      
+      // Calculate economic projections
+      const marketPricePerKg = VARIETY_PRICES['Default']; // Use default price for now
+      const estimatedDryBark = hybridResult.final_hybrid_yield_kg * (hybridResult.estimated_dry_bark_percentage / 100);
+      const estimatedRevenue = estimatedDryBark * marketPricePerKg;
       
       // Transform API result to match our UI expectations
       const transformedResult = {
@@ -458,11 +492,37 @@ const MyYieldScreen = () => {
           plot: hybridResult.blending_weight_plot
         },
         economicProjections: {
-          dryBarkPercentage: hybridResult.estimated_dry_bark_percentage,
-          estimatedPrice: hybridResult.estimated_market_price_per_kg,
-          estimatedRevenue: hybridResult.estimated_revenue
+          dryBarkPercentage: hybridResult.estimated_dry_bark_percentage || 5,
+          estimatedDryBarkKg: estimatedDryBark,
+          estimatedPrice: marketPricePerKg,
+          estimatedRevenue: estimatedRevenue,
+          priceSource: 'Tridge Mar 2025 (Default)'
         }
       };
+      
+      // Save prediction to database
+      try {
+        await yieldAPI.saveHybridPrediction({
+          plot_id: selectedPlotId!,
+          total_trees: hybridResult.total_estimated_trees,
+          ml_yield_tree_level: hybridResult.tree_model_yield_kg,
+          ml_yield_farm_level: hybridResult.plot_model_yield_kg,
+          final_hybrid_yield: hybridResult.final_hybrid_yield_kg,
+          confidence_score: hybridResult.confidence_score,
+          tree_model_confidence: hybridResult.tree_model_confidence,
+          farm_model_confidence: hybridResult.plot_model_confidence,
+          blending_weight_tree: hybridResult.blending_weight_tree,
+          blending_weight_farm: hybridResult.blending_weight_plot,
+          model_versions: hybridResult.model_versions,
+          features_used: hybridResult.features_used,
+        });
+        console.log('✅ Hybrid prediction saved to database');
+        // Reload recent predictions
+        await loadRecentPredictions();
+      } catch (saveError) {
+        console.error('❌ Failed to save prediction to database:', saveError);
+        // Don't fail the whole process if save fails
+      }
       
       // Store the result and mark trees as completed for this plot
       setHybridYieldResult(transformedResult);
@@ -517,12 +577,13 @@ const MyYieldScreen = () => {
     
     Alert.alert(
       'Tree Data Collection',
-      `You will now collect data for 10 random trees from "${selectedPlot.name}". This data will be used to create a hybrid yield prediction combining tree-level and plot-level machine learning models.`,
+      `You will now collect data for 3 random trees from "${selectedPlot.name}". This data will be used to create a hybrid yield prediction combining tree-level and plot-level machine learning models.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Start Collection', onPress: () => {
           initializeTreeData();
           setTotalTreesInPlot(''); // Reset total trees input
+          setIsEnteringTotalTrees(true); // Start with total trees step
           setShowTreeInputModal(true);
         }}
       ]
@@ -600,7 +661,7 @@ const MyYieldScreen = () => {
 
                     {/* Tree-Level Analysis */}
                     <View style={styles.predictionStep}>
-                      <Text style={styles.stepTitle}>🌳 Tree-Level Analysis ({hybridYieldResult.sampleSize || 10} trees)</Text>
+                      <Text style={styles.stepTitle}>🌳 Tree-Level Analysis ({hybridYieldResult.sampleSize || 3} trees)</Text>
                       <Text style={styles.stepDetail}>
                         Avg canes per tree: {hybridYieldResult.treeLevelPrediction?.avgCanesPerTree?.toFixed(1) || 'N/A'}
                       </Text>
@@ -649,15 +710,19 @@ const MyYieldScreen = () => {
                         <Text style={styles.stepDetail}>
                           Dry bark conversion: {hybridYieldResult.economicProjections.dryBarkPercentage?.toFixed(1) || '5.0'}%
                         </Text>
-                        {hybridYieldResult.economicProjections.estimatedPrice && (
-                          <>
-                            <Text style={styles.stepDetail}>
-                              Estimated price: Rs. {hybridYieldResult.economicProjections.estimatedPrice?.toFixed(0) || 'N/A'}/kg
-                            </Text>
-                            <Text style={styles.stepDetail}>
-                              Estimated revenue: Rs. {hybridYieldResult.economicProjections.estimatedRevenue?.toFixed(0) || 'N/A'}
-                            </Text>
-                          </>
+                        <Text style={styles.stepDetail}>
+                          Estimated dry bark: {hybridYieldResult.economicProjections.estimatedDryBarkKg?.toFixed(2) || 'N/A'} kg
+                        </Text>
+                        <Text style={styles.stepDetail}>
+                          Market price: Rs. {hybridYieldResult.economicProjections.estimatedPrice?.toLocaleString() || 'N/A'}/kg
+                        </Text>
+                        <Text style={[styles.stepDetail, { fontWeight: '700', color: '#047857', fontSize: 15 }]}>
+                          Estimated revenue: Rs. {hybridYieldResult.economicProjections.estimatedRevenue?.toLocaleString('en-LK', { maximumFractionDigits: 0 }) || 'N/A'}
+                        </Text>
+                        {hybridYieldResult.economicProjections.priceSource && (
+                          <Text style={[styles.stepDetail, { fontSize: 12, fontStyle: 'italic', color: '#6B7280' }]}>
+                            Price source: {hybridYieldResult.economicProjections.priceSource}
+                          </Text>
                         )}
                       </View>
                     )}
@@ -700,7 +765,7 @@ const MyYieldScreen = () => {
                 <View>
                   <Text style={styles.instructionTitle}>How to Use Hybrid Yield Prediction:</Text>
                   <Text style={styles.instructionText}>1. Select a plot with "HARVESTING" status from the dropdown above</Text>
-                  <Text style={styles.instructionText}>2. Click "Add Tree Data" to collect measurements from 10 random trees</Text>
+                  <Text style={styles.instructionText}>2. Click "Add Tree Data" to collect measurements from 3 random trees</Text>
                   <Text style={styles.instructionText}>3. Get AI-powered hybrid prediction combining tree and plot data</Text>
                   
                   <View style={styles.benefitsContainer}>
@@ -717,7 +782,7 @@ const MyYieldScreen = () => {
                     Plot selected: {getFilteredPlots().find(p => p.id === selectedPlotId)?.name}
                   </Text>
                   <Text style={styles.instructionText}>
-                    Click "Add Tree Data" below to collect measurements from 10 random trees for hybrid yield prediction.
+                    Click "Add Tree Data" below to collect measurements from 3 random trees for hybrid yield prediction.
                   </Text>
                 </View>
               )}
@@ -946,8 +1011,60 @@ const MyYieldScreen = () => {
             </View>
           )}
         </View>
-      </ScrollView>
 
+        {/* Recent Hybrid Predictions Section */}
+        {recentPredictions && recentPredictions.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="analytics" size={20} color="#4CAF50" />
+              <Text style={styles.sectionTitle}>Recent Hybrid Predictions</Text>
+            </View>
+            
+            {loadingPredictions ? (
+              <ActivityIndicator size="small" color="#4CAF50" />
+            ) : (
+              <View style={styles.recordsContainer}>
+                {recentPredictions.map((prediction, index) => {
+                  const plotName = availablePlots.find(p => p.id === prediction.plot_id)?.name || `Plot ${prediction.plot_id}`;
+                  const predictionDate = new Date(prediction.calculated_at);
+                  
+                  return (
+                    <View key={prediction.id || index} style={styles.predictionCard}>
+                      <View style={styles.predictionHeader}>
+                        <Text style={styles.predictionPlotName}>{plotName}</Text>
+                        <Text style={styles.predictionDate}>
+                          {predictionDate.toLocaleDateString()}
+                        </Text>
+                      </View>
+                      <View style={styles.predictionContent}>
+                        <View style={styles.predictionStat}>
+                          <Text style={styles.predictionLabel}>Predicted Yield</Text>
+                          <Text style={styles.predictionValue}>
+                            {prediction.final_hybrid_yield?.toFixed(1) || 'N/A'} kg
+                          </Text>
+                        </View>
+                        <View style={styles.predictionStat}>
+                          <Text style={styles.predictionLabel}>Confidence</Text>
+                          <Text style={styles.predictionValue}>
+                            {((prediction.confidence_score || 0) * 100).toFixed(0)}%
+                          </Text>
+                        </View>
+                        <View style={styles.predictionStat}>
+                          <Text style={styles.predictionLabel}>Trees</Text>
+                          <Text style={styles.predictionValue}>
+                            {prediction.total_trees || 0}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
+      </ScrollView>
+```
       {/* Add Yield Modal */}
       <Modal
         visible={showAddYieldModal}
@@ -1002,7 +1119,7 @@ const MyYieldScreen = () => {
 
             {/* Yield Amount */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Yield Amount (kg)</Text>
+              <Text style={styles.label}>{t('yield_weather.my_yield.yield_amount')}</Text>
               <TextInput
                 style={styles.input}
                 value={yieldAmount}
@@ -1037,40 +1154,58 @@ const MyYieldScreen = () => {
               <Ionicons name="close" size={24} color="#666666" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>
-              Tree Data Collection - Tree {currentTreeIndex + 1} of 10
+              {isEnteringTotalTrees 
+                ? t('yield_weather.my_yield.total_trees')
+                : `${t('yield_weather.my_yield.tree_input_method')} - ${t('yield_weather.my_yield.tree_of', { current: currentTreeIndex + 1, total: 3 })}`
+              }
             </Text>
 
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBar}>
-                <View 
-                  style={[styles.progressFill, { width: `${((currentTreeIndex + 1) / 10) * 100}%` }]}
-                />
+            {!isEnteringTotalTrees && (
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View 
+                    style={[styles.progressFill, { width: `${((currentTreeIndex + 1) / 3) * 100}%` }]}
+                  />
+                </View>
+                <Text style={styles.progressText}>{currentTreeIndex + 1}/3 trees</Text>
               </View>
-              <Text style={styles.progressText}>{currentTreeIndex + 1}/10 trees</Text>
-            </View>
+            )}
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Total Trees Input - Show only for first tree */}
-              {currentTreeIndex === 0 && (
-                <View style={[styles.formGroup, { backgroundColor: '#F0F9FF', padding: 16, borderRadius: 8, marginBottom: 20 }]}>
-                  <Text style={styles.label}>📊 Total Trees in Plot *</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={totalTreesInPlot}
-                    onChangeText={setTotalTreesInPlot}
-                    placeholder="Enter total number of trees in the entire plot"
-                    keyboardType="numeric"
-                  />
-                  <Text style={styles.helperText}>
-                    This helps calculate the total yield. You're sampling 10 trees out of this total.
-                  </Text>
+              {/* Step 1: Total Trees Input */}
+              {isEnteringTotalTrees && (
+                <View style={{ paddingTop: 20 }}>
+                  <View style={[styles.formGroup, { backgroundColor: '#F0FDF4', padding: 20, borderRadius: 12, marginBottom: 20, borderWidth: 2, borderColor: '#4CAF50' }]}>
+                    <Text style={[styles.label, { fontSize: 16, marginBottom: 10, color: '#047857' }]}>{t('yield_weather.my_yield.total_trees')} *</Text>
+                    <TextInput
+                      style={[styles.input, { fontSize: 16, borderColor: '#4CAF50' }]}
+                      value={totalTreesInPlot}
+                      onChangeText={setTotalTreesInPlot}
+                      placeholder="Enter total trees"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="numeric"
+                    />
+                    <Text style={[styles.helperText, { marginTop: 12, fontSize: 14, color: '#059669' }]}>
+                      This helps calculate the total yield. You're sampling 3 random trees out of this total.
+                    </Text>
+                  </View>
+
+                  <View style={styles.instructionContainer}>
+                    <Text style={styles.instructionTitle}>
+                      Next Steps:
+                    </Text>
+                    <Text style={styles.instructionText}>
+                      After entering the total trees, you'll collect detailed measurements from 3 random trees in your plot for accurate yield prediction.
+                    </Text>
+                  </View>
                 </View>
               )}
 
-              {treeData.length > 0 && (
+              {/* Step 2: Tree Data Entry */}
+              {!isEnteringTotalTrees && treeData.length > 0 && currentTreeIndex < treeData.length && (
                 <View>
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Tree Code</Text>
+                    <Text style={styles.label}>{t('yield_weather.my_yield.tree_code')}</Text>
                     <TextInput
                       style={styles.input}
                       value={treeData[currentTreeIndex].treeCode}
@@ -1080,7 +1215,7 @@ const MyYieldScreen = () => {
                   </View>
 
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Stem Diameter (mm) *</Text>
+                    <Text style={styles.label}>{t('yield_weather.my_yield.stem_diameter')} *</Text>
                     <TextInput
                       style={styles.input}
                       value={treeData[currentTreeIndex].stem_diameter_mm}
@@ -1091,7 +1226,7 @@ const MyYieldScreen = () => {
                   </View>
 
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Number of Existing Stems *</Text>
+                    <Text style={styles.label}>{t('yield_weather.my_yield.number_of_stems')} *</Text>
                     <TextInput
                       style={styles.input}
                       value={treeData[currentTreeIndex].num_existing_stems}
@@ -1154,33 +1289,52 @@ const MyYieldScreen = () => {
             </ScrollView>
 
             <View style={styles.modalActions}>
-              <View style={styles.navigationButtons}>
+              {isEnteringTotalTrees ? (
+                /* Step 1: Next button to proceed to tree data entry */
                 <TouchableOpacity
-                  style={[styles.navButton, currentTreeIndex === 0 && styles.disabledButton]}
-                  onPress={previousTree}
-                  disabled={currentTreeIndex === 0}
+                  style={[styles.saveButton, { width: '100%' }, !totalTreesInPlot && styles.disabledButton]}
+                  onPress={() => {
+                    if (!totalTreesInPlot || parseInt(totalTreesInPlot) <= 0) {
+                      Alert.alert('Required', 'Please enter the total number of trees in the plot.');
+                      return;
+                    }
+                    setIsEnteringTotalTrees(false); // Move to tree data entry step
+                  }}
+                  disabled={!totalTreesInPlot}
                 >
-                  <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
-                  <Text style={styles.navButtonText}>Previous</Text>
+                  <Text style={styles.saveButtonText}>Next: Enter Tree Data</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
+              ) : (
+                /* Step 2: Navigation buttons for tree data entry */
+                <View style={styles.navigationButtons}>
+                  <TouchableOpacity
+                    style={[styles.navButton, currentTreeIndex === 0 && styles.disabledButton]}
+                    onPress={previousTree}
+                    disabled={currentTreeIndex === 0}
+                  >
+                    <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+                    <Text style={styles.navButtonText}>Previous</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.saveButton, treeSubmitting && styles.disabledButton]}
-                  onPress={submitTreeData}
-                  disabled={treeSubmitting}
-                >
-                  {treeSubmitting ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <Text style={styles.saveButtonText}>
-                        {currentTreeIndex === 9 ? 'Run Prediction' : 'Save & Next'}
-                      </Text>
-                      {currentTreeIndex < 9 && <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />}
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
+                  <TouchableOpacity
+                    style={[styles.saveButton, treeSubmitting && styles.disabledButton]}
+                    onPress={submitTreeData}
+                    disabled={treeSubmitting}
+                  >
+                    {treeSubmitting ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <Text style={styles.saveButtonText}>
+                          {currentTreeIndex === 2 ? 'Run Prediction' : 'Save & Next'}
+                        </Text>
+                        {currentTreeIndex < 2 && <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />}
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </View>
         </SafeAreaView>
@@ -1695,6 +1849,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
+  farmInfo: {
+    backgroundColor: '#F8FAFC',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
   plotInfoText: {
     fontSize: 13,
     color: '#64748B',
@@ -1724,6 +1886,55 @@ const styles = StyleSheet.create({
     color: '#475569',
     marginBottom: 4,
     lineHeight: 18,
+  },
+  predictionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  predictionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  predictionPlotName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  predictionDate: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  predictionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  predictionStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  predictionLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  predictionValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#047857',
   },
 });
 

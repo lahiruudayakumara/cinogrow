@@ -11,7 +11,7 @@ class ActivityHistory(SQLModel, table=True):
     
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int  # Remove foreign key constraint until users table is implemented
-    plot_id: int = Field(foreign_key="plots.id")
+    plot_id: int = Field(foreign_key="plots.id", ondelete="CASCADE")
     activity_name: str = Field(max_length=100)
     activity_date: datetime
     trigger_condition: str = Field(max_length=500)

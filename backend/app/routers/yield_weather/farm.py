@@ -61,6 +61,11 @@ async def delete_farm(farm_id: int, db: Session = Depends(get_session)):
         return farm_service.delete_farm(farm_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        print(f"Error deleting farm {farm_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to delete farm: {str(e)}")
 
 
 @router.post("/plots", response_model=PlotRead)

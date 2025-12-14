@@ -15,18 +15,21 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import type { YieldWeatherStackParamList } from '../../navigation/YieldWeatherNavigator';
-import { farmAPI, type Farm, type Plot, type Activity } from '../../services/yield_weather/farmAPI';
-import { plantingRecordsAPI, type PlantingRecord } from '../../services/yield_weather/plantingRecordsAPI';
-import { PlotManagementModal } from '../../components/PlotManagementModal';
-import { DEFAULT_CINNAMON_VARIETY, CINNAMON_VARIETY_VALUES } from '../../constants/CinnamonVarieties';
+import type { YieldWeatherStackParamList } from '../../../navigation/YieldWeatherNavigator';
+import { farmAPI, type Farm, type Plot, type Activity } from '../../../services/yield_weather/farmAPI';
+import { plantingRecordsAPI, type PlantingRecord } from '../../../services/yield_weather/plantingRecordsAPI';
+import { PlotManagementModal } from '../../../components/PlotManagementModal';
+import { DEFAULT_CINNAMON_VARIETY, CINNAMON_VARIETY_VALUES } from '../../../constants/CinnamonVarieties';
 
 type NavigationProp = StackNavigationProp<YieldWeatherStackParamList>;
 
 const MyFarm = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [farm, setFarm] = useState<Farm | null>(null);
@@ -141,13 +144,13 @@ const MyFarm = () => {
           Alert.alert(
             'Connection Issue',
             'Unable to connect to the server. Please check if the backend is running and try again.',
-            [{ text: 'OK' }]
+            [{ text: t('yield_weather.common.ok') }]
           );
         } else {
-          Alert.alert('Error', `Failed to load farm data: ${error.message}`);
+          Alert.alert(t('yield_weather.common.error'), `Failed to load farm data: ${error.message}`);
         }
       } else {
-        Alert.alert('Error', 'An unexpected error occurred while loading farm data.');
+        Alert.alert(t('yield_weather.common.error'), 'An unexpected error occurred while loading farm data.');
       }
       
       // Clear state on error
@@ -411,7 +414,7 @@ const MyFarm = () => {
         `This will change the number of plots from ${plots.length} to ${plotsValue} and regenerate all plot data. Continue?`,
         [
           { 
-            text: 'Cancel', 
+            text: t('yield_weather.common.cancel'), 
             style: 'cancel', 
             onPress: async () => {
               // If user cancels, we need to revert the farm's num_plots back to the original value
@@ -431,7 +434,7 @@ const MyFarm = () => {
             }
           },
           {
-            text: 'Continue',
+            text: t('yield_weather.common.continue'),
             onPress: async () => {
               try {
                 const isBackendAvailable = await farmAPI.testConnection();
@@ -453,11 +456,11 @@ const MyFarm = () => {
                 setFarm(farmData);
                 setEditModalVisible(false);
                 setLoading(false);
-                Alert.alert('Success', 'Farm details updated successfully');
+                Alert.alert(t('yield_weather.common.success'), t('yield_weather.my_farm.success.farm_updated'));
               } catch (error) {
                 console.error('Error updating plots:', error);
                 setLoading(false);
-                Alert.alert('Error', 'Failed to update plots');
+                Alert.alert(t('yield_weather.common.error'), 'Failed to update plots');
               }
             }
           }
@@ -504,11 +507,11 @@ const MyFarm = () => {
         setFarm(farmData);
         setEditModalVisible(false);
         setLoading(false);
-        Alert.alert('Success', isEditing ? 'Farm details updated successfully' : 'Farm created successfully');
+        Alert.alert(t('yield_weather.common.success'), isEditing ? t('yield_weather.my_farm.success.farm_updated') : t('yield_weather.my_farm.success.farm_created'));
       } catch (error) {
         console.error('Error handling plots change:', error);
         setLoading(false);
-        Alert.alert('Error', 'Failed to update farm');
+        Alert.alert(t('yield_weather.common.error'), t('yield_weather.my_farm.errors.save_failed'));
       }
     }
   };
@@ -546,26 +549,26 @@ const MyFarm = () => {
     try {
       // Validate form
       if (!farmName.trim() || !ownerName.trim() || !farmLocation.trim() || !farmArea.trim() || !numPlots.trim()) {
-        Alert.alert('Error', 'Please fill in all required fields');
+        Alert.alert(t('yield_weather.common.error'), t('yield_weather.my_farm.errors.fill_required'));
         return;
       }
 
       const areaValue = parseFloat(farmArea);
       if (isNaN(areaValue) || areaValue <= 0) {
-        Alert.alert('Error', 'Please enter a valid farm area');
+        Alert.alert(t('yield_weather.common.error'), t('yield_weather.my_farm.errors.invalid_area'));
         return;
       }
 
       const plotsValue = parseInt(numPlots);
       if (isNaN(plotsValue) || plotsValue <= 0 || plotsValue > 50) {
-        Alert.alert('Error', 'Please enter a valid number of plots (1-50)');
+        Alert.alert(t('yield_weather.common.error'), t('yield_weather.my_farm.errors.invalid_plots'));
         return;
       }
 
       // Validate that each plot will have a reasonable area
       const areaPerPlot = areaValue / plotsValue;
       if (areaPerPlot < 0.1) {
-        Alert.alert('Error', 'Too many plots for the farm area. Each plot would be less than 0.1 hectares.');
+        Alert.alert(t('yield_weather.common.error'), 'Too many plots for the farm area. Each plot would be less than 0.1 hectares.');
         return;
       }
 
@@ -650,10 +653,10 @@ const MyFarm = () => {
               setActivities([]);
               setIsEditing(false);
               clearForm();
-              Alert.alert('Success', 'Farm deleted successfully');
+              Alert.alert(t('yield_weather.common.success'), 'Farm deleted successfully');
             } catch (error) {
               console.error('Error deleting farm:', error);
-              Alert.alert('Error', 'Failed to delete farm');
+              Alert.alert(t('yield_weather.common.error'), 'Failed to delete farm');
             } finally {
               setLoading(false);
             }
@@ -688,7 +691,7 @@ const MyFarm = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4CAF50" />
-          <Text style={styles.loadingText}>Loading farm data...</Text>
+          <Text style={styles.loadingText}>{t('yield_weather.common.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -705,7 +708,7 @@ const MyFarm = () => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>My Farm</Text>
+          <Text style={styles.title}>{t('yield_weather.my_farm.title')}</Text>
           {farm && (
             <TouchableOpacity
               style={styles.editButton}
@@ -741,7 +744,7 @@ const MyFarm = () => {
                     text: `${farm.name} (${farm.num_plots} plots, ${farm.total_area} ha)`,
                     onPress: () => handleFarmChange(farm.id!),
                   })).concat([
-                    { text: 'Cancel', onPress: () => {} }
+                    { text: 'Cancel', onPress: async () => {} }
                   ])
                 );
               }}
@@ -778,11 +781,11 @@ const MyFarm = () => {
                 </View>
                 <View style={styles.detailRow}>
                   <Ionicons name="resize-outline" size={16} color="#6B7280" />
-                  <Text style={styles.detailText}>{farm.total_area} hectares</Text>
+                  <Text style={styles.detailText}>{farm.total_area} {t('yield_weather.common.hectares')}</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Ionicons name="grid-outline" size={16} color="#6B7280" />
-                  <Text style={styles.detailText}>{plots.length} plots</Text>
+                  <Text style={styles.detailText}>{plots.length} {t('yield_weather.my_farm.plots')}</Text>
                 </View>
               </View>
               <View style={styles.farmActions}>
@@ -793,13 +796,13 @@ const MyFarm = () => {
                     setEditModalVisible(true);
                   }}
                 >
-                  <Text style={styles.editFarmButtonText}>Edit Farm</Text>
+                  <Text style={styles.editFarmButtonText}>{t('yield_weather.my_farm.edit_farm')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.deleteFarmButton}
                   onPress={handleDeleteFarm}
                 >
-                  <Text style={styles.deleteFarmButtonText}>Delete</Text>
+                  <Text style={styles.deleteFarmButtonText}>{t('yield_weather.common.delete')}</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -811,6 +814,7 @@ const MyFarm = () => {
               <TouchableOpacity
                 style={styles.createFarmButton}
                 onPress={() => {
+                  setIsEditing(false);
                   setNumPlots('1');
                   setEditModalVisible(true);
                 }}
@@ -838,11 +842,11 @@ const MyFarm = () => {
             {/* Total area summary */}
             <View style={styles.areaSummary}>
               <Text style={styles.areaSummaryText}>
-                Total Allocated: {plots.reduce((sum, plot) => sum + plot.area, 0).toFixed(1)} ha of {farm?.total_area} ha
+                Total Allocated: {plots.reduce((sum, plot) => sum + plot.area, 0).toFixed(1)} {t('yield_weather.common.ha')} of {farm?.total_area} {t('yield_weather.common.ha')}
               </Text>
               {plots.reduce((sum, plot) => sum + plot.area, 0) < (farm?.total_area || 0) && (
                 <Text style={styles.remainingAreaText}>
-                  ({((farm?.total_area || 0) - plots.reduce((sum, plot) => sum + plot.area, 0)).toFixed(1)} ha remaining)
+                  ({((farm?.total_area || 0) - plots.reduce((sum, plot) => sum + plot.area, 0)).toFixed(1)} {t('yield_weather.common.ha')} remaining)
                 </Text>
               )}
             </View>
@@ -890,10 +894,10 @@ const MyFarm = () => {
                           <Text style={styles.varietyText}>{plantingInfo.variety}</Text>
                         </View>
                         <Text style={styles.plantingDetails}>
-                          Planted: {plantingInfo.plantedDate ? new Date(plantingInfo.plantedDate).toLocaleDateString() : 'Unknown'}
+                          Planted: {plantingInfo.plantedDate ? new Date(plantingInfo.plantedDate).toLocaleDateString() : t('yield_weather.common.unknown')}
                         </Text>
                         <Text style={styles.ageText}>
-                          {plantingInfo.daysOld} days old ({Math.floor(plantingInfo.daysOld / 365)} years) • {plantingInfo.seedlingCount.toLocaleString()} seedlings
+                          {plantingInfo.daysOld} {t('yield_weather.my_farm.days_old')} ({Math.floor(plantingInfo.daysOld / 365)} years) • {plantingInfo.seedlingCount.toLocaleString()} {t('yield_weather.my_farm.seedlings')}
                         </Text>
                         {/* Show growth stage information */}
                         {plantingInfo.plantedDate && (() => {
@@ -924,7 +928,7 @@ const MyFarm = () => {
                         <Text style={styles.notPlantedText}>Ready for planting</Text>
                         <TouchableOpacity
                           style={styles.plantButton}
-                          onPress={() => navigation.navigate('MyPlantingRecords')}
+                          onPress={() => router.push('/yield-weather/MyPlantingRecords')}
                         >
                           <Text style={styles.plantButtonText}>Add Planting Record</Text>
                         </TouchableOpacity>
@@ -940,7 +944,7 @@ const MyFarm = () => {
         {/* Activity History */}
         {activities.length > 0 && (
           <View style={styles.activitySection}>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
+            <Text style={styles.sectionTitle}>{t('yield_weather.my_farm.recent_activities')}</Text>
             <View style={styles.activityList}>
               {activities.slice(0, 5).map((activity) => (
                 <View key={activity.id} style={styles.activityItem}>
@@ -984,11 +988,11 @@ const MyFarm = () => {
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Text style={styles.modalCancelText}>{t('yield_weather.common.cancel')}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>{isEditing ? 'Edit Farm' : 'Create Farm'}</Text>
+            <Text style={styles.modalTitle}>{isEditing ? t('yield_weather.my_farm.edit_farm') : t('yield_weather.my_farm.create_farm')}</Text>
             <TouchableOpacity onPress={handleSaveFarm}>
-              <Text style={styles.modalSaveText}>Save</Text>
+              <Text style={styles.modalSaveText}>{t('yield_weather.common.save')}</Text>
             </TouchableOpacity>
           </View>
           
@@ -1027,7 +1031,7 @@ const MyFarm = () => {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Farm Area (hectares) *</Text>
+              <Text style={styles.label}>Farm Area ({t('yield_weather.common.hectares')}) *</Text>
               <TextInput
                 style={styles.input}
                 value={farmArea}
@@ -1053,8 +1057,8 @@ const MyFarm = () => {
                 The last plot will get the remaining area after distributing equal areas to other plots
                 {farmArea && numPlots && !isNaN(parseFloat(farmArea)) && !isNaN(parseInt(numPlots)) && parseInt(numPlots) > 0 ? (
                   parseInt(numPlots) === 1 ? 
-                    ` (${parseFloat(farmArea).toFixed(1)} ha for single plot)` :
-                    ` (${(parseFloat(farmArea) / parseInt(numPlots)).toFixed(1)} ha each, last plot gets remainder)`
+                    ` (${parseFloat(farmArea).toFixed(1)} ${t('yield_weather.common.ha')} for single plot)` :
+                    ` (${(parseFloat(farmArea) / parseInt(numPlots)).toFixed(1)} ${t('yield_weather.common.ha')} each, last plot gets remainder)`
                 ) : ''}
               </Text>
             </View>

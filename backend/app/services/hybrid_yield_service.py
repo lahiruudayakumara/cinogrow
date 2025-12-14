@@ -161,7 +161,7 @@ class HybridYieldService(BaseService):
         avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
         
         # Adjust confidence based on sample size
-        sample_size_factor = min(len(trees) / 10.0, 1.0)  # Optimal sample size is 10+ trees
+        sample_size_factor = min(len(trees) / 3.0, 1.0)  # Optimal sample size is 3+ trees (demo)
         final_confidence = avg_confidence * sample_size_factor
         
         return total_predicted_yield, final_confidence

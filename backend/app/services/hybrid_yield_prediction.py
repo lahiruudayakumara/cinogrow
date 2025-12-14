@@ -354,7 +354,7 @@ class HybridYieldPredictionService:
         """Calculate confidence for tree-level predictions"""
         
         # Base confidence on sample size
-        sample_size_factor = min(1.0, len(sample_trees) / 10.0)  # Max confidence at 10+ samples
+        sample_size_factor = min(1.0, len(sample_trees) / 3.0)  # Max confidence at 3+ samples (demo)
         
         # Reduce confidence for diseased trees
         disease_factor = 1.0

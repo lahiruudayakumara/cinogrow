@@ -70,6 +70,13 @@ const MyYieldScreen = () => {
   const [isEnteringTotalTrees, setIsEnteringTotalTrees] = useState<boolean>(true); // New state to track if we're on the "total trees" step
   const [recentPredictions, setRecentPredictions] = useState<any[]>([]);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
+  const [readyToCollectTreeData, setReadyToCollectTreeData] = useState(false);
+  
+  // Collapsible sections state
+  const [showHowToUse, setShowHowToUse] = useState(false);
+  const [showNextSteps, setShowNextSteps] = useState(false);
+  const [showReadyInstructions, setShowReadyInstructions] = useState(false);
+  const [showAllRecords, setShowAllRecords] = useState(false);
 
   // Tree input interface
   interface TreeInputData {
@@ -329,6 +336,7 @@ const MyYieldScreen = () => {
     setSelectedPlotId(null); // Clear plot selection when farm changes
     setTreesCompletedForPlot(null);
     setHybridYieldResult(null);
+    setReadyToCollectTreeData(false); // Reset ready state
     // Store in AsyncStorage and reload data
     AsyncStorage.setItem('selectedFarmId', farmId.toString()).then(() => {
       loadData();
@@ -628,14 +636,114 @@ const MyYieldScreen = () => {
           </View>
         )}
 
-        {/* Predicted Yield Section */}
+        {/* Card 1: Actual Yield Records */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderLeft}>
+              <Ionicons name="document-text" size={24} color="#4CAF50" />
+              <View style={{ marginLeft: 12 }}>
+                <Text style={styles.cardTitle}>{t('yield_weather.my_yield.actual_records_title')}</Text>
+                <Text style={styles.cardSubtitle}>{t('yield_weather.my_yield.actual_records_subtitle')}</Text>
+              </View>
+            </View>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.addRecordButtonCard}
+            onPress={() => setShowAddYieldModal(true)}
+          >
+            <Ionicons name="add-circle" size={20} color="#FFFFFF" />
+            <Text style={styles.addRecordButtonText}>{t('yield_weather.my_yield.add_record')}</Text>
+          </TouchableOpacity>
+
+          {userYieldRecords && userYieldRecords.length > 0 ? (
+            <View style={styles.recordsList}>
+              {userYieldRecords
+                .sort((a, b) => {
+                  const dateA = new Date(a.harvest_date || 0);
+                  const dateB = new Date(b.harvest_date || 0);
+                  return dateB.getTime() - dateA.getTime(); // Most recent first
+                })
+                .slice(0, showAllRecords ? userYieldRecords.length : 2)
+                .map((record, index) => {
+                const plot = availablePlots.find(p => p.id === record.plot_id);
+                const recordDate = record.harvest_date ? new Date(record.harvest_date) : new Date();
+                const isValidDate = !isNaN(recordDate.getTime());
+                
+                return (
+                  <View key={record.id || index} style={styles.recordItem}>
+                    <View style={styles.recordHeader}>
+                      <Text style={styles.recordPlotName}>{plot?.name || `Plot ${record.plot_id}`}</Text>
+                      <Text style={styles.recordDate}>
+                        {isValidDate ? recordDate.toLocaleDateString() : 'N/A'}
+                      </Text>
+                    </View>
+                    <View style={styles.recordDetails}>
+                      <View style={styles.recordDetailItem}>
+                        <Ionicons name="leaf" size={16} color="#4CAF50" />
+                        <Text style={styles.recordDetailText}>
+                          {record.yield_amount} {t('yield_weather.my_yield.kg_suffix')}
+                        </Text>
+                      </View>
+                      {plot && (
+                        <View style={styles.recordDetailItem}>
+                          <Ionicons name="resize" size={16} color="#6B7280" />
+                          <Text style={styles.recordDetailText}>
+                            {plot.area} {t('yield_weather.my_yield.ha_suffix')}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+              
+              {userYieldRecords.length > 2 && (
+                <TouchableOpacity 
+                  style={styles.viewAllLink}
+                  onPress={() => setShowAllRecords(!showAllRecords)}
+                >
+                  <Text style={styles.viewAllLinkText}>
+                    {showAllRecords 
+                      ? t('yield_weather.my_yield.show_less')
+                      : `${t('yield_weather.my_yield.view_all_records')} (${userYieldRecords.length})`
+                    }
+                  </Text>
+                  <Ionicons 
+                    name={showAllRecords ? "chevron-up" : "chevron-down"} 
+                    size={16} 
+                    color="#4CAF50" 
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="document-outline" size={48} color="#D1D5DB" />
+              <Text style={styles.emptyStateText}>{t('yield_weather.my_yield.no_records_yet')}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Card 2: AI Yield Predictions */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderLeft}>
+              <Ionicons name="analytics" size={24} color="#8B4513" />
+              <View style={{ marginLeft: 12 }}>
+                <Text style={[styles.cardTitle, { color: '#8B4513' }]}>{t('yield_weather.my_yield.prediction_title')}</Text>
+                <Text style={styles.cardSubtitle}>{t('yield_weather.my_yield.prediction_subtitle')}</Text>
+              </View>
+            </View>
+          </View>
+
         {/* Conditional Yield Display */}
         {selectedPlotId && treesCompletedForPlot === selectedPlotId ? (
           /* Show Hybrid Prediction Results */
-          <View style={styles.section}>
+          <View style={{ marginTop: 0 }}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="analytics" size={20} color="#4CAF50" />
-              <Text style={styles.sectionTitle}>{t('yield_weather.my_yield.hybrid_prediction_results')}</Text>
+              <Ionicons name="analytics" size={20} color="#8B4513" />
+              <Text style={[styles.sectionTitle, { color: '#8B4513' }]}>{t('yield_weather.my_yield.ai_prediction_results')}</Text>
             </View>
             
             {hybridYieldResult && (
@@ -753,48 +861,58 @@ const MyYieldScreen = () => {
           </View>
         ) : (
           /* Show Instructions */
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="information-circle" size={20} color="#4CAF50" />
-              <Text style={styles.sectionTitle}>
-                {selectedPlotId ? t('yield_weather.my_yield.ready_tree_data_collection') : t('yield_weather.my_yield.select_plot_begin')}
-              </Text>
-            </View>
+          <View style={{ marginTop: 0 }}>
+            <TouchableOpacity 
+              style={styles.sectionHeader}
+              onPress={() => !selectedPlotId ? setShowHowToUse(!showHowToUse) : setShowNextSteps(!showNextSteps)}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <Text style={[styles.sectionTitle, { flex: 1 }]}>
+                  {selectedPlotId ? t('yield_weather.my_yield.ready_tree_data_collection') : t('yield_weather.my_yield.select_plot_begin')}
+                </Text>
+                <Ionicons 
+                  name={(!selectedPlotId ? showHowToUse : showNextSteps) ? "chevron-up" : "chevron-down"} 
+                  size={20} 
+                  color="#4CAF50" 
+                />
+              </View>
+            </TouchableOpacity>
             
-            <View style={styles.instructionContainer}>
-              {!selectedPlotId ? (
-                <View>
-                  <Text style={styles.instructionTitle}>{t('yield_weather.my_yield.how_to_use_hybrid')}</Text>
-                  <Text style={styles.instructionText}>{t('yield_weather.my_yield.step_1_select_plot')}</Text>
-                  <Text style={styles.instructionText}>{t('yield_weather.my_yield.step_2_add_tree_data')}</Text>
-                  <Text style={styles.instructionText}>{t('yield_weather.my_yield.step_3_get_prediction')}</Text>
-                  
-                  <View style={styles.benefitsContainer}>
-                    <Text style={styles.benefitsTitle}>{t('yield_weather.my_yield.why_hybrid_title')}</Text>
-                    <Text style={styles.benefitsText}>{t('yield_weather.my_yield.benefit_1_accuracy')}</Text>
-                    <Text style={styles.benefitsText}>{t('yield_weather.my_yield.benefit_2_combines')}</Text>
-                    <Text style={styles.benefitsText}>{t('yield_weather.my_yield.benefit_3_accounts')}</Text>
-                  </View>
+            {!selectedPlotId && showHowToUse && (
+              <View style={styles.instructionContainer}>
+                <Text style={styles.instructionTitle}>{t('yield_weather.my_yield.how_to_use_hybrid')}</Text>
+                <Text style={styles.instructionText}>{t('yield_weather.my_yield.step_1_select_plot')}</Text>
+                <Text style={styles.instructionText}>{t('yield_weather.my_yield.step_2_add_tree_data')}</Text>
+                <Text style={styles.instructionText}>{t('yield_weather.my_yield.step_3_get_prediction')}</Text>
+                
+                <View style={styles.benefitsContainer}>
+                  <Text style={styles.benefitsTitle}>{t('yield_weather.my_yield.why_hybrid_title')}</Text>
+                  <Text style={styles.benefitsText}>{t('yield_weather.my_yield.benefit_1_accuracy')}</Text>
+                  <Text style={styles.benefitsText}>{t('yield_weather.my_yield.benefit_2_combines')}</Text>
+                  <Text style={styles.benefitsText}>{t('yield_weather.my_yield.benefit_3_accounts')}</Text>
                 </View>
-              ) : (
-                <View>
-                  <Text style={styles.instructionTitle}>{t('yield_weather.my_yield.next_step_tree_data')}</Text>
-                  <Text style={styles.instructionText}>
-                    {t('yield_weather.my_yield.plot_selected')}: {getFilteredPlots().find(p => p.id === selectedPlotId)?.name}
-                  </Text>
-                  <Text style={styles.instructionText}>
-                    {t('yield_weather.my_yield.click_add_tree_data')}
-                  </Text>
-                </View>
-              )}
-            </View>
+              </View>
+            )}
+            
+            {selectedPlotId && showNextSteps && (
+              <View style={styles.instructionContainer}>
+                <Text style={styles.instructionTitle}>{t('yield_weather.my_yield.next_step_tree_data')}</Text>
+                <Text style={styles.instructionText}>
+                  {t('yield_weather.my_yield.plot_selected')}: {getFilteredPlots().find(p => p.id === selectedPlotId)?.name}
+                </Text>
+                <Text style={styles.instructionText}>
+                  {t('yield_weather.my_yield.click_add_tree_data')}
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
         {/* Farm Selection Section */}
-        <View style={styles.section}>
+        {!(treesCompletedForPlot && treesCompletedForPlot === selectedPlotId) && (
+        <View style={{ marginTop: 16 }}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="business" size={20} color="#4CAF50" />
+            <Ionicons name="business" size={20} color="#8B4513" />
             <Text style={styles.sectionTitle}>{t('yield_weather.my_yield.select_farm')}</Text>
           </View>
           
@@ -848,11 +966,13 @@ const MyYieldScreen = () => {
             </View>
           )}
         </View>
+        )}
 
         {/* Plot Selection Section */}
-        <View style={styles.section}>
+        {!(treesCompletedForPlot && treesCompletedForPlot === selectedPlotId) && (
+        <View style={{ marginTop: 16 }}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="location" size={20} color="#4CAF50" />
+            <Ionicons name="location" size={20} color="#8B4513" />
             <Text style={styles.sectionTitle}>{t('yield_weather.my_yield.select_plot_analysis')}</Text>
           </View>
           
@@ -959,7 +1079,43 @@ const MyYieldScreen = () => {
             </View>
           )}
           
-          {selectedPlotId && (
+          {selectedPlotId && !readyToCollectTreeData && (
+            <TouchableOpacity 
+              style={[styles.addButton, styles.treeDataButton]}
+              onPress={() => setReadyToCollectTreeData(true)}
+            >
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+              <Text style={styles.addButtonText}>{t('yield_weather.common.next')}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        )}
+
+        {/* Ready to Collect Tree Data Section */}
+        {selectedPlotId && readyToCollectTreeData && !(treesCompletedForPlot && treesCompletedForPlot === selectedPlotId) && (
+          <View style={{ marginTop: 16 }}>
+            <TouchableOpacity 
+              style={styles.sectionHeader}
+              onPress={() => setShowReadyInstructions(!showReadyInstructions)}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <Text style={[styles.sectionTitle, { flex: 1 }]}>{t('yield_weather.my_yield.ready_tree_data_collection')}</Text>
+                <Ionicons 
+                  name={showReadyInstructions ? "chevron-up" : "chevron-down"} 
+                  size={20} 
+                  color="#4CAF50" 
+                />
+              </View>
+            </TouchableOpacity>
+            
+            {showReadyInstructions && (
+              <View style={styles.instructionContainer}>
+                <Text style={styles.instructionText}>
+                  {t('yield_weather.my_yield.click_add_tree_data')}
+                </Text>
+              </View>
+            )}
+
             <TouchableOpacity 
               style={[styles.addButton, styles.treeDataButton]}
               onPress={openTreeInputModal}
@@ -967,109 +1123,60 @@ const MyYieldScreen = () => {
               <Ionicons name="leaf" size={20} color="#FFFFFF" />
               <Text style={styles.addButtonText}>{t('yield_weather.my_yield.add_tree_data')}</Text>
             </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Add Yield Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="add-circle" size={20} color="#4CAF50" />
-            <Text style={styles.sectionTitle}>{t('yield_weather.my_yield.add_yield_record')}</Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.addButton, styles.fullButton]}
-            onPress={() => setShowAddYieldModal(true)}
-          >
-            <Ionicons name="add" size={20} color="#FFFFFF" />
-            <Text style={styles.addButtonText}>{t('yield_weather.my_yield.add_yield_record')}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Yield Records Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="list" size={20} color="#4CAF50" />
-            <Text style={styles.sectionTitle}>{t('yield_weather.my_yield.my_yield_records')}</Text>
-          </View>
-          
-          {userYieldRecords.length > 0 ? (
-            <View style={styles.recordsContainer}>
-              <View style={styles.recordsHeader}>
-                <Text style={styles.columnHeader}>Plot</Text>
-                <Text style={styles.columnHeader}>Yield Amount</Text>
-                <Text style={styles.columnHeader}>Date</Text>
-              </View>
-              {userYieldRecords.map((record, index) => (
-                <View key={record.yield_id || index} style={styles.recordRow}>
-                  <Text style={styles.recordCell}>{record.plot_name || 'Unknown'}</Text>
-                  <Text style={styles.recordCell}>{formatYield(record.yield_amount)}</Text>
-                  <Text style={styles.recordCell}>{formatDate(record.yield_date)}</Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="document-outline" size={32} color="#9CA3AF" />
-              <Text style={styles.emptyText}>{t('yield_weather.my_yield.no_yield_records')}</Text>
-              <Text style={styles.emptySubtext}>{t('yield_weather.my_yield.add_first_record')}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Recent Hybrid Predictions Section */}
-        {recentPredictions && recentPredictions.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="analytics" size={20} color="#4CAF50" />
-              <Text style={styles.sectionTitle}>{t('yield_weather.my_yield.recent_predictions')}</Text>
-            </View>
-            
-            {loadingPredictions ? (
-              <ActivityIndicator size="small" color="#4CAF50" />
-            ) : (
-              <View style={styles.recordsContainer}>
-                {recentPredictions.map((prediction, index) => {
-                  const plotName = availablePlots.find(p => p.id === prediction.plot_id)?.name || `Plot ${prediction.plot_id}`;
-                  const predictionDate = new Date(prediction.calculated_at);
-                  
-                  return (
-                    <View key={prediction.id || index} style={styles.predictionCard}>
-                      <View style={styles.predictionHeader}>
-                        <Text style={styles.predictionPlotName}>{plotName}</Text>
-                        <Text style={styles.predictionDate}>
-                          {predictionDate.toLocaleDateString()}
-                        </Text>
-                      </View>
-                      <View style={styles.predictionContent}>
-                        <View style={styles.predictionStat}>
-                          <Text style={styles.predictionLabel}>{t('yield_weather.my_yield.predicted_yield')}</Text>
-                          <Text style={styles.predictionValue}>
-                            {prediction.final_hybrid_yield?.toFixed(1) || 'N/A'} {t('yield_weather.my_yield.kg_suffix')}
-                          </Text>
-                        </View>
-                        <View style={styles.predictionStat}>
-                          <Text style={styles.predictionLabel}>{t('yield_weather.my_yield.confidence')}</Text>
-                          <Text style={styles.predictionValue}>
-                            {((prediction.confidence_score || 0) * 100).toFixed(0)}%
-                          </Text>
-                        </View>
-                        <View style={styles.predictionStat}>
-                          <Text style={styles.predictionLabel}>{t('yield_weather.my_yield.trees')}</Text>
-                          <Text style={styles.predictionValue}>
-                            {prediction.total_trees || 0}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
           </View>
         )}
+
+          {/* Recent AI Predictions */}
+          {recentPredictions && recentPredictions.length > 0 && (
+            <View style={{ marginTop: 16 }}>
+              <Text style={styles.sectionTitle}>{t('yield_weather.my_yield.recent_ai_predictions')}</Text>
+              
+              {loadingPredictions ? (
+                <ActivityIndicator size="small" color="#8B4513" />
+              ) : (
+                <View style={styles.recordsContainer}>
+                  {recentPredictions.slice(0, 2).map((prediction, index) => {
+                    const plotName = availablePlots.find(p => p.id === prediction.plot_id)?.name || `Plot ${prediction.plot_id}`;
+                    const predictionDate = new Date(prediction.calculated_at);
+                    
+                    return (
+                      <View key={prediction.id || index} style={styles.predictionCard}>
+                        <View style={styles.predictionHeader}>
+                          <Text style={styles.predictionPlotName}>{plotName}</Text>
+                          <Text style={styles.predictionDate}>
+                            {predictionDate.toLocaleDateString()}
+                          </Text>
+                        </View>
+                        <View style={styles.predictionContent}>
+                          <View style={styles.predictionStat}>
+                            <Text style={styles.predictionLabel}>{t('yield_weather.my_yield.predicted_yield')}</Text>
+                            <Text style={styles.predictionValue}>
+                              {prediction.final_hybrid_yield?.toFixed(1) || 'N/A'} {t('yield_weather.my_yield.kg_suffix')}
+                            </Text>
+                          </View>
+                          <View style={styles.predictionStat}>
+                            <Text style={styles.predictionLabel}>{t('yield_weather.my_yield.confidence')}</Text>
+                            <Text style={styles.predictionValue}>
+                              {((prediction.confidence_score || 0) * 100).toFixed(0)}%
+                            </Text>
+                          </View>
+                          <View style={styles.predictionStat}>
+                            <Text style={styles.predictionLabel}>{t('yield_weather.my_yield.trees')}</Text>
+                            <Text style={styles.predictionValue}>
+                              {prediction.total_trees || 0}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
       </ScrollView>
-```
+
       {/* Add Yield Modal */}
       <Modal
         visible={showAddYieldModal}
@@ -1197,10 +1304,10 @@ const MyYieldScreen = () => {
 
                   <View style={styles.instructionContainer}>
                     <Text style={styles.instructionTitle}>
-                      Next Steps:
+                      {t('yield_weather.my_yield.next_steps_title')}
                     </Text>
                     <Text style={styles.instructionText}>
-                      After entering the total trees, you'll collect detailed measurements from 3 random trees in your plot for accurate yield prediction.
+                      {t('yield_weather.my_yield.tree_measurement_info')}
                     </Text>
                   </View>
                 </View>
@@ -1215,7 +1322,7 @@ const MyYieldScreen = () => {
                       style={styles.input}
                       value={treeData[currentTreeIndex].treeCode}
                       onChangeText={(text) => updateTreeData(currentTreeIndex, 'treeCode', text)}
-                      placeholder="e.g., TREE_1"
+                      placeholder={t('yield_weather.my_yield.tree_code_placeholder')}
                     />
                   </View>
 
@@ -1225,7 +1332,7 @@ const MyYieldScreen = () => {
                       style={styles.input}
                       value={treeData[currentTreeIndex].stem_diameter_mm}
                       onChangeText={(text) => updateTreeData(currentTreeIndex, 'stem_diameter_mm', text)}
-                      placeholder="Enter diameter in mm"
+                      placeholder={t('yield_weather.my_yield.enter_diameter_placeholder')}
                       keyboardType="numeric"
                     />
                   </View>
@@ -1236,19 +1343,19 @@ const MyYieldScreen = () => {
                       style={styles.input}
                       value={treeData[currentTreeIndex].num_existing_stems}
                       onChangeText={(text) => updateTreeData(currentTreeIndex, 'num_existing_stems', text)}
-                      placeholder="Enter number of stems"
+                      placeholder={t('yield_weather.my_yield.enter_stems_placeholder')}
                       keyboardType="numeric"
                     />
                   </View>
 
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Fertilizer Used</Text>
+                    <Text style={styles.label}>{t('yield_weather.my_yield.fertilizer_used_label')}</Text>
                     <TouchableOpacity 
                       style={[styles.dropdown, treeData[currentTreeIndex].fertilizer_used_tree && styles.activeOption]}
                       onPress={() => updateTreeData(currentTreeIndex, 'fertilizer_used_tree', !treeData[currentTreeIndex].fertilizer_used_tree)}
                     >
                       <Text style={styles.dropdownText}>
-                        {treeData[currentTreeIndex].fertilizer_used_tree ? 'Yes' : 'No'}
+                        {treeData[currentTreeIndex].fertilizer_used_tree ? t('yield_weather.my_yield.yes') : t('yield_weather.my_yield.no')}
                       </Text>
                       <Ionicons 
                         name={treeData[currentTreeIndex].fertilizer_used_tree ? "checkmark-circle" : "ellipse-outline"} 
@@ -1259,33 +1366,37 @@ const MyYieldScreen = () => {
                   </View>
 
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>Disease Status</Text>
+                    <Text style={styles.label}>{t('yield_weather.my_yield.disease_status_label')}</Text>
                     <View style={styles.optionGroup}>
-                      {['none', 'mild', 'severe'].map((status) => (
-                        <TouchableOpacity
-                          key={status}
-                          style={[
-                            styles.optionButton,
-                            treeData[currentTreeIndex].diseases_tree === status && styles.activeOption
-                          ]}
-                          onPress={() => updateTreeData(currentTreeIndex, 'diseases_tree', status)}
-                        >
-                          <Text style={[
-                            styles.optionText,
-                            treeData[currentTreeIndex].diseases_tree === status && styles.activeOptionText
-                          ]}>
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
+                      {['none', 'mild', 'severe'].map((status) => {
+                        const labelKey = status === 'none' ? 'disease_none_label' : 
+                                        status === 'mild' ? 'disease_mild_label' : 'disease_severe_label';
+                        return (
+                          <TouchableOpacity
+                            key={status}
+                            style={[
+                              styles.optionButton,
+                              treeData[currentTreeIndex].diseases_tree === status && styles.activeOption
+                            ]}
+                            onPress={() => updateTreeData(currentTreeIndex, 'diseases_tree', status)}
+                          >
+                            <Text style={[
+                              styles.optionText,
+                              treeData[currentTreeIndex].diseases_tree === status && styles.activeOptionText
+                            ]}>
+                              {t(`yield_weather.my_yield.${labelKey}`)}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
                     </View>
                   </View>
 
                   {treeData[currentTreeIndex].predicted_canes && (
                     <View style={styles.treePredictionContainer}>
-                      <Text style={styles.predictionLabel}>Model 1 Prediction:</Text>
+                      <Text style={styles.predictionLabel}>{t('yield_weather.my_yield.model_prediction_label')}</Text>
                       <Text style={styles.predictionValue}>
-                        {treeData[currentTreeIndex].predicted_canes} canes per tree
+                        {treeData[currentTreeIndex].predicted_canes} {t('yield_weather.my_yield.canes_per_tree')}
                       </Text>
                     </View>
                   )}
@@ -1300,14 +1411,14 @@ const MyYieldScreen = () => {
                   style={[styles.saveButton, { width: '100%' }, !totalTreesInPlot && styles.disabledButton]}
                   onPress={() => {
                     if (!totalTreesInPlot || parseInt(totalTreesInPlot) <= 0) {
-                      Alert.alert('Required', 'Please enter the total number of trees in the plot.');
+                      Alert.alert(t('yield_weather.my_yield.required_title'), t('yield_weather.my_yield.enter_total_trees_required'));
                       return;
                     }
                     setIsEnteringTotalTrees(false); // Move to tree data entry step
                   }}
                   disabled={!totalTreesInPlot}
                 >
-                  <Text style={styles.saveButtonText}>Next: Enter Tree Data</Text>
+                  <Text style={styles.saveButtonText}>{t('yield_weather.my_yield.next_enter_tree_data')}</Text>
                   <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
               ) : (
@@ -1319,7 +1430,7 @@ const MyYieldScreen = () => {
                     disabled={currentTreeIndex === 0}
                   >
                     <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
-                    <Text style={styles.navButtonText}>Previous</Text>
+                    <Text style={styles.navButtonText}>{t('yield_weather.my_yield.previous_button')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -1332,7 +1443,7 @@ const MyYieldScreen = () => {
                     ) : (
                       <>
                         <Text style={styles.saveButtonText}>
-                          {currentTreeIndex === 2 ? 'Run Prediction' : 'Save & Next'}
+                          {currentTreeIndex === 2 ? t('yield_weather.my_yield.run_prediction_button') : t('yield_weather.my_yield.save_next_button')}
                         </Text>
                         {currentTreeIndex < 2 && <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />}
                       </>
@@ -1372,11 +1483,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 24,
   },
+  headerAddButton: {
+    padding: 4,
+    marginLeft: 12,
+  },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
@@ -1637,10 +1752,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   treeButton: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#8B4513',
   },
   treeDataButton: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#8B4513',
     marginTop: 12,
     width: '100%',
   },
@@ -1892,6 +2007,152 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     lineHeight: 18,
   },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  cardHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#4CAF50',
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  addRecordButtonCard: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  addRecordButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  recordsList: {
+    gap: 12,
+  },
+  recordItem: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  recordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  recordPlotName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  recordDate: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  recordDetails: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  recordDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  recordDetailText: {
+    fontSize: 14,
+    color: '#374151',
+  },
+  viewAllLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 4,
+  },
+  viewAllLinkText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4CAF50',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginTop: 12,
+  },
+  viewRecordsButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  viewRecordsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  viewRecordsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  viewRecordsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  viewRecordsSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
   predictionCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -1939,7 +2200,7 @@ const styles = StyleSheet.create({
   predictionValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#047857',
+    color: '#8B4513',
   },
 });
 

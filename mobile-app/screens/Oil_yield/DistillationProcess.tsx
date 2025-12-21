@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiConfig from '../../config/api';
 
 // Use localhost for web platform, otherwise use the configured API URL
@@ -22,6 +23,7 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function DistillationProcess() {
+  const { t } = useTranslation();
   const [plantPart, setPlantPart] = useState('');
   const [cinnamonType, setCinnamonType] = useState('');
   const [distillCapacity, setDistillCapacity] = useState('');
@@ -362,20 +364,20 @@ export default function DistillationProcess() {
                 <MaterialCommunityIcons name="alpha-c-circle" size={24} color="#FF9F0A" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Cinnamon Type</Text>
-                <Text style={styles.labelSubtext}>Select variety</Text>
+                <Text style={styles.label}>{t('yield_weather.common.cinnamon_variety')}</Text>
+                <Text style={styles.labelSubtext}>{t('yield_weather.common.select_variety')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Sri Gamunu"
+                label={t('yield_weather.common.sri_gemunu')}
                 value="Sri Gamunu"
                 selected={cinnamonType === 'Sri Gamunu'}
                 onSelect={() => setCinnamonType('Sri Gamunu')}
                 icon="spa"
               />
               <RadioOption
-                label="Sri Wijaya"
+                label={t('yield_weather.common.sri_wijaya')}
                 value="Sri Wijaya"
                 selected={cinnamonType === 'Sri Wijaya'}
                 onSelect={() => setCinnamonType('Sri Wijaya')}

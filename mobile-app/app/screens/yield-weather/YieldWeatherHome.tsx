@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   RefreshControl,
   Platform,
   Image,
+  Dimensions,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +24,8 @@ import locationService from '../../../services/locationService';
 import LocationInputModal from '../../../components/LocationInputModal';
 import APIDebugger from '../../../services/apiDebugger';
 
+const { width: screenWidth } = Dimensions.get('window');
+
 const YieldWeatherHome = () => {
   const { t } = useTranslation();
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
@@ -33,12 +37,59 @@ const YieldWeatherHome = () => {
   const [lastDataLoad, setLastDataLoad] = useState<number>(0);
   const [farmStats, setFarmStats] = useState({ totalArea: 0, activePlots: 0, plotsReadyToHarvest: 0 });
   const [farmStatsLoading, setFarmStatsLoading] = useState(true);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const carouselRef = useRef<FlatList>(null);
   
   // Get safe area insets to handle overlap with tab bar
   const insets = useSafeAreaInsets();
 
   // Cache duration in milliseconds (3 minutes)
   const CACHE_DURATION = 3 * 60 * 1000;
+
+  // Services data for carousel
+  const services = [
+    {
+      id: '1',
+      title: t('yield_weather.home.services.weather_yield.title'),
+      description: t('yield_weather.home.services.weather_yield.description'),
+      icon: 'cloud',
+      color: '#059669',
+      bgColor: '#D1FAE5',
+      route: '/yield-weather/MyYield',
+      image: require('../../../assets/images/yield.png'),
+      
+    },
+    {
+      id: '2',
+      title: t('yield_weather.home.services.oil_yield.title'),
+      description: t('yield_weather.home.services.oil_yield.description'),
+      icon: 'flask',
+      color: '#D97706',
+      bgColor: '#FEF3C7',
+      route: '/(tabs)/oil',
+      image: require('../../../assets/images/oil.png'),
+    },
+    {
+      id: '3',
+      title: t('yield_weather.home.services.fertilizer.title'),
+      description: t('yield_weather.home.services.fertilizer.description'),
+      icon: 'nutrition',
+      color: '#2563EB',
+      bgColor: '#DBEAFE',
+      route: '/(tabs)/fertilizer',
+      image: require('../../../assets/images/fertilizer.png'),
+    },
+    {
+      id: '4',
+      title: t('yield_weather.home.services.pest_disease.title'),
+      description: t('yield_weather.home.services.pest_disease.description'),
+      icon: 'bug',
+      color: '#DC2626',
+      bgColor: '#FEE2E2',
+      route: '/(tabs)/pests',
+      image: require('../../../assets/images/pest.png'),
+    },
+  ];
 
   const loadWeatherData = async (showRefreshIndicator = false, skipConnectivityTest = false) => {
     try {
@@ -287,7 +338,7 @@ const YieldWeatherHome = () => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.welcomeSection}>
-            <Text style={styles.greeting}>{t('yield_weather.home.greeting')} Udari! 👋</Text>
+            <Text style={styles.greeting}>{t('yield_weather.home.greeting')} ! </Text>
             <Text style={styles.subtitle}>
               {t('yield_weather.home.subtitle')}
             </Text>
@@ -336,10 +387,10 @@ const YieldWeatherHome = () => {
           <View style={styles.insightContent}>
             <Text style={styles.insightText}>
               {weatherData && weatherData.humidity > 70 
-                ? "High humidity detected - Monitor for fungal diseases" 
+                ? t('yield_weather.home.weather_insights.high_humidity')
                 : weatherData && weatherData.rainfall > 5
-                ? "Recent rain - Good for young plants, check drainage"
-                : "Perfect weather conditions for farming activities"}
+                ? t('yield_weather.home.weather_insights.recent_rain')
+                : t('yield_weather.home.weather_insights.perfect_conditions')}
             </Text>
           </View>
         </View>
@@ -370,51 +421,118 @@ const YieldWeatherHome = () => {
           </View>
         </View>
 
+        {/* Services Carousel */}
+        <View style={styles.carouselSection}>
+          <Text style={styles.sectionTitle}>{t('yield_weather.home.our_services')}</Text>
+          <FlatList
+            ref={carouselRef}
+            data={services}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={(event) => {
+              const slideIndex = Math.round(
+                event.nativeEvent.contentOffset.x / (screenWidth - 40)
+              );
+              setActiveSlide(slideIndex);
+            }}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.carouselCard}
+                onPress={() => router.push(item.route as any)}
+                activeOpacity={0.9}
+              >
+                <View style={styles.carouselImageContainer}>
+                  <Image
+                    source={item.image}
+                    style={styles.carouselImage}
+                    resizeMode="cover"
+                  />
+                </View>
+                <View style={styles.carouselContent}>
+                  <Text style={styles.carouselTitle}>{item.title}</Text>
+                  <Text style={styles.carouselDescription}>{item.description}</Text>
+                  <TouchableOpacity 
+                    style={[styles.carouselCTAButton, { backgroundColor: item.color }]}
+                    onPress={() => router.push(item.route as any)}
+                  >
+                    <Text style={styles.carouselCTAButtonText}>
+                      {t('yield_weather.home.explore_now')}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            )}
+            keyExtractor={(item) => item.id}
+          />
+          {/* Pagination Dots */}
+          <View style={styles.paginationContainer}>
+            {services.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  activeSlide === index && styles.paginationDotActive,
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
         {/* Quick Actions */}
         <View style={styles.quickActionsSection}>
           <Text style={styles.sectionTitle}>{t('yield_weather.home.quick_actions')}</Text>
           <View style={styles.actionGrid}>
             <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/MyFarm')}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#E3F2FD' }]}>
-                <Ionicons name="business" size={24} color="#1976D2" />
+                <Ionicons name="business" size={26} color="#1976D2" />
               </View>
-              <Text style={styles.actionCardTitle}>{t('yield_weather.home.my_farm')}</Text>
-              <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.manage_plots')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionCardTitle}>{t('yield_weather.home.my_farm')}</Text>
+                <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.manage_plots')}</Text>
+              </View>
               <View style={styles.actionCardArrow}>
-                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
               </View>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/MyPlantingRecords')}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#F3E5F5' }]}>
-                <Ionicons name="flower" size={24} color="#7B1FA2" />
+                <Ionicons name="flower" size={26} color="#7B1FA2" />
               </View>
-              <Text style={styles.actionCardTitle}>{t('yield_weather.home.records')}</Text>
-              <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.planting_history')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionCardTitle}>{t('yield_weather.home.records')}</Text>
+                <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.planting_history')}</Text>
+              </View>
               <View style={styles.actionCardArrow}>
-                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
               </View>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/MyYield')}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#FFF3E0' }]}>
-                <Ionicons name="bar-chart" size={24} color="#F57C00" />
+                <Ionicons name="bar-chart" size={26} color="#F57C00" />
               </View>
-              <Text style={styles.actionCardTitle}>{t('yield_weather.home.my_yield')}</Text>
-              <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.track_harvest')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionCardTitle}>{t('yield_weather.home.my_yield')}</Text>
+                <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.track_harvest')}</Text>
+              </View>
               <View style={styles.actionCardArrow}>
-                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
               </View>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/FarmAssistance')}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#E8F5E9' }]}>
-                <Ionicons name="leaf" size={24} color="#22C55E" />
+                <Ionicons name="leaf" size={26} color="#22C55E" />
               </View>
-              <Text style={styles.actionCardTitle}>{t('yield_weather.home.farm_assistant')}</Text>
-              <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.smart_recommendations')}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionCardTitle}>{t('yield_weather.home.farm_assistant')}</Text>
+                <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.smart_recommendations')}</Text>
+              </View>
               <View style={styles.actionCardArrow}>
-                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
               </View>
             </TouchableOpacity>
           </View>
@@ -723,16 +841,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   actionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
     gap: 12,
   },
   actionCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -746,28 +862,110 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   actionIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginRight: 16,
   },
   actionCardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#111827',
     marginBottom: 4,
+    flex: 1,
   },
   actionCardSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6B7280',
-    marginBottom: 8,
+    flex: 1,
   },
   actionCardArrow: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
+    marginLeft: 8,
+  },
+  // Carousel Styles
+  carouselSection: {
+    marginBottom: 32,
+  },
+  carouselCard: {
+    width: screenWidth - 40,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginRight: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  carouselImageContainer: {
+    width: '100%',
+    height: 200,
+    position: 'relative',
+  },
+  carouselImage: {
+    width: '100%',
+    height: '100%',
+  },
+  carouselContent: {
+    padding: 20,
+  },
+  carouselTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: 10,
+    letterSpacing: -0.3,
+  },
+  carouselDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  carouselCTAButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  carouselCTAButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginRight: 8,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D1D5DB',
+    marginHorizontal: 4,
+  },
+  paginationDotActive: {
+    width: 24,
+    backgroundColor: '#4CAF50',
   },
 });
 

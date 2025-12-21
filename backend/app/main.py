@@ -16,8 +16,6 @@ from app.models.yield_weather.tree import Tree, TreeMeasurement, TreeHarvestReco
 from app.models.yield_weather.weather import WeatherRecord
 from app.models.yield_weather.farm_assistance import ActivityHistory
 from app.models.yield_weather.hybrid_yield import HybridYieldResult
-from app.models.fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis
-from app.models.fertilizer.fertilizer import FertilizerType, FertilizerApplication, FertilizerSchedule, FertilizerRecommendation
 
 # Import database and routers
 from app.db.session import create_db_and_tables

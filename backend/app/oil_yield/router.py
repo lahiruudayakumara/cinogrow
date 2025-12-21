@@ -9,11 +9,35 @@ from .model import load_model
 from .distillation_time_model import load_model as load_distillation_model
 from .price_forecast_model import forecast_prices
 import numpy as np
+import logging
 
 router = APIRouter(prefix="/oil_yield", tags=["Oil Yield"])
+logger = logging.getLogger(__name__)
 
-model = load_model()
-distillation_model = load_distillation_model()
+# Global variable to cache the model
+_cached_model = None
+_cached_distillation_model = None
+
+def get_model():
+    """
+    Get the XGBoost model, loading it if not already cached.
+    This avoids loading the model during import.
+    """
+    global _cached_model
+    if _cached_model is None:
+        logger.info("🔧 Loading XGBoost model for oil yield prediction...")
+        _cached_model = load_model()
+    return _cached_model
+
+def get_distillation_model():
+    """
+    Get the distillation time model, loading it if not already cached.
+    """
+    global _cached_distillation_model
+    if _cached_distillation_model is None:
+        logger.info("🔧 Loading distillation time model...")
+        _cached_distillation_model = load_distillation_model()
+    return _cached_distillation_model
 
 @router.post("/predict", response_model=OilYieldOutput)
 def predict_yield(data: OilYieldInput):
@@ -29,6 +53,8 @@ def predict_yield(data: OilYieldInput):
     
     Returns predicted oil yield in liters.
     """
+    model = get_model()
+    
     # Encode categorical features
     species_encoded = 0 if data.species_variety == "Sri Gemunu" else 1
     plant_part_encoded = 0 if data.plant_part == "Featherings & Chips" else 1
@@ -69,6 +95,8 @@ def predict_distillation_time(data: DistillationTimeInput):
     
     Returns predicted distillation time in hours.
     """
+    distillation_model = get_distillation_model()
+    
     # Encode categorical features
     plant_part_encoded = 0 if data.plant_part == "Featherings & Chips" else 1
     cinnamon_type_encoded = 0 if data.cinnamon_type == "Sri Gamunu" else 1

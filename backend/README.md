@@ -42,7 +42,7 @@ Configure your environment variables:
 
 ### Database Configuration (Required)
 ```
-DATABASE_URL=postgresql+psycopg2://postgres:password@127.0.0.1:5432/mydb
+DATABASE_URL=postgresql+psycopg2://postgres:CinoGrowW025REs@cinogrow-postges-dev.c09w0ggaml6u.us-east-1.rds.amazonaws.com:5432/postgres
 ```
 
 ### OpenWeather API Configuration

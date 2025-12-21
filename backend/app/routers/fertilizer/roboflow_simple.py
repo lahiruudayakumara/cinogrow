@@ -29,7 +29,7 @@ except ImportError:
     logging.warning("⚠️ inference-sdk not installed. Run: pip install inference-sdk")
 
 # Load environment variables
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), '../../../..', '.env'))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -756,7 +756,7 @@ def generate_recommendations(deficiency: str, severity: str, plant_age: int, con
         ring_distance = "30 cm (12 inches)"
         placement_desc = "Apply fertilizer 30 cm (12 inches) away from the base"
     
-    # Fertilizer recommendations by deficiency type - UPDATED GUIDELINES
+    # Fertilizer recommendations by deficiency type
     fertilizer_guide = {
         "Nitrogen Deficiency": {
             "primary_nutrient": "Nitrogen (N)",

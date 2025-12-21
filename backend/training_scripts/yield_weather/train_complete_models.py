@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Complete Model Training System
-Trains all models needed for hybrid prediction using the three datasets:
-1. Tree-level models (cane & weight prediction) - tree_dataset_template.csv
-2. Plot-level model (yield prediction) - yield_dataset_template.csv + enhanced_plot_dataset_template.csv
+Complete Model Training System with Kaggle Integration
+Trains all models needed for hybrid prediction using datasets from Kaggle:
+1. Tree-level models (cane & weight prediction) 
+2. Plot-level model (yield prediction)
+3. Enhanced models with weather integration
+Uses kagglehub for seamless pandas DataFrame loading
 """
 
 import pandas as pd
@@ -14,9 +16,19 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import joblib
 import os
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional, List
 import warnings
 warnings.filterwarnings('ignore')
+
+# Kaggle integration
+try:
+    import kagglehub
+    from kagglehub import KaggleDatasetAdapter
+    KAGGLEHUB_AVAILABLE = True
+    print("✅ kagglehub available - ready for dataset loading from Kaggle")
+except ImportError:
+    print("⚠️ kagglehub not available. Install with: pip install kagglehub[pandas-datasets]")
+    KAGGLEHUB_AVAILABLE = False
 
 
 class CompleteModelTrainer:
@@ -37,23 +49,115 @@ class CompleteModelTrainer:
         self.encoders = {}
         self.feature_names = {}
     
-    def load_datasets(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Load all three datasets"""
+    def load_datasets(self, use_kaggle: bool = True, dataset_handle: str = "udaridevindi/cinogrow-dataset") -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """
+        Load all datasets from Kaggle or local files
+        
+        Args:
+            use_kaggle: If True, load from Kaggle using kagglehub
+            dataset_handle: Kaggle dataset identifier (e.g., 'udaridevindi/cinogrow-dataset')
+        """
         print("📊 Loading datasets...")
         
-        # Tree-level data
-        tree_data = pd.read_csv("datasets/yield_weather/tree_dataset_template.csv")
-        print(f"   Tree dataset: {len(tree_data)} samples")
+        if use_kaggle and KAGGLEHUB_AVAILABLE:
+            return self._load_from_kaggle(dataset_handle)
+        else:
+            return self._load_from_local_files()
+    
+    def _load_from_kaggle(self, dataset_handle: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Load datasets from Kaggle using kagglehub"""
+        print(f"🌐 Loading from Kaggle dataset: {dataset_handle}")
         
-        # Basic yield data
-        yield_data = pd.read_csv("datasets/yield_weather/yield_dataset_template.csv")
-        print(f"   Yield dataset: {len(yield_data)} samples")
+        try:
+            # Download the dataset first
+            dataset_path = kagglehub.dataset_download(dataset_handle)
+            print(f"✅ Dataset downloaded to: {dataset_path}")
+            
+            # Your dataset has a subfolder structure
+            data_folder = os.path.join(dataset_path, "Cinnamon Yield Dataset")
+            
+            # Load tree dataset
+            print("   Loading tree dataset...")
+            tree_data = pd.read_csv(os.path.join(data_folder, "tree_level_dataset.csv"))
+            print(f"   Tree dataset: {len(tree_data)} samples")
+            
+            # Load main yield dataset 
+            print("   Loading yield dataset...")
+            yield_data = pd.read_csv(os.path.join(data_folder, "aggregated_yield_dataset.csv"))
+            print(f"   Yield dataset: {len(yield_data)} samples")
+            
+            # Load enhanced plot dataset
+            print("   Loading enhanced plot dataset...")
+            enhanced_data = pd.read_csv(os.path.join(data_folder, "enhanced_plot_dataset.csv"))
+            print(f"   Enhanced plot dataset: {len(enhanced_data)} samples")
+            
+            return tree_data, yield_data, enhanced_data
+            
+        except Exception as e:
+            print(f"❌ Failed to load from Kaggle: {e}")
+            print("   Falling back to local files...")
+            return self._load_from_local_files()
+    
+    def _load_from_local_files(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Load datasets from local CSV files (fallback method)"""
+        print("📁 Loading from local files...")
         
-        # Enhanced plot data
-        enhanced_data = pd.read_csv("datasets/yield_weather/enhanced_plot_dataset_template.csv")
-        print(f"   Enhanced plot dataset: {len(enhanced_data)} samples")
+        local_files = {
+            "tree_data": "datasets/yield_weather/tree_dataset_template.csv",
+            "yield_data": "datasets/yield_weather/yield_dataset_template.csv", 
+            "enhanced_data": "datasets/yield_weather/enhanced_plot_dataset_template.csv"
+        }
         
-        return tree_data, yield_data, enhanced_data
+        datasets = {}
+        missing_files = []
+        
+        for dataset_name, file_path in local_files.items():
+            if os.path.exists(file_path):
+                datasets[dataset_name] = pd.read_csv(file_path)
+                print(f"   {dataset_name}: {len(datasets[dataset_name])} samples")
+            else:
+                missing_files.append(file_path)
+                datasets[dataset_name] = pd.DataFrame()
+        
+        if missing_files:
+            print(f"⚠️  Local files not found: {missing_files}")
+            print("   💡 Recommendation: Use Kaggle dataset (option 1) instead")
+        
+        return (
+            datasets.get('tree_data', pd.DataFrame()),
+            datasets.get('yield_data', pd.DataFrame()),
+            datasets.get('enhanced_data', pd.DataFrame())
+        )
+    
+    def load_single_kaggle_dataset(self, dataset_handle: str = "udaridevindi/cinogrow-dataset", file_path: str = "") -> pd.DataFrame:
+        """
+        Load a single dataset from Kaggle - useful for testing
+        
+        Args:
+            dataset_handle: Kaggle dataset identifier
+            file_path: Specific file within the dataset to load
+        """
+        if not KAGGLEHUB_AVAILABLE:
+            raise ImportError("kagglehub not available. Install with: pip install kagglehub[pandas-datasets]")
+        
+        print(f"📥 Loading single dataset: {dataset_handle}/{file_path}")
+        
+        try:
+            df = kagglehub.load_dataset(
+                KaggleDatasetAdapter.PANDAS,
+                dataset_handle,
+                file_path
+            )
+            print(f"✅ Loaded dataset: {df.shape[0]} rows × {df.shape[1]} columns")
+            print(f"📋 Columns: {list(df.columns)}")
+            print("First 5 records:")
+            print(df.head())
+            
+            return df
+            
+        except Exception as e:
+            print(f"❌ Failed to load dataset: {e}")
+            raise
     
     def train_tree_cane_model(self, tree_data: pd.DataFrame) -> Dict[str, Any]:
         """Train tree-level cane prediction model"""
@@ -391,10 +495,134 @@ class CompleteModelTrainer:
 
 
 def main():
-    """Main training function"""
-    trainer = CompleteModelTrainer()
-    results = trainer.train_all_models()
+    """Main training function with Kaggle integration options"""
+    print("🌱 Complete Model Training System")
+    print("=" * 50)
+    
+    if KAGGLEHUB_AVAILABLE:
+        print("✅ Kaggle integration available")
+        print("🌐 Primary data source: Kaggle dataset (udaridevindi/cinogrow-dataset)")
+        choice = input("\nChoose data source:\n1. Kaggle dataset (Recommended) 🌟\n2. Local CSV files (if available)\n3. Test single Kaggle file loading\nEnter choice (1-3, default=1): ").strip()
+        
+        if not choice:  # Default to Kaggle
+            choice = "1"
+        
+        trainer = CompleteModelTrainer()
+        
+        if choice == "1":
+            print(f"\n🌐 Using Kaggle dataset (recommended)...")
+            # Load datasets from Kaggle
+            tree_data, yield_data, enhanced_data = trainer.load_datasets(use_kaggle=True)
+            
+            if tree_data.empty and yield_data.empty and enhanced_data.empty:
+                print("❌ No data loaded from Kaggle, exiting...")
+                return None
+            
+            # Train models
+            results = trainer.train_all_models_with_data(tree_data, yield_data, enhanced_data)
+            
+        elif choice == "3":
+            # Test loading a single file
+            file_path = input("Enter specific file path within dataset (or press Enter for default): ").strip()
+            if not file_path:
+                file_path = "Cinnamon Yield Dataset/aggregated_yield_dataset.csv"  # Default file
+            
+            try:
+                df = trainer.load_single_kaggle_dataset(file_path=file_path)
+                print(f"\n✅ Successfully loaded and displayed dataset!")
+                return df
+            except Exception as e:
+                print(f"❌ Failed to load: {e}")
+                return None
+                
+        else:  # choice == "2" or fallback
+            print(f"\n📁 Attempting to use local CSV files...")
+            results = trainer.train_all_models()
+    
+    else:
+        print("⚠️ kagglehub not available")
+        print("   Install with: pip install kagglehub")
+        print("   Falling back to local files...")
+        trainer = CompleteModelTrainer()
+        results = trainer.train_all_models()
+    
     return results
+
+
+def train_all_models_with_data(self, tree_data: pd.DataFrame, yield_data: pd.DataFrame, enhanced_data: pd.DataFrame):
+    """Train all models with provided data (used for Kaggle integration)"""
+    print("\n🚀 Starting Model Training with Loaded Data...")
+    
+    results = {}
+    
+    # Train tree-level models if data is available
+    if not tree_data.empty:
+        results['tree_cane_model'] = self.train_tree_cane_model(tree_data)
+        results['tree_weight_model'] = self.train_tree_weight_model(tree_data)
+    else:
+        print("⚠️ Tree data not available, skipping tree models")
+    
+    # Train plot-level model if data is available
+    if not yield_data.empty:
+        results['plot_yield_model'] = self.train_plot_yield_model(yield_data, enhanced_data)
+    else:
+        print("⚠️ Yield data not available, skipping plot model")
+    
+    # Save training summary
+    import json
+    with open(f"{self.models_dir}/training_results.json", 'w') as f:
+        # Convert numpy types to regular Python types for JSON serialization
+        json_results = {}
+        for model_name, metrics in results.items():
+            json_results[model_name] = {
+                k: float(v) if isinstance(v, (np.floating, np.integer)) else str(v) if hasattr(v, '__class__') else v
+                for k, v in metrics.items() 
+                if k not in ['model']  # Exclude model objects from JSON
+            }
+        json.dump(json_results, f, indent=2)
+    
+    print("\n🎉 Model Training Complete!")
+    print("\n📋 Summary:")
+    for model_name, metrics in results.items():
+        if 'cv_r2' in metrics:
+            print(f"   {model_name}: {metrics.get('model_name', 'Unknown')} (R² = {metrics['cv_r2']:.3f})")
+    
+    print(f"\n💾 Models saved in:")
+    print(f"   Tree models: {self.tree_models_dir}/")
+    print(f"   Plot models: {self.plot_models_dir}/")
+    
+    return results
+
+
+# Add the method to the CompleteModelTrainer class
+CompleteModelTrainer.train_all_models_with_data = train_all_models_with_data
+
+
+def test_kaggle_connection():
+    """Test Kaggle dataset loading functionality"""
+    if not KAGGLEHUB_AVAILABLE:
+        print("❌ kagglehub not available. Install with: pip install kagglehub[pandas-datasets]")
+        return False
+    
+    try:
+        print("🧪 Testing Kaggle connection...")
+        trainer = CompleteModelTrainer()
+        
+        # Try to load a simple dataset
+        df = trainer.load_single_kaggle_dataset(
+            dataset_handle="udaridevindi/cinogrow-dataset",
+            file_path=""  # Will list available files
+        )
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Kaggle test failed: {e}")
+        print("\n💡 Troubleshooting:")
+        print("   1. Ensure kagglehub is installed: pip install kagglehub[pandas-datasets]")
+        print("   2. Authenticate with Kaggle: import kagglehub; kagglehub.login()")
+        print("   3. Check dataset visibility and permissions")
+        return False
 
 
 if __name__ == "__main__":

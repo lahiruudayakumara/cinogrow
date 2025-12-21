@@ -2,14 +2,16 @@
 export const CINNAMON_VARIETIES = [
   {
     value: 'Sri Gemunu',
-    label: 'Sri Gemunu',
+    label: 'Sri Gemunu', // Will be translated in UI
+    translationKey: 'yield_weather.common.sri_gemunu',
     description: 'High-yielding Sri Lankan cinnamon variety with excellent commercial value',
     scientificName: 'Cinnamomum zeylanicum var. Sri Gemunu',
     characteristics: 'Superior bark quality, good peeling characteristics, high oil content'
   },
   {
     value: 'Sri Wijaya',
-    label: 'Sri Wijaya',
+    label: 'Sri Wijaya', // Will be translated in UI
+    translationKey: 'yield_weather.common.sri_wijaya',
     description: 'Premium Sri Lankan variety known for superior quality and aroma',
     scientificName: 'Cinnamomum zeylanicum var. Sri Wijaya',
     characteristics: 'Excellent flavor profile, fine bark texture, disease resistant'

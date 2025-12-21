@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiConfig from '../../config/api';
 
 // Use localhost for web platform, otherwise use the configured API URL
@@ -22,6 +23,7 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function OilYieldPredictorSecond() {
+  const { t } = useTranslation();
   const [cinnamonType, setCinnamonType] = useState('');
   const [plantPart, setPlantPart] = useState('');
   const [mass, setMass] = useState('');
@@ -322,20 +324,20 @@ export default function OilYieldPredictorSecond() {
                 <MaterialCommunityIcons name="alpha-c-circle" size={24} color="#30D158" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Cinnamon Type</Text>
-                <Text style={styles.labelSubtext}>Select variety</Text>
+                <Text style={styles.label}>{t('yield_weather.common.cinnamon_variety')}</Text>
+                <Text style={styles.labelSubtext}>{t('yield_weather.common.select_variety')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Sri Gemunu"
+                label={t('yield_weather.common.sri_gemunu')}
                 value="Sri Gemunu"
                 selected={cinnamonType === 'Sri Gemunu'}
                 onSelect={() => setCinnamonType('Sri Gemunu')}
                 color="#30D158"
               />
               <RadioOption
-                label="Sri Vijaya"
+                label={t('yield_weather.common.sri_wijaya')}
                 value="Sri Vijaya"
                 selected={cinnamonType === 'Sri Vijaya'}
                 onSelect={() => setCinnamonType('Sri Vijaya')}

@@ -14,30 +14,19 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
     fetchFertilizerHistory,
     formatAnalysisDate,
     getSeverityColor,
     formatConfidence,
     FertilizerHistoryRecord,
-} from '../../services/fertilizerHistoryService';
+} from '../../../services/fertilizerHistoryService';
+import { FertilizerHomeParams } from '../../fertilizer/types';
 
-type FertilizerHomeScreenNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerHome'
->;
-
-type FertilizerHomeScreenRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerHome'>;
-
-interface FertilizerHomeScreenProps {
-    navigation: FertilizerHomeScreenNavigationProp;
-    route: FertilizerHomeScreenRouteProp;
-}
-
-const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) => {
+const Fertilizer: React.FC = () => {
+    const router = useRouter();
+    const params = useLocalSearchParams<FertilizerHomeParams>();
     const [leafImage, setLeafImage] = useState<string | null>(null);
     const [soilImage, setSoilImage] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
@@ -48,13 +37,13 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
     const insets = useSafeAreaInsets();
 
     useEffect(() => {
-        if (route.params?.leafImage) {
-            setLeafImage(route.params.leafImage);
+        if (params?.leafImage) {
+            setLeafImage(params.leafImage);
         }
-        if (route.params?.soilImage) {
-            setSoilImage(route.params.soilImage);
+        if (params?.soilImage) {
+            setSoilImage(params.soilImage);
         }
-    }, [route.params]);
+    }, [params?.leafImage, params?.soilImage]);
 
     // Load recent fertilizer history
     useEffect(() => {
@@ -75,12 +64,13 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
     };
 
     const handleUploadLeafSample = () => {
-        navigation.navigate('FertilizerUploadLeaf');
+        router.push('/fertilizer/upload-leaf');
     };
 
     const handleUploadSoilSample = () => {
-        navigation.navigate('FertilizerUploadSoil', {
-            leafImage: leafImage || undefined
+        router.push({
+            pathname: '/fertilizer/upload-soil',
+            params: { leafImage: leafImage || undefined }
         });
     };
 
@@ -90,19 +80,20 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
             // Simulate API call
             setTimeout(() => {
                 setLoading(false);
-                navigation.navigate('FertilizerResult', {
-                    leafImage,
-                    soilImage,
+                router.push({
+                    pathname: '/fertilizer/result',
+                    params: { leafImage, soilImage }
                 });
             }, 1500);
         } else {
             if (!leafImage && !soilImage) {
-                navigation.navigate('FertilizerUploadLeaf');
+                router.push('/fertilizer/upload-leaf');
             } else if (!leafImage) {
-                navigation.navigate('FertilizerUploadLeaf');
+                router.push('/fertilizer/upload-leaf');
             } else if (!soilImage) {
-                navigation.navigate('FertilizerUploadSoil', {
-                    leafImage: leafImage || undefined
+                router.push({
+                    pathname: '/fertilizer/upload-soil',
+                    params: { leafImage: leafImage || undefined }
                 });
             }
         }
@@ -110,31 +101,34 @@ const Fertilizer: React.FC<FertilizerHomeScreenProps> = ({ navigation, route }) 
 
     const handleHistoryPress = (item: FertilizerHistoryRecord) => {
         // Navigate to result screen with history data
-        navigation.navigate('FertilizerResult', {
-            roboflowAnalysis: {
-                success: true,
-                primary_deficiency: item.primary_deficiency,
-                confidence: item.confidence,
-                severity: item.severity,
-                plant_age: item.plant_age,
-                recommendations: item.recommendations,
-                history_id: item.id,
-                detections: [{
-                    class: item.primary_deficiency || 'Unknown',
-                    confidence: item.confidence || 0,
-                    deficiency: item.primary_deficiency || 'Unknown',
-                    severity: item.severity || 'Low'
-                }],
-                roboflow_output: [{
-                    predictions: {
-                        predictions: [{
-                            class: item.primary_deficiency || 'Unknown',
-                            confidence: item.confidence || 0
-                        }]
-                    }
-                }]
-            },
-            plantAge: item.plant_age || 1,
+        router.push({
+            pathname: '/fertilizer/result',
+            params: {
+                roboflowAnalysis: JSON.stringify({
+                    success: true,
+                    primary_deficiency: item.primary_deficiency,
+                    confidence: item.confidence,
+                    severity: item.severity,
+                    plant_age: item.plant_age,
+                    recommendations: item.recommendations,
+                    history_id: item.id,
+                    detections: [{
+                        class: item.primary_deficiency || 'Unknown',
+                        confidence: item.confidence || 0,
+                        deficiency: item.primary_deficiency || 'Unknown',
+                        severity: item.severity || 'Low'
+                    }],
+                    roboflow_output: [{
+                        predictions: {
+                            predictions: [{
+                                class: item.primary_deficiency || 'Unknown',
+                                confidence: item.confidence || 0
+                            }]
+                        }
+                    }]
+                }),
+                plantAge: item.plant_age || 1,
+            }
         });
     };
 

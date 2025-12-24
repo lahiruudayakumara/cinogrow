@@ -14,19 +14,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
+import { useRouter } from 'expo-router';
+import { serializePhotoPreviewParams } from '../../fertilizer/types';
 
-type UploadLeafScreenNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerUploadLeaf'
->;
-
-interface UploadLeafScreenProps {
-    navigation: UploadLeafScreenNavigationProp;
-}
-
-const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
+const UploadLeafScreen: React.FC = () => {
+    const router = useRouter();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const insets = useSafeAreaInsets();
 
@@ -87,10 +79,13 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
 
                 // Navigate directly to PhotoPreview for Roboflow analysis
                 console.log('📸 Photo captured, navigating to preview...');
-                navigation.navigate('FertilizerPhotoPreview', {
-                    imageUri: imageUri,
-                    imageType: 'leaf',
-                    leafImage: imageUri,
+                router.push({
+                    pathname: '/fertilizer/photo-preview',
+                    params: serializePhotoPreviewParams({
+                        imageUri: imageUri,
+                        imageType: 'leaf',
+                        leafImage: imageUri,
+                    })
                 });
             }
         } catch (error) {
@@ -117,10 +112,13 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
 
                 // Navigate directly to PhotoPreview for Roboflow analysis
                 console.log('🖼️ Image selected from library, navigating to preview...');
-                navigation.navigate('FertilizerPhotoPreview', {
-                    imageUri: imageUri,
-                    imageType: 'leaf',
-                    leafImage: imageUri,
+                router.push({
+                    pathname: '/fertilizer/photo-preview',
+                    params: serializePhotoPreviewParams({
+                        imageUri: imageUri,
+                        imageType: 'leaf',
+                        leafImage: imageUri,
+                    })
                 });
             }
         } catch (error) {
@@ -136,10 +134,13 @@ const UploadLeafScreen: React.FC<UploadLeafScreenProps> = ({ navigation }) => {
         }
 
         // Navigate to PhotoPreview for leaf image
-        navigation.navigate('FertilizerPhotoPreview', {
-            imageUri: selectedImage,
-            imageType: 'leaf',
-            leafImage: selectedImage,
+        router.push({
+            pathname: '/fertilizer/photo-preview',
+            params: serializePhotoPreviewParams({
+                imageUri: selectedImage,
+                imageType: 'leaf',
+                leafImage: selectedImage,
+            })
         });
     };
 

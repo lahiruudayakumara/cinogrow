@@ -1,6 +1,6 @@
 import React from 'react';
-import FertilizerNavigator from '../../navigation/FertilizerNavigator';
+import { Redirect } from 'expo-router';
 
 export default function FertilizerTab() {
-  return <FertilizerNavigator />;
+  return <Redirect href="/fertilizer" />;
 }

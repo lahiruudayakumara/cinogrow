@@ -14,28 +14,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
-import { imageAnalysisService } from '../../services/imageAnalysisService';
-import { metadataStorageService } from '../../services/metadataStorageService';
-import { SoilAnalysisMetadata } from '../../services/imageAnalysisService';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { imageAnalysisService } from '../../../services/imageAnalysisService';
+import { metadataStorageService } from '../../../services/metadataStorageService';
+import { SoilAnalysisMetadata } from '../../../services/imageAnalysisService';
+import { UploadSoilParams, serializePhotoPreviewParams } from '../../fertilizer/types';
 
-type UploadSoilScreenNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerUploadSoil'
->;
-
-type UploadSoilScreenRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerUploadSoil'>;
-
-interface UploadSoilScreenProps {
-    navigation: UploadSoilScreenNavigationProp;
-    route: UploadSoilScreenRouteProp;
-}
-
-const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }) => {
+const UploadSoilScreen: React.FC = () => {
+    const router = useRouter();
+    const params = useLocalSearchParams<UploadSoilParams>();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const { fromLeaf, leafImage } = route.params || {};
+    const fromLeaf = params?.fromLeaf === 'true';
+    const { leafImage } = params || {};
     const insets = useSafeAreaInsets();
 
     const requestCameraPermission = async () => {
@@ -113,11 +103,14 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
                 }
 
                 // Auto-navigate to PhotoPreview
-                navigation.navigate('FertilizerPhotoPreview', {
-                    imageUri: imageUri,
-                    imageType: 'soil',
-                    soilImage: imageUri,
-                    leafImage: leafImage, // Pass the leaf image from route params
+                router.push({
+                    pathname: '/fertilizer/photo-preview',
+                    params: serializePhotoPreviewParams({
+                        imageUri: imageUri,
+                        imageType: 'soil',
+                        soilImage: imageUri,
+                        leafImage: leafImage, // Pass the leaf image from route params
+                    })
                 });
             }
         } catch (error) {
@@ -162,11 +155,14 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
                 }
 
                 // Auto-navigate to PhotoPreview
-                navigation.navigate('FertilizerPhotoPreview', {
-                    imageUri: imageUri,
-                    imageType: 'soil',
-                    soilImage: imageUri,
-                    leafImage: leafImage, // Pass the leaf image from route params
+                router.push({
+                    pathname: '/fertilizer/photo-preview',
+                    params: serializePhotoPreviewParams({
+                        imageUri: imageUri,
+                        imageType: 'soil',
+                        soilImage: imageUri,
+                        leafImage: leafImage, // Pass the leaf image from route params
+                    })
                 });
             }
         } catch (error) {
@@ -182,11 +178,14 @@ const UploadSoilScreen: React.FC<UploadSoilScreenProps> = ({ navigation, route }
         }
 
         // Navigate to PhotoPreview for soil image, passing both images
-        navigation.navigate('FertilizerPhotoPreview', {
-            imageUri: selectedImage,
-            imageType: 'soil',
-            leafImage: leafImage,
-            soilImage: selectedImage,
+        router.push({
+            pathname: '/fertilizer/photo-preview',
+            params: serializePhotoPreviewParams({
+                imageUri: selectedImage,
+                imageType: 'soil',
+                leafImage: leafImage,
+                soilImage: selectedImage,
+            })
         });
     };
 

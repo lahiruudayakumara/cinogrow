@@ -11,6 +11,7 @@ import OilQualityGuideScreen from '../screens/Oil_yield/OilQualityGuide';
 import OilPricePredictorScreen from '../screens/Oil_yield/OilPricePredictor';
 import TrainingModulesScreen from '../screens/Oil_yield/TrainingModules';
 import LabCertificationScreen from '../screens/Oil_yield/LabCertification';
+import AddMaterialBatchScreen from '../screens/Oil_yield/AddMaterialBatch';
 
 // Define navigation parameter types
 export type RootStackParamList = {
@@ -23,6 +24,7 @@ export type RootStackParamList = {
   OilPricePredictor: undefined;
   TrainingModules: undefined;
   LabCertification: undefined;
+  AddMaterialBatch: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -100,6 +102,13 @@ const OilYieldNavigator = () => {
         component={LabCertificationScreen}
         options={{
           title: 'Lab Certification',
+        }}
+      />
+      <Stack.Screen
+        name="AddMaterialBatch"
+        component={AddMaterialBatchScreen}
+        options={{
+          title: 'Add Material Batch',
         }}
       />
     </Stack.Navigator>

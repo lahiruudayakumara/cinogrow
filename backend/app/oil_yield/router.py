@@ -11,7 +11,7 @@ from .distillation_time_model import load_model as load_distillation_model
 from .price_forecast_model import forecast_prices
 import numpy as np
 import logging
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.db.session import get_session
 from app.models.oil_yield.material_batch import MaterialBatch
 
@@ -189,3 +189,21 @@ def create_material_batch(payload: MaterialBatchCreate, session: Session = Depen
         return batch
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create material batch: {str(e)}")
+
+
+@router.get("/batch", response_model=list[MaterialBatchRead])
+def list_material_batches(session: Session = Depends(get_session)):
+    """
+    List all material batch records, newest first.
+
+    Returns a list of `MaterialBatchRead` items.
+    """
+    try:
+        # Ensure table exists
+        MaterialBatch.__table__.create(session.get_bind(), checkfirst=True)
+
+        stmt = select(MaterialBatch).order_by(MaterialBatch.created_at.desc())
+        results = session.exec(stmt).all()
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list material batches: {str(e)}")

@@ -203,7 +203,7 @@ export default function OilScreen() {
           {/* Grid Layout Title */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Oil Production</Text>
-            <Text style={styles.sectionCount}>5 tools</Text>
+            <Text style={styles.sectionCount}>6 tools</Text>
           </View>
 
           {/* Grid Cards - 2 Column Layout */}
@@ -251,6 +251,15 @@ export default function OilScreen() {
               title="Oil Price Predictor"
               subtitle="Market forecast"
               onPress={() => navigation.navigate('OilPricePredictor')}
+            />
+
+            <GridCard
+              icon="plus-circle-outline"
+              iconColor="#30D158"
+              backgroundColor="rgba(48, 209, 88, 0.15)"
+              title="Add Material Batch"
+              subtitle="Record a new batch"
+              onPress={() => navigation.navigate('AddMaterialBatch')}
             />
           </View>
 

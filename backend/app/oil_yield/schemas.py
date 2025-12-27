@@ -37,6 +37,7 @@ class PriceForecastOutput(BaseModel):
 # Material Batch Schemas
 # --------------------------
 class MaterialBatchCreate(BaseModel):
+    batch_name: str | None = Field(None, description="Optional batch name for identification")
     cinnamon_type: str = Field(..., description="Cinnamon type or variety")
     mass_kg: float = Field(..., gt=0, description="Mass of material in kilograms")
     plant_part: str = Field(..., description="Plant part used")
@@ -46,6 +47,7 @@ class MaterialBatchCreate(BaseModel):
 
 class MaterialBatchRead(BaseModel):
     id: int
+    batch_name: str | None
     cinnamon_type: str
     mass_kg: float
     plant_part: str

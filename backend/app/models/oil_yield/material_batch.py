@@ -7,6 +7,7 @@ class MaterialBatch(SQLModel, table=True):
     __tablename__ = "oil_material_batches"
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    batch_name: Optional[str] = Field(default=None, max_length=120)
     cinnamon_type: str = Field(max_length=100)
     mass_kg: float
     plant_part: str = Field(max_length=100)

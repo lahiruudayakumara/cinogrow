@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import apiConfig from '../config/api';
 
 export interface MaterialBatchCreate {
+  batch_name?: string;
   cinnamon_type: string;
   mass_kg: number;
   plant_part: string;

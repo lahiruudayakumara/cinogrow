@@ -177,6 +177,7 @@ def create_material_batch(payload: MaterialBatchCreate, session: Session = Depen
         MaterialBatch.__table__.create(session.get_bind(), checkfirst=True)
 
         batch = MaterialBatch(
+            batch_name=payload.batch_name,
             cinnamon_type=payload.cinnamon_type,
             mass_kg=payload.mass_kg,
             plant_part=payload.plant_part,

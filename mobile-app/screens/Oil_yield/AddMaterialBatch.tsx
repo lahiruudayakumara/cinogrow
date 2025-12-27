@@ -24,6 +24,7 @@ const API_BASE_URL = Platform.OS === 'web'
 
 interface MaterialBatch {
   id: number;
+  batch_name?: string;
   cinnamon_type: string;
   mass_kg: number;
   plant_part: string;
@@ -33,6 +34,7 @@ interface MaterialBatch {
 }
 
 export default function AddMaterialBatchScreen() {
+  const [batchName, setBatchName] = useState('');
   const [cinnamonType, setCinnamonType] = useState('');
   const [massKg, setMassKg] = useState('');
   const [plantPart, setPlantPart] = useState('');
@@ -43,9 +45,9 @@ export default function AddMaterialBatchScreen() {
   const [loadingBatches, setLoadingBatches] = useState(true);
 
   // Dropdown options
-  const cinnamonTypes = ['Sri Gemunu', 'Sri Vijaya', 'Sri Gamunu', 'Wild Type'];
-  const plantParts = ['Bark', 'Leaves', 'Leaves & Twigs', 'Roots', 'Stems'];
-  const harvestSeasons = ['May–August', 'September–December', 'January–April', 'Year Round'];
+  const cinnamonTypes = ['Sri Gemunu', 'Sri Vijaya'];
+  const plantParts = ['Leaves & Twigs', 'Featherings & Chips'];
+  const harvestSeasons = ['May–August', 'January–April'];
 
   useEffect(() => {
     fetchBatches();
@@ -79,6 +81,7 @@ export default function AddMaterialBatchScreen() {
     try {
       setLoading(true);
       const payload = {
+        batch_name: batchName.trim() || undefined,
         cinnamon_type: cinnamonType.trim(),
         mass_kg: parseFloat(massKg),
         plant_part: plantPart.trim(),
@@ -113,6 +116,7 @@ export default function AddMaterialBatchScreen() {
       setPlantPart('');
       setPlantAgeYears('');
       setHarvestSeason('');
+      setBatchName('');
       
       // Refresh batches list
       fetchBatches();
@@ -161,7 +165,7 @@ export default function AddMaterialBatchScreen() {
             <MaterialCommunityIcons name="package-variant" size={24} color="#FF3B30" />
           </View>
           <View style={styles.batchHeaderText}>
-            <Text style={styles.batchId}>Batch #{batch.id}</Text>
+            <Text style={styles.batchId}>{batch.batch_name || `Batch ${batch.id}`}</Text>
             <Text style={styles.batchDate}>
               {new Date(batch.created_at).toLocaleDateString()}
             </Text>
@@ -239,6 +243,30 @@ export default function AddMaterialBatchScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>New Batch</Text>
         </View>
+
+          {/* Batch Name */}
+          <View style={styles.inputCard}>
+            <BlurView intensity={70} tint="light" style={styles.cardBlur}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardIconCircle}>
+                  <MaterialCommunityIcons name="package-variant" size={20} color="#FF3B30" />
+                </View>
+                <View style={styles.cardHeaderText}>
+                  <Text style={styles.label}>Batch Name</Text>
+                  <Text style={styles.labelSubtext}>Enter batch name</Text>
+                </View>
+              </View>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={batchName}
+                  onChangeText={setBatchName}
+                  placeholder="Batch A - Leaves"
+                  placeholderTextColor="#C7C7CC"
+                />
+              </View>
+            </BlurView>
+          </View>
 
         {/* Cinnamon Type */}
         <View style={styles.inputCard}>

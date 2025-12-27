@@ -55,7 +55,7 @@ const YieldWeatherHome = () => {
       icon: 'cloud',
       color: '#059669',
       bgColor: '#D1FAE5',
-      route: '/yield-weather/MyYield',
+      route: '/yield-weather/YieldPredictor',
       image: require('../../../assets/images/yield.png'),
       
     },
@@ -510,12 +510,25 @@ const YieldWeatherHome = () => {
               </View>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/MyYield')}>
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/YieldPredictor' as any)}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#FFF3E0' }]}>
                 <Ionicons name="bar-chart" size={26} color="#F57C00" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.actionCardTitle}>{t('yield_weather.home.my_yield')}</Text>
+                <Text style={styles.actionCardTitle}>{t('yield_weather.home.yield_predictor')}</Text>
+                <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.ai_powered_yield_prediction')}</Text>
+              </View>
+              <View style={styles.actionCardArrow}>
+                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/yield-weather/MyYield' as any)}>
+              <View style={[styles.actionIconContainer, { backgroundColor: '#E1F5FE' }]}>
+                <Ionicons name="document-text" size={26} color="#0288D1" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionCardTitle}>{t('yield_weather.home.my_yield_records')}</Text>
                 <Text style={styles.actionCardSubtitle}>{t('yield_weather.home.track_harvest')}</Text>
               </View>
               <View style={styles.actionCardArrow}>

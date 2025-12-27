@@ -1,6 +1,7 @@
 # app/oil_yield/schemas.py
 from pydantic import BaseModel, Field
 from typing import Literal
+from datetime import datetime
 
 class OilYieldInput(BaseModel):
     dried_mass_kg: float = Field(..., description="Dried mass of cinnamon in kilograms", gt=0)
@@ -30,3 +31,26 @@ class PriceForecastOutput(BaseModel):
     forecast: list[float] = Field(..., description="List of forecasted prices")
     dates: list[str] = Field(..., description="List of forecast dates")
     statistics: dict = Field(..., description="Forecast statistics (mean, min, max)")
+
+
+# --------------------------
+# Material Batch Schemas
+# --------------------------
+class MaterialBatchCreate(BaseModel):
+    cinnamon_type: str = Field(..., description="Cinnamon type or variety")
+    mass_kg: float = Field(..., gt=0, description="Mass of material in kilograms")
+    plant_part: str = Field(..., description="Plant part used")
+    plant_age_years: float = Field(..., gt=0, description="Age of the plant in years")
+    harvest_season: str = Field(..., description="Harvest season description")
+
+
+class MaterialBatchRead(BaseModel):
+    id: int
+    cinnamon_type: str
+    mass_kg: float
+    plant_part: str
+    plant_age_years: float
+    harvest_season: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

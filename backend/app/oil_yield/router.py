@@ -1,15 +1,19 @@
 # app/oil_yield/router.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from .schemas import (
     OilYieldInput, OilYieldOutput, 
     DistillationTimeInput, DistillationTimeOutput,
-    PriceForecastInput, PriceForecastOutput
+    PriceForecastInput, PriceForecastOutput,
+    MaterialBatchCreate, MaterialBatchRead
 )
 from .model import load_model
 from .distillation_time_model import load_model as load_distillation_model
 from .price_forecast_model import forecast_prices
 import numpy as np
 import logging
+from sqlmodel import Session
+from app.db.session import get_session
+from app.models.oil_yield.material_batch import MaterialBatch
 
 router = APIRouter(prefix="/oil_yield", tags=["Oil Yield"])
 logger = logging.getLogger(__name__)
@@ -154,3 +158,34 @@ def get_price_forecast(data: PriceForecastInput):
             status_code=500,
             detail=f"Error generating forecast: {str(e)}"
         )
+
+
+@router.post("/batch", response_model=MaterialBatchRead)
+def create_material_batch(payload: MaterialBatchCreate, session: Session = Depends(get_session)):
+    """
+    Create a material batch record for oil yield processing.
+
+    Fields:
+    - cinnamon_type: Cinnamon type or variety
+    - mass_kg: Mass of material in kilograms
+    - plant_part: Plant part used
+    - plant_age_years: Age of the plant in years
+    - harvest_season: Harvest season description
+    """
+    try:
+        # Ensure table exists (in case app started before model import)
+        MaterialBatch.__table__.create(session.get_bind(), checkfirst=True)
+
+        batch = MaterialBatch(
+            cinnamon_type=payload.cinnamon_type,
+            mass_kg=payload.mass_kg,
+            plant_part=payload.plant_part,
+            plant_age_years=payload.plant_age_years,
+            harvest_season=payload.harvest_season,
+        )
+        session.add(batch)
+        session.commit()
+        session.refresh(batch)
+        return batch
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create material batch: {str(e)}")

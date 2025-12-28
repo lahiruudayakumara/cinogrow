@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -22,41 +21,50 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function OilYieldPredictorSecond() {
-  const [cinnamonType, setCinnamonType] = useState('');
-  const [plantPart, setPlantPart] = useState('');
-  const [mass, setMass] = useState('');
-  const [age, setAge] = useState('');
-  const [harvestingSeason, setHarvestingSeason] = useState('');
+  type MaterialBatch = {
+    id: number;
+    batch_name?: string | null;
+    cinnamon_type: string;
+    mass_kg: number;
+    plant_part: string;
+    plant_age_years: number;
+    harvest_season: string;
+  };
+
+  const [batches, setBatches] = useState<MaterialBatch[]>([]);
+  const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
+  const selectedBatch = batches.find(b => b.id === selectedBatchId) || null;
   const [predictedYield, setPredictedYield] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [inputSummary, setInputSummary] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/oil_yield/batch`);
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Failed to load batches: ${res.status} ${errText}`);
+        }
+        const data: MaterialBatch[] = await res.json();
+        setBatches(data);
+      } catch (e: any) {
+        console.error('❌ Failed to fetch batches', e);
+        Alert.alert('Load Error', e.message || 'Could not load material batches');
+      }
+    };
+    fetchBatches();
+  }, []);
 
   const handlePredict = async () => {
     console.log('🔍 handlePredict called');
     console.log('API_BASE_URL:', API_BASE_URL);
     
     // Validation
-    if (!cinnamonType || !plantPart || !mass || !age || !harvestingSeason) {
-      console.log('❌ Validation failed - missing fields');
-      Alert.alert('Missing Information', 'Please fill in all required fields.');
-      return;
-    }
-
-    const massNum = parseFloat(mass);
-    const ageNum = parseFloat(age);
-    
-    console.log('📊 Input values:', { cinnamonType, plantPart, mass: massNum, age: ageNum, harvestingSeason });
-    
-    if (isNaN(massNum) || massNum <= 0) {
-      console.log('❌ Invalid mass value');
-      Alert.alert('Invalid Input', 'Please enter a valid mass value.');
-      return;
-    }
-
-    if (isNaN(ageNum) || ageNum <= 0) {
-      console.log('❌ Invalid age value');
-      Alert.alert('Invalid Input', 'Please enter a valid age value.');
+    if (!selectedBatch) {
+      console.log('❌ Validation failed - no batch selected');
+      Alert.alert('Missing Information', 'Please select a material batch.');
       return;
     }
 
@@ -66,11 +74,11 @@ export default function OilYieldPredictorSecond() {
     setInputSummary(null);
 
     const requestBody = {
-      dried_mass_kg: massNum,
-      species_variety: cinnamonType,
-      plant_part: plantPart,
-      age_years: ageNum,
-      harvesting_season: harvestingSeason,
+      dried_mass_kg: selectedBatch.mass_kg,
+      species_variety: selectedBatch.cinnamon_type,
+      plant_part: selectedBatch.plant_part,
+      age_years: selectedBatch.plant_age_years,
+      harvesting_season: selectedBatch.harvest_season,
     };
 
     console.log('📤 Sending request to:', `${API_BASE_URL}/oil_yield/predict`);
@@ -107,9 +115,9 @@ export default function OilYieldPredictorSecond() {
       // Generate recommendations based on results
       const recommendations = generateRecommendations(
         data.predicted_yield_liters,
-        plantPart,
-        cinnamonType,
-        harvestingSeason
+        selectedBatch.plant_part,
+        selectedBatch.cinnamon_type,
+        selectedBatch.harvest_season
       );
       console.log('💡 Generated recommendations:', recommendations);
       setRecommendation(JSON.stringify(recommendations));
@@ -299,166 +307,51 @@ export default function OilYieldPredictorSecond() {
           <BlurView intensity={50} tint="light" style={styles.infoBannerBlur}>
             <View style={styles.infoBannerContent}>
               <MaterialCommunityIcons name="information" size={20} color="#0A84FF" />
-              <Text style={styles.infoBannerText}>
-                Fill in all fields for accurate predictions
-              </Text>
+              <Text style={styles.infoBannerText}>Select a batch to predict</Text>
             </View>
           </BlurView>
         </View>
 
-        {/* Input Section */}
+        {/* Batch Selection Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Input Parameters</Text>
+          <Text style={styles.sectionTitle}>Material Batch</Text>
           <View style={styles.requiredBadge}>
             <Text style={styles.requiredText}>Required</Text>
           </View>
         </View>
-
-        {/* Cinnamon Type Card */}
+        
+        {/* Material Batch Card */}
         <View style={styles.inputCard}>
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="alpha-c-circle" size={24} color="#30D158" />
+                <MaterialCommunityIcons name="package-variant-closed" size={24} color="#34C759" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Cinnamon Type</Text>
-                <Text style={styles.labelSubtext}>Select variety</Text>
+                <Text style={styles.label}>Select Batch</Text>
+                <Text style={styles.labelSubtext}>Choose material batch to predict</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
-              <RadioOption
-                label="Sri Gemunu"
-                value="Sri Gemunu"
-                selected={cinnamonType === 'Sri Gemunu'}
-                onSelect={() => setCinnamonType('Sri Gemunu')}
-                color="#30D158"
-              />
-              <RadioOption
-                label="Sri Vijaya"
-                value="Sri Vijaya"
-                selected={cinnamonType === 'Sri Vijaya'}
-                onSelect={() => setCinnamonType('Sri Vijaya')}
-                color="#30D158"
-              />
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Plant Part Card */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="leaf" size={24} color="#FF9F0A" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Plant Part</Text>
-                <Text style={styles.labelSubtext}>Choose section</Text>
-              </View>
-            </View>
-            <View style={styles.radioGroup}>
-              <RadioOption
-                label="Featherings & Chips"
-                value="Featherings & Chips"
-                selected={plantPart === 'Featherings & Chips'}
-                onSelect={() => setPlantPart('Featherings & Chips')}
-                color="#FF9F0A"
-              />
-              <RadioOption
-                label="Leaves & Twigs"
-                value="Leaves & Twigs"
-                selected={plantPart === 'Leaves & Twigs'}
-                onSelect={() => setPlantPart('Leaves & Twigs')}
-                color="#FF9F0A"
-              />
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Mass Input Card */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="scale-balance" size={24} color="#5E5CE6" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Dried Mass</Text>
-                <Text style={styles.labelSubtext}>In kilograms</Text>
-              </View>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter mass (e.g., 150)"
-                placeholderTextColor="#C7C7CC"
-                keyboardType="numeric"
-                value={mass}
-                onChangeText={setMass}
-              />
-              <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>kg</Text>
-              </View>
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Age Input Card */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="calendar-clock" size={24} color="#FF453A" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Plant Age</Text>
-                <Text style={styles.labelSubtext}>In years</Text>
-              </View>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter age (e.g., 4.5)"
-                placeholderTextColor="#C7C7CC"
-                keyboardType="numeric"
-                value={age}
-                onChangeText={setAge}
-              />
-              <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>years</Text>
-              </View>
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Harvesting Season Card */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="weather-sunny" size={24} color="#FFD60A" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Harvesting Season</Text>
-                <Text style={styles.labelSubtext}>Select period</Text>
-              </View>
-            </View>
-            <View style={styles.radioGroup}>
-              <RadioOption
-                label="May–August"
-                value="May–August"
-                selected={harvestingSeason === 'May–August'}
-                onSelect={() => setHarvestingSeason('May–August')}
-                color="#FFD60A"
-              />
-              <RadioOption
-                label="Oct–Dec/Jan"
-                value="October–December/January"
-                selected={harvestingSeason === 'October–December/January'}
-                onSelect={() => setHarvestingSeason('October–December/January')}
-                color="#FFD60A"
-              />
+              {batches.length === 0 ? (
+                <Text style={styles.labelSubtext}>No batches found</Text>
+              ) : (
+                batches.map((b) => {
+                  const label = b.batch_name
+                    ? `${b.batch_name} • ${b.cinnamon_type} • ${b.plant_part} • ${b.mass_kg}kg`
+                    : `${b.cinnamon_type} • ${b.plant_part} • ${b.mass_kg}kg`;
+                  return (
+                    <RadioOption
+                      key={b.id}
+                      label={label}
+                      value={String(b.id)}
+                      selected={selectedBatchId === b.id}
+                      onSelect={() => setSelectedBatchId(b.id)}
+                      color="#34C759"
+                    />
+                  );
+                })
+              )}
             </View>
           </BlurView>
         </View>
@@ -499,7 +392,7 @@ export default function OilYieldPredictorSecond() {
                   <Text style={styles.resultMetaText}>Just now</Text>
                   <View style={styles.resultMetaDot} />
                   <MaterialCommunityIcons name="leaf" size={14} color="#8E8E93" />
-                  <Text style={styles.resultMetaText}>{cinnamonType}</Text>
+                  <Text style={styles.resultMetaText}>{selectedBatch?.cinnamon_type || '-'}</Text>
                 </View>
               </BlurView>
             </View>

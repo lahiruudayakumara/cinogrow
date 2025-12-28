@@ -8,7 +8,7 @@ type AdvancedResultType = {
   status: "infected" | "invalid" | "error";
   name?: string;
   confidence?: number;
-  severity?: "High" | "Medium" | "Low";
+  severity?: "High" | "Medium" | "Low" | "Moderate" | "Critical";
   category?: string;
   affected_area?: string;
   symptoms?: string[];
@@ -71,10 +71,14 @@ export default function AdvancedResult() {
                   gap: 4,
                   backgroundColor:
                     result.severity === "Low"
-                      ? "#7efc0082" // apple green
-                      : result.severity === "Medium"
+                      ? "#7efc0082" // green
+                      : result.severity === "Moderate"
                       ? "#ffd90045" // yellow
-                      : "#ff440051", // red for high
+                      : result.severity === "High"
+                      ? "#ff8c0051" // orange
+                      : result.severity === "Critical"
+                      ? "#ff440051" // red
+                      : "#e0e0e0", // fallback
                 }}
               >
                 <TriangleAlert />

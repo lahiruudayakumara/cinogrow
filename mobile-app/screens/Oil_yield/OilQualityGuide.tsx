@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,28 +8,65 @@ import {
   Animated,
   StatusBar,
   Linking,
+  Alert,
+  Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import apiConfig from '../../config/api';
+
+// Use localhost for web platform, otherwise use the configured API URL
+const API_BASE_URL = Platform.OS === 'web'
+  ? 'http://localhost:8000/api/v1'
+  : apiConfig.API_BASE_URL;
 
 export default function PreliminaryOilQualityAssessment() {
   const [color, setColor] = useState('');
   const [clarity, setClarity] = useState('');
   const [aroma, setAroma] = useState('');
-  const [plantPart, setPlantPart] = useState('');
   const [score, setScore] = useState<number | null>(null);
   const [label, setLabel] = useState('');
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [predictedPrice, setPredictedPrice] = useState('');
   const [labAdvice, setLabAdvice] = useState('');
 
-  const plantPartLabels: Record<string, string> = {
-    leaves: 'Leaves & Twigs',
-    bark: 'Bark',
+  type MaterialBatch = {
+    id: number;
+    batch_name?: string | null;
+    cinnamon_type: string;
+    mass_kg: number;
+    plant_part: string;
+    plant_age_years: number;
+    harvest_season: string;
   };
+  const [batches, setBatches] = useState<MaterialBatch[]>([]);
+  const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
+  const selectedBatch = batches.find(b => b.id === selectedBatchId) || null;
+
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/oil_yield/batch`);
+        if (!response.ok) {
+          throw new Error(`Failed to load batches (HTTP ${response.status})`);
+        }
+        const data = await response.json();
+        setBatches(Array.isArray(data) ? data : []);
+      } catch (e: any) {
+        Alert.alert('Failed to load batches', e?.message || 'Unknown error');
+      }
+    };
+    fetchBatches();
+  }, []);
 
   const calculateQuality = () => {
-    if (!plantPart || !color || !clarity || !aroma) return;
+    if (!selectedBatch || !color || !clarity || !aroma) {
+      Alert.alert(
+        'Missing Information',
+        'Please select a material batch and all quality attributes.'
+      );
+      return;
+    }
 
     const colorScoreMap: Record<string, number> = {
       pale_yellow: 90,
@@ -87,6 +124,13 @@ export default function PreliminaryOilQualityAssessment() {
       setLabAdvice('Resolve quality issues before any certification attempts.');
     }
 
+    // Add plant-part contextual note from selected batch
+    if (selectedBatch?.plant_part?.toLowerCase().includes('leave')) {
+      recs.push('Leaves & Twigs often show higher eugenol; expect stronger aroma.');
+    } else if (selectedBatch?.plant_part) {
+      recs.push('Featherings & Chips tend to have higher cinnamaldehyde; color may be richer.');
+    }
+
     setScore(finalScore);
     setLabel(qualityLabel);
     setRecommendations(recs);
@@ -94,7 +138,6 @@ export default function PreliminaryOilQualityAssessment() {
   };
 
   const clearForm = () => {
-    setPlantPart('');
     setColor('');
     setClarity('');
     setAroma('');
@@ -395,33 +438,34 @@ export default function PreliminaryOilQualityAssessment() {
           </BlurView>
         </View>
 
-        {/* Plant Part Card */}
+        {/* Material Batch Card */}
         <View style={styles.inputCard}>
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="nature" size={24} color="#34C759" />
+                <MaterialCommunityIcons name="database" size={24} color="#34C759" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Plant Part</Text>
-                <Text style={styles.labelSubtext}>Source material</Text>
+                <Text style={styles.label}>Material Batch</Text>
+                <Text style={styles.labelSubtext}>Select from recorded batches</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
-              <RadioOption
-                label="Bark"
-                value="bark"
-                selected={plantPart === 'bark'}
-                onSelect={() => setPlantPart('bark')}
-                icon="nature-people"
-              />
-              <RadioOption
-                label="Leaves & Twigs"
-                value="leaves"
-                selected={plantPart === 'leaves'}
-                onSelect={() => setPlantPart('leaves')}
-                icon="leaf"
-              />
+              {batches.length === 0 ? (
+                <Text style={styles.labelSubtext}>No batches found. Create one in Oil Yield.</Text>
+              ) : (
+                batches.map((b) => (
+                  <RadioOption
+                    key={b.id}
+                    label={b.batch_name ? b.batch_name : `Batch #${b.id}`}
+                    value={String(b.id)}
+                    selected={selectedBatchId === b.id}
+                    onSelect={() => setSelectedBatchId(b.id)}
+                    icon="database"
+                    subtitle={`${b.plant_part} • ${b.cinnamon_type}`}
+                  />
+                ))
+              )}
             </View>
           </BlurView>
         </View>
@@ -433,7 +477,7 @@ export default function PreliminaryOilQualityAssessment() {
             isPrimary={true}
             icon="check-decagram"
             text="Evaluate Preliminary Quality"
-            disabled={!plantPart || !color || !clarity || !aroma}
+            disabled={!selectedBatch || !color || !clarity || !aroma}
           />
         </View>
 
@@ -482,6 +526,13 @@ export default function PreliminaryOilQualityAssessment() {
                   <View style={styles.resultMetaDot} />
                   <MaterialCommunityIcons name="flower" size={14} color="#8E8E93" />
                   <Text style={styles.resultMetaText}>{aroma}</Text>
+                  {selectedBatch?.plant_part ? (
+                    <>
+                      <View style={styles.resultMetaDot} />
+                      <MaterialCommunityIcons name="nature" size={14} color="#8E8E93" />
+                      <Text style={styles.resultMetaText}>{selectedBatch.plant_part}</Text>
+                    </>
+                  ) : null}
                 </View>
 
                 {/* Progress Bar */}
@@ -517,7 +568,7 @@ export default function PreliminaryOilQualityAssessment() {
                   <View style={styles.priceInfoItem}>
                     <MaterialCommunityIcons name="nature" size={16} color="#8E8E93" />
                     <Text style={styles.priceInfoText}>
-                      {plantPartLabels[plantPart]}
+                      {selectedBatch?.plant_part || '—'}
                     </Text>
                   </View>
                 </View>

@@ -356,15 +356,15 @@ export default function OilScreen() {
           </View>
 
           {/* Research Center Section */}
-          <View style={styles.sectionHeader}>
+          {/* <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Research Center Services</Text>
             <View style={styles.newBadge}>
               <Text style={styles.newBadgeText}>NEW</Text>
             </View>
-          </View>
+          </View> */}
 
           {/* Research Center Info Card */}
-          <View style={styles.researchInfoCard}>
+          {/* <View style={styles.researchInfoCard}>
             <BlurView intensity={60} tint="light" style={styles.researchInfoBlur}>
               <View style={styles.researchInfoHeader}>
                 <View style={styles.researchIconLarge}>
@@ -386,10 +386,10 @@ export default function OilScreen() {
                 </View>
               </View>
             </BlurView>
-          </View>
+          </View> */}
 
           {/* Research Center Feature Cards */}
-          <View style={styles.gridContainer}>
+          {/* <View style={styles.gridContainer}>
             <GridCard
               icon="school-outline"
               iconColor="#5E5CE6"
@@ -407,10 +407,10 @@ export default function OilScreen() {
               subtitle="Export standards"
               onPress={() => navigation.navigate('LabCertification')}
             />
-          </View>
+          </View> */}
 
           {/* Quick Stats Widget */}
-          <View style={styles.statsWidget}>
+          {/* <View style={styles.statsWidget}>
             <BlurView intensity={50} tint="light" style={styles.statsBlur}>
               <View style={styles.statsContent}>
                 <View style={styles.statItem}>
@@ -429,10 +429,10 @@ export default function OilScreen() {
                 </View>
               </View>
             </BlurView>
-          </View>
+          </View> */}
 
           {/* Footer */}
-          <View style={styles.footer}>
+          {/* <View style={styles.footer}>
             <View style={styles.footerBadge}>
               <MaterialCommunityIcons name="shield-check" size={14} color="#30D158" />
               <Text style={styles.footerBadgeText}>AI Powered</Text>
@@ -440,7 +440,7 @@ export default function OilScreen() {
             <Text style={styles.footerText}>
               Empowering Cinnamon Farmers
             </Text>
-          </View>
+          </View> */}
         </ScrollView>
       </ImageBackground>
     </>

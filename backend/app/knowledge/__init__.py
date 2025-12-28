@@ -1,0 +1,1 @@
+from .knowledge_base import DISEASE_PEST_KNOWLEDGE

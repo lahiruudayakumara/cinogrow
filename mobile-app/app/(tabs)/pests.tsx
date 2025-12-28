@@ -40,6 +40,7 @@ export default function PestDiseaseScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <UploadCard />
           <RecommendationButton
+            disabled={true}
             title={t("pest_disease.get_recommendations")}
             onPress={() => {}}
           />

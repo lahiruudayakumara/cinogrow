@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { CINNAMON_VARIETY_OPTIONS, DEFAULT_CINNAMON_VARIETY } from '../constants/CinnamonVarieties';
+import { useTranslation } from 'react-i18next';
+import { CINNAMON_VARIETY_OPTIONS, DEFAULT_CINNAMON_VARIETY, CINNAMON_VARIETIES } from '../constants/CinnamonVarieties';
 
 interface CinnamonVarietyPickerProps {
   value?: string;
@@ -16,17 +17,21 @@ interface CinnamonVarietyPickerProps {
 export const CinnamonVarietyPicker: React.FC<CinnamonVarietyPickerProps> = ({
   value = '',
   onValueChange,
-  label = 'Cinnamon Variety',
-  placeholder = 'Select variety',
+  label,
+  placeholder,
   style,
   disabled = false,
   showDescription = false,
 }) => {
+  const { t } = useTranslation();
   const selectedVariety = CINNAMON_VARIETY_OPTIONS.find(option => option.value === value);
+  
+  const displayLabel = label || t('yield_weather.common.cinnamon_variety');
+  const displayPlaceholder = placeholder || t('yield_weather.common.select_variety');
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {displayLabel && <Text style={styles.label}>{displayLabel}</Text>}
       
       <View style={styles.pickerContainer}>
         <Picker
@@ -36,15 +41,15 @@ export const CinnamonVarietyPicker: React.FC<CinnamonVarietyPickerProps> = ({
           style={styles.picker}
         >
           <Picker.Item 
-            label={placeholder} 
+            label={displayPlaceholder} 
             value="" 
             color="#9CA3AF"
           />
-          {CINNAMON_VARIETY_OPTIONS.map((option) => (
+          {CINNAMON_VARIETIES.map((variety) => (
             <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
+              key={variety.value}
+              label={t(variety.translationKey)}
+              value={variety.value}
             />
           ))}
         </Picker>
@@ -79,7 +84,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   picker: {
-    height: 50,
+    height: 56,
     color: '#111827',
   },
   description: {

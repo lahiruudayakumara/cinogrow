@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { farmAPI, type Plot } from '../services/yield_weather/farmAPI';
 import { CinnamonVarietyPicker } from './CinnamonVarietyPicker';
 import { DEFAULT_CINNAMON_VARIETY } from '../constants/CinnamonVarieties';
@@ -47,6 +48,7 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
   farmTotalArea,
   onPlotsUpdate,
 }) => {
+  const { t } = useTranslation();
   const [editedPlots, setEditedPlots] = useState<PlotEditData[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -128,17 +130,17 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
 
   const removePlot = (index: number) => {
     if (editedPlots.length === 1) {
-      Alert.alert('Error', 'A farm must have at least one plot');
+      Alert.alert(t('yield_weather.common.error'), t('yield_weather.my_farm.plot_management.min_one_plot'));
       return;
     }
 
     Alert.alert(
-      'Remove Plot',
-      `Are you sure you want to remove ${editedPlots[index].name}?`,
+      t('yield_weather.my_farm.plot_management.remove_plot'),
+      t('yield_weather.my_farm.plot_management.remove_confirm', { name: editedPlots[index].name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('yield_weather.common.cancel'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: t('yield_weather.my_farm.plot_management.remove'),
           style: 'destructive',
           onPress: () => {
             const updated = editedPlots.filter((_, i) => i !== index);
@@ -168,12 +170,18 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
     // Validate all areas
     const invalidPlots = editedPlots.filter(plot => !isValidArea(plot.tempArea));
     if (invalidPlots.length > 0) {
-      Alert.alert('Invalid Areas', 'Please ensure all plot areas are between 0.1 and the total farm area');
+      Alert.alert(t('yield_weather.my_farm.plot_management.invalid_areas'), t('yield_weather.my_farm.plot_management.invalid_areas_message'));
       return;
     }
 
     if (!isValidTotalArea()) {
-      Alert.alert('Invalid Total', `Total plot area (${calculateTotalArea().toFixed(1)} ha) cannot exceed farm area (${farmTotalArea} ha)`);
+      Alert.alert(
+        t('yield_weather.my_farm.plot_management.invalid_total'), 
+        t('yield_weather.my_farm.plot_management.invalid_total_message', { 
+          total: calculateTotalArea().toFixed(1), 
+          farm: farmTotalArea 
+        })
+      );
       return;
     }
 
@@ -220,7 +228,7 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
         }
 
         onPlotsUpdate(updatedPlots);
-        Alert.alert('Success', 'Plot areas updated successfully');
+        Alert.alert(t('yield_weather.common.success'), t('yield_weather.my_farm.plot_management.success_updated'));
       } else {
         // Update locally for offline mode
         const localUpdatedPlots = editedPlots.map(plot => ({
@@ -228,13 +236,13 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
           area: parseFloat(plot.tempArea),
         }));
         onPlotsUpdate(localUpdatedPlots);
-        Alert.alert('Success', 'Plot areas updated locally');
+        Alert.alert(t('yield_weather.common.success'), t('yield_weather.my_farm.plot_management.success_local'));
       }
 
       onClose();
     } catch (error) {
       console.error('Error saving plots:', error);
-      Alert.alert('Error', 'Failed to save plot areas');
+      Alert.alert(t('yield_weather.common.error'), t('yield_weather.my_farm.plot_management.failed_save'));
     } finally {
       setLoading(false);
     }
@@ -251,9 +259,9 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.headerButton}>
-            <Text style={styles.cancelText}>Cancel</Text>
+            <Text style={styles.cancelText}>{t('yield_weather.my_farm.plot_management.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Manage Plot Areas</Text>
+          <Text style={styles.title}>{t('yield_weather.my_farm.plot_management.title')}</Text>
           <TouchableOpacity 
             onPress={savePlots} 
             style={styles.headerButton}
@@ -263,7 +271,7 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
               styles.saveText,
               { opacity: loading || !isValidTotalArea() ? 0.5 : 1 }
             ]}>
-              Save
+              {t('yield_weather.my_farm.plot_management.save')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -271,13 +279,13 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
         {/* Farm Info */}
         <View style={styles.farmInfo}>
           <Text style={styles.farmInfoText}>
-            Farm Area: {farmTotalArea} ha • 
-            Used: {calculateTotalArea().toFixed(1)} ha • 
-            Remaining: {getRemainingArea().toFixed(1)} ha
+            {t('yield_weather.my_farm.plot_management.farm_area')}: {farmTotalArea} {t('yield_weather.common.ha')} • 
+            {t('yield_weather.my_farm.plot_management.used')}: {calculateTotalArea().toFixed(1)} {t('yield_weather.common.ha')} • 
+            {t('yield_weather.my_farm.plot_management.remaining')}: {getRemainingArea().toFixed(1)} {t('yield_weather.common.ha')}
           </Text>
           {!isValidTotalArea() && (
             <Text style={styles.errorText}>
-              ⚠️ Total area exceeds farm size
+              ⚠️ {t('yield_weather.my_farm.plot_management.exceeds_farm_size')}
             </Text>
           )}
         </View>
@@ -287,11 +295,11 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
           <View style={styles.quickActions}>
             <TouchableOpacity style={styles.actionButton} onPress={distributeAreaEqually}>
               <Ionicons name="pie-chart-outline" size={16} color="#4CAF50" />
-              <Text style={styles.actionButtonText}>Distribute Equally</Text>
+              <Text style={styles.actionButtonText}>{t('yield_weather.my_farm.plot_management.distribute_equally')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton} onPress={addPlot}>
               <Ionicons name="add-outline" size={16} color="#4CAF50" />
-              <Text style={styles.actionButtonText}>Add Plot</Text>
+              <Text style={styles.actionButtonText}>{t('yield_weather.my_farm.plot_management.add_plot')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -304,7 +312,7 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
                     style={styles.plotNameInput}
                     value={plot.name}
                     onChangeText={(name) => updatePlotName(index, name)}
-                    placeholder="Plot name"
+                    placeholder={t('yield_weather.my_farm.plot_management.plot_name')}
                   />
                   {editedPlots.length > 1 && (
                     <TouchableOpacity
@@ -318,7 +326,7 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
 
                 <View style={styles.areaSection}>
                   <View style={styles.areaInputContainer}>
-                    <Text style={styles.areaLabel}>Area (ha)</Text>
+                    <Text style={styles.areaLabel}>{t('yield_weather.my_farm.plot_management.area_ha')}</Text>
                     <TextInput
                       style={[
                         styles.areaInput,
@@ -345,7 +353,7 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
                       />
                     </View>
                     <Text style={styles.percentageText}>
-                      {getAreaPercentage(parseFloat(plot.tempArea) || 0).toFixed(1)}% of farm
+                      {getAreaPercentage(parseFloat(plot.tempArea) || 0).toFixed(1)}% {t('yield_weather.my_farm.plot_management.of_farm')}
                     </Text>
                   </View>
                 </View>
@@ -353,13 +361,13 @@ export const PlotManagementModal: React.FC<PlotManagementModalProps> = ({
                 <CinnamonVarietyPicker
                   value={plot.crop_type}
                   onValueChange={(variety) => updatePlotVariety(index, variety)}
-                  label="Cinnamon Variety"
+                  label={t('yield_weather.my_farm.plot_management.cinnamon_variety')}
                   style={styles.varietyPicker}
                 />
 
                 {!isValidArea(plot.tempArea) && (
                   <Text style={styles.plotErrorText}>
-                    Area must be between 0.1 and {farmTotalArea} hectares
+                    {t('yield_weather.my_farm.plot_management.area_range_error', { max: farmTotalArea })}
                   </Text>
                 )}
               </View>

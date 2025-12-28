@@ -281,7 +281,7 @@ const MyFarm = () => {
   const getPlotStatusDisplay = (plot: Plot, plantingInfo: any) => {
     if (!plantingInfo.isPlanted) {
       return {
-        status: 'NOT PLANTED',
+        status: t('yield_weather.my_farm.plot_status.not_planted'),
         color: '#94A3B8',
         bgColor: '#F1F5F9'
       };
@@ -295,25 +295,25 @@ const MyFarm = () => {
     switch (status) {
       case 'PLANTED':
         return {
-          status: 'PLANTED',
+          status: t('yield_weather.my_farm.plot_status.planted'),
           color: '#059669',
           bgColor: '#ECFDF5'
         };
       case 'GROWING':
         return {
-          status: 'GROWING',
+          status: t('yield_weather.my_farm.plot_status.growing'),
           color: '#0EA5E9',
           bgColor: '#F0F9FF'
         };
       case 'MATURE':
         return {
-          status: 'MATURE',
+          status: t('yield_weather.my_farm.plot_status.mature'),
           color: '#7C3AED',
           bgColor: '#FAF5FF'
         };
       case 'HARVESTING':
         return {
-          status: 'READY TO HARVEST',
+          status: t('yield_weather.my_farm.plot_status.harvesting'),
           color: '#F59E0B',
           bgColor: '#FFFBEB'
         };
@@ -829,24 +829,24 @@ const MyFarm = () => {
         {plots.length > 0 && (
           <View style={styles.plotsSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Farm Plots</Text>
+              <Text style={styles.sectionTitle}>{t('yield_weather.my_farm.plots')}</Text>
               <TouchableOpacity
                 style={styles.managePlotsButton}
                 onPress={() => setPlotManagementVisible(true)}
               >
                 <Ionicons name="settings-outline" size={16} color="#4CAF50" />
-                <Text style={styles.managePlotsText}>Manage Areas</Text>
+                <Text style={styles.managePlotsText}>{t('yield_weather.my_farm.manage_plots')}</Text>
               </TouchableOpacity>
             </View>
             
             {/* Total area summary */}
             <View style={styles.areaSummary}>
               <Text style={styles.areaSummaryText}>
-                Total Allocated: {plots.reduce((sum, plot) => sum + plot.area, 0).toFixed(1)} {t('yield_weather.common.ha')} of {farm?.total_area} {t('yield_weather.common.ha')}
+                {t('yield_weather.my_farm.total_allocated')}: {plots.reduce((sum, plot) => sum + plot.area, 0).toFixed(1)} {t('yield_weather.common.ha')} / {farm?.total_area} {t('yield_weather.common.ha')}
               </Text>
               {plots.reduce((sum, plot) => sum + plot.area, 0) < (farm?.total_area || 0) && (
                 <Text style={styles.remainingAreaText}>
-                  ({((farm?.total_area || 0) - plots.reduce((sum, plot) => sum + plot.area, 0)).toFixed(1)} {t('yield_weather.common.ha')} remaining)
+                  ({((farm?.total_area || 0) - plots.reduce((sum, plot) => sum + plot.area, 0)).toFixed(1)} {t('yield_weather.common.ha')} {t('yield_weather.my_farm.remaining')})
                 </Text>
               )}
             </View>
@@ -894,7 +894,7 @@ const MyFarm = () => {
                           <Text style={styles.varietyText}>{plantingInfo.variety}</Text>
                         </View>
                         <Text style={styles.plantingDetails}>
-                          Planted: {plantingInfo.plantedDate ? new Date(plantingInfo.plantedDate).toLocaleDateString() : t('yield_weather.common.unknown')}
+                          {t('yield_weather.my_farm.planted')}: {plantingInfo.plantedDate ? new Date(plantingInfo.plantedDate).toLocaleDateString() : t('yield_weather.common.unknown')}
                         </Text>
                         <Text style={styles.ageText}>
                           {plantingInfo.daysOld} {t('yield_weather.my_farm.days_old')} ({Math.floor(plantingInfo.daysOld / 365)} years) • {plantingInfo.seedlingCount.toLocaleString()} {t('yield_weather.my_farm.seedlings')}
@@ -906,13 +906,13 @@ const MyFarm = () => {
                           let stageDescription = '';
                           
                           if (yearsDiff < 1) {
-                            stageDescription = 'Young saplings stage';
+                            stageDescription = t('yield_weather.my_farm.growth_stages.young_saplings');
                           } else if (yearsDiff < 3) {
-                            stageDescription = 'Active growth stage';
+                            stageDescription = t('yield_weather.my_farm.growth_stages.active_growth');
                           } else if (yearsDiff < 3.5) {
-                            stageDescription = 'Maturation stage';
+                            stageDescription = t('yield_weather.my_farm.growth_stages.maturation');
                           } else {
-                            stageDescription = 'Prime harvesting age';
+                            stageDescription = t('yield_weather.my_farm.growth_stages.prime_harvesting');
                           }
                           
                           return (

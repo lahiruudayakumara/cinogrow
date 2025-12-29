@@ -30,6 +30,263 @@
     "settings": "Settings",
     "select_language": "Select Language"
   },
+  "fertilizer": {
+    "home": {
+      "title": "Fertilizer Analysis",
+      "subtitle": "Get AI-powered fertilizer recommendations for your cinnamon crops",
+      "quick_start_guide": "Quick Start Guide",
+      "step_1": "Start with a leaf sample for instant recommendations",
+      "step_2": "Optionally add a soil sample for enhanced results",
+      "step_3": "Get personalized fertilizer advice in seconds",
+      "sample_analysis": "Sample Analysis",
+      "leaf_sample": "Leaf Sample",
+      "leaf_sample_subtitle": "Detect nutrient deficiencies",
+      "soil_sample": "Soil Sample",
+      "soil_sample_subtitle": "Analyze soil conditions",
+      "uploaded": "Uploaded",
+      "ready_for_analysis": "Ready for Analysis",
+      "samples_uploaded": "1 of 2 samples uploaded",
+      "upload_to_begin": "Upload samples to begin analysis",
+      "recent_analysis": "Recent Analysis",
+      "view_all": "View All",
+      "loading_analyses": "Loading recent analyses...",
+      "no_history": "No analysis history yet",
+      "start_analyzing": "Start by analyzing a leaf sample",
+      "confidence": "Confidence"
+    },
+    "result": {
+      "header": {
+        "title_history": "Analysis History",
+        "title_detection": "Deficiency Detection",
+        "subtitle_history": "Previous analysis details",
+        "subtitle_detection": "AI-powered leaf analysis results"
+      },
+      "analyzed_image": "Analyzed Image",
+      "detections": {
+        "title": "Detected Deficiencies",
+        "no_deficiencies_title": "No Deficiencies Detected",
+        "no_deficiencies_text": "Your plant appears healthy. Continue regular care and monitoring.",
+        "severity_high": "High",
+        "severity_moderate": "Moderate",
+        "severity_low": "Low",
+        "class": "Class",
+        "confidence": "Confidence"
+      },
+      "recommendations": {
+        "title": "Fertilizer Recommendations",
+        "loading": "Generating personalized recommendations...",
+        "year": "year",
+        "years": "years",
+        "growth_stage": {
+          "title": "Growth Stage"
+        },
+        "primary_fertilizer": {
+          "title": "Recommended Fertilizer",
+          "npk": "NPK",
+          "dosage": "Dosage",
+          "frequency": "Frequency",
+          "application_method": "Application Method"
+        },
+        "schedule": {
+          "title": "Application Schedule",
+          "urgent_title": "Immediate Action Required",
+          "urgent_text": "Apply fertilizer",
+          "first_application": "First Application",
+          "best_time": "Best Time",
+          "weather": "Weather"
+        },
+        "organic": {
+          "title": "Organic Alternative"
+        },
+        "expected_results": {
+          "title": "Expected Results",
+          "improvement_timeline": "Improvement Timeline",
+          "full_recovery": "Full Recovery",
+          "monitor_points": "Monitor these points"
+        },
+        "warnings": {
+          "title": "Important Warnings"
+        },
+        "additional_care": {
+          "title": "Additional Care"
+        }
+      },
+      "actions": {
+        "back_home": "Back to Home",
+        "analyze_another": "Analyze Another"
+      }
+    },
+    "photo_preview": {
+      "header": {
+        "title_leaf": "Leaf Sample Preview",
+        "title_soil": "Soil Sample Preview",
+        "subtitle": "Review your {{type}} sample before proceeding"
+      },
+      "progress": {
+        "title": "Analysis Progress",
+        "ready_recommendations": "Ready for recommendations",
+        "enhanced_ready": "Enhanced analysis ready"
+      },
+      "sample": {
+        "leaf": "Leaf Sample",
+        "soil": "Soil Sample",
+        "quality_good": "Good Quality"
+      },
+      "analysis": {
+        "title": "AI Quick Analysis",
+        "status_analyzing": "Analyzing",
+        "status_ready": "Ready",
+        "leaf_condition": "Analyzing leaf condition...",
+        "checking_deficiencies": "Checking for deficiencies...",
+        "soil_ph_issue": "Soil pH imbalance identified",
+        "low_organic": "Low organic matter content",
+        "progress_detecting": "🔍 Detecting deficiencies with Roboflow AI..."
+      },
+      "notes": {
+        "leaf_analyzing": "Real-time ML analysis in progress. This will provide accurate fertilizer recommendations based on your leaf sample.",
+        "leaf_ready": "Tap \"Get ML Recommendations\" for AI-powered fertilizer advice based on real leaf analysis. Enhanced with soil data for better results.",
+        "soil_enhanced": "Enhanced analysis with both leaf and soil samples for comprehensive recommendations."
+      },
+      "buttons": {
+        "retake": "Retake Photo",
+        "get_ml_recommendations": "Get ML Recommendations",
+        "add_soil": "Add Soil Analysis for Better Results",
+        "get_enhanced": "Get Enhanced Results",
+        "analyzing": "Analyzing..."
+      },
+      "alerts": {
+        "analysis_failed": "Analysis Failed",
+        "failed_message": "Failed to analyze leaf image: {{error}}. Would you like to continue with basic analysis?",
+        "try_again": "Try Again",
+        "basic_analysis": "Basic Analysis"
+      }
+    },
+    "upload_leaf": {
+      "header": {
+        "title": "Upload Leaf Sample",
+        "subtitle": "Step 1: Take a clear photo of your cinnamon leaf for instant fertilizer recommendations"
+      },
+      "guidelines": {
+        "title": "Photography Guidelines",
+        "natural_light": "Use natural daylight when possible",
+        "entire_leaf": "Include the entire leaf in frame",
+        "flat_lit": "Ensure the leaf is flat and well-lit",
+        "avoid_shadows": "Avoid shadows and reflections"
+      },
+      "upload": {
+        "title": "Select Image Source",
+        "take_photo": "Take Photo",
+        "take_photo_subtitle": "Use your camera to capture a leaf",
+        "photo_library": "Photo Library",
+        "photo_library_subtitle": "Choose from your gallery"
+      },
+      "preview": {
+        "title": "Image Preview",
+        "change_image": "Change Image"
+      },
+      "alerts": {
+        "permission_camera_title": "Permission Required",
+        "permission_camera_message": "Camera permission is required to take photos.",
+        "permission_library_title": "Permission Required",
+        "permission_library_message": "Photo library permission is required to select images.",
+        "select_image": "Select Image",
+        "select_image_message": "Choose how you want to select your image",
+        "camera": "Camera",
+        "photo_library": "Photo Library",
+        "cancel": "Cancel",
+        "error": "Error",
+        "failed_take_photo": "Failed to take photo",
+        "failed_pick_image": "Failed to pick image",
+        "no_image_title": "No Image Selected",
+        "no_image_message": "Please select a leaf image first."
+      }
+    },
+    "upload_soil": {
+      "header": {
+        "title": "Upload Soil Sample",
+        "subtitle": "Optional Step 2: Add soil photo to enhance your fertilizer recommendations"
+      },
+      "progress": {
+        "title": "Leaf Sample Complete",
+        "subtitle": "Great! Now upload your soil sample to complete the analysis.",
+        "step": "Step 2 of 2"
+      },
+      "guidelines": {
+        "title": "Soil Photography Guidelines",
+        "natural_daylight": "Take photo in natural daylight",
+        "show_topsoil": "Show topsoil surface clearly",
+        "clear_debris": "Clear away debris and vegetation",
+        "moist_soil": "Ensure soil is moist, not waterlogged"
+      },
+      "upload": {
+        "title": "Select Image Source",
+        "take_photo": "Take Photo",
+        "take_photo_subtitle": "Use your camera to capture soil",
+        "photo_library": "Photo Library",
+        "photo_library_subtitle": "Choose from your gallery"
+      },
+      "preview": {
+        "title": "Image Preview",
+        "change_image": "Change Image"
+      },
+      "alerts": {
+        "permission_camera_title": "Permission Required",
+        "permission_camera_message": "Camera permission is required to take photos.",
+        "permission_library_title": "Permission Required",
+        "permission_library_message": "Photo library permission is required to select images.",
+        "select_image": "Select Image",
+        "select_image_message": "Choose how you want to select your image",
+        "camera": "Camera",
+        "photo_library": "Photo Library",
+        "cancel": "Cancel",
+        "error": "Error",
+        "failed_take_photo": "Failed to take photo",
+        "failed_pick_image": "Failed to pick image",
+        "no_image_title": "No Image Selected",
+        "no_image_message": "Please select a soil image first."
+      }
+    },
+    "plant_age_selector": {
+      "title": "Plant Age",
+      "description": "Select the age of your cinnamon plant to get age-appropriate fertilizer recommendations",
+      "age_options": {
+        "year_0_1": {
+          "label": "0-1 Year",
+          "description": "Newly planted, establishment phase"
+        },
+        "year_1_2": {
+          "label": "1-2 Years",
+          "description": "Young growth, developing"
+        },
+        "year_2_3": {
+          "label": "2-3 Years",
+          "description": "Early productive stage"
+        },
+        "year_3_5": {
+          "label": "3-5 Years",
+          "description": "Mature, peak production"
+        },
+        "year_5_10": {
+          "label": "5-10 Years",
+          "description": "Established, consistent yield"
+        },
+        "year_10_plus": {
+          "label": "10+ Years",
+          "description": "Old growth, maintenance"
+        }
+      },
+      "custom_age": {
+        "label": "Custom Age",
+        "description": "Enter specific plant age",
+        "input_label": "Enter plant age (years)",
+        "placeholder": "e.g., 5"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "confirm": "Get Recommendations"
+      }
+    }
+  },
   "pest_disease": {
     "recommendations": "Pest & Disease Recommendations",
     "upload_photo": "Upload Photo",

@@ -25,51 +25,104 @@ export interface Plot {
 }
 
 class PlantingRecordsAPI {
-  private async request(endpoint: string, options: RequestInit = {}) {
-    try {
-      const url = `${API_BASE_URL}${endpoint}`;
-      console.log(`📡 Making PlantingRecords API request to: ${url}`);
-      console.log(`🔧 Using base URL: ${API_BASE_URL}`);
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
+  private async request(endpoint: string, options: RequestInit = {}): Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Check if fetch is available
+        if (typeof fetch === 'undefined') {
+          throw new Error('Fetch API is not available');
+        }
 
-      console.log(`📡 Response status: ${response.status}`);
+        const url = `${API_BASE_URL}${endpoint}`;
+        console.log(`🚀 Making PlantingRecords API request to: ${url}`);
+        console.log(`🔧 Using base URL: ${API_BASE_URL}`);
+        
+        const requestOptions: RequestInit = {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...options.headers,
+          },
+          ...options,
+        };
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error(`❌ HTTP Error ${response.status}: ${errorData}`);
-        throw new Error(`HTTP ${response.status}: ${errorData}`);
-      }
+        // Add timeout functionality using AbortController
+        const timeoutMs = 30000;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+        }, timeoutMs);
+        
+        requestOptions.signal = controller.signal;
 
-      const data = await response.json();
-      console.log(`✅ PlantingRecords API response received:`, data);
-      return data;
-    } catch (error) {
-      if (error instanceof TypeError && error.message.includes('Network request failed')) {
-        console.error('❌ Network connectivity issue:', error);
-        throw new Error('Network connection failed. Please check your internet connection and ensure the backend server is running and accessible.');
-      } else {
+        const response = await fetch(url, requestOptions);
+        clearTimeout(timeoutId);
+
+        console.log(`📡 Response status: ${response.status}`);
+
+        if (!response.ok) {
+          let errorData: string;
+          try {
+            errorData = await response.text();
+          } catch (textError) {
+            errorData = `${response.status} ${response.statusText}`;
+          }
+          console.error(`❌ HTTP Error ${response.status}: ${errorData}`);
+          reject(new Error(`HTTP ${response.status}: ${errorData}`));
+          return;
+        }
+
+        try {
+          const data = await response.json();
+          console.log(`✅ PlantingRecords API response received:`, data);
+          resolve(data);
+        } catch (jsonError) {
+          console.error('❌ JSON parsing error:', jsonError);
+          reject(new Error('Invalid JSON response from server'));
+        }
+      } catch (error) {
         console.error('❌ PlantingRecords API request failed:', error);
-        throw error;
+        
+        if (error instanceof Error && (
+          error.message.includes('Network request failed') ||
+          error.message.includes('undefined is not a function') ||
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('The operation was aborted') ||
+          error.name === 'AbortError'
+        )) {
+          console.error('🔌 Network connectivity issue:', error);
+          reject(new Error('Network connection failed. Please check your internet connection and ensure the backend server is running and accessible.'));
+        } else {
+          reject(error);
+        }
       }
-    }
+    });
   }
 
   // Get all planting records for a user
   async getUserPlantingRecords(userId: number): Promise<PlantingRecord[]> {
-    return this.request(`/users/${userId}/planting-records`);
+    return this.request(`/yield-weather/users/${userId}/planting-records`);
+  }
+
+  // Get all planting records for a farm
+  async getFarmPlantingRecords(farmId: number): Promise<PlantingRecord[]> {
+    return this.request(`/yield-weather/farms/${farmId}/planting-records`);
+  }
+
+  // Get all planting records for a specific plot
+  async getPlotPlantingRecords(plotId: number): Promise<PlantingRecord[]> {
+    return this.request(`/yield-weather/plots/${plotId}/planting-records`);
+  }
+
+  // Get all planting records (without user filter)
+  async getAllPlantingRecords(): Promise<PlantingRecord[]> {
+    return this.request(`/yield-weather/planting-records`);
   }
 
   // Create a new planting record
   async createPlantingRecord(record: Omit<PlantingRecord, 'record_id' | 'created_at' | 'plot_name'>): Promise<PlantingRecord> {
-    return this.request('/planting-records', {
+    return this.request('/yield-weather/planting-records', {
       method: 'POST',
       body: JSON.stringify(record),
     });
@@ -80,7 +133,7 @@ class PlantingRecordsAPI {
     recordId: number, 
     updates: Partial<Omit<PlantingRecord, 'record_id' | 'user_id' | 'created_at' | 'plot_name'>>
   ): Promise<PlantingRecord> {
-    return this.request(`/planting-records/${recordId}`, {
+    return this.request(`/yield-weather/planting-records/${recordId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
     });
@@ -88,19 +141,19 @@ class PlantingRecordsAPI {
 
   // Delete a planting record
   async deletePlantingRecord(recordId: number): Promise<{ message: string }> {
-    return this.request(`/planting-records/${recordId}`, {
+    return this.request(`/yield-weather/planting-records/${recordId}`, {
       method: 'DELETE',
     });
   }
 
   // Get farm plots (for dropdown)
   async getFarmPlots(farmId: number): Promise<Plot[]> {
-    return this.request(`/farms/${farmId}/plots`);
+    return this.request(`/yield-weather/farms/${farmId}/plots`);
   }
 
   // Get all farms (to get plots)
   async getFarms(): Promise<any[]> {
-    return this.request('/farms');
+    return this.request('/yield-weather/farms');
   }
 
   // Test connection to backend

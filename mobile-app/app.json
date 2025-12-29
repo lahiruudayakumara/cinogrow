@@ -41,11 +41,13 @@
       "typedRoutes": true
     },
     "extra": {
-      "API_BASE_HOST": "192.168.8.130",
+      "API_BASE_HOST": "192.168.8.116",
       "API_PORT": "8000",
+      "API_BASE_URL": "http://192.168.8.116:8000/api/v1",
       "PROD_API_BASE_URL": "https://your-production-api.com/api/v1",
       "API_TIMEOUT": "10000",
-      "PROD_API_TIMEOUT": "15000"
+      "PROD_API_TIMEOUT": "15000",
+      "HEALTH_ENDPOINT": "http://192.168.8.116:8000/health"
     }
   }
 }

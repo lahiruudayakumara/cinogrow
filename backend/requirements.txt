@@ -12,6 +12,7 @@ joblib
 pillow
 httpx
 opencv-python
+statsmodels
 
 # --- Database & ORM ---
 sqlalchemy
@@ -31,3 +32,6 @@ email-validator
 
 # --- Roboflow Integration ---
 inference-sdk
+
+# --- Kaggle Integration ---
+kaggle>=1.6.0

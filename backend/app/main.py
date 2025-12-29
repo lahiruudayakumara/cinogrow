@@ -8,6 +8,7 @@ import platform
 import os
 from app.routers import auth
 from app.db import Base, engine
+from app.routers import pest_disease_router
 
 # Load environment variables FIRST before importing anything else
 load_dotenv()
@@ -58,6 +59,7 @@ app.include_router(farm.router, prefix="/api/v1")
 app.include_router(farm_assistance.router, prefix="/api/v1")
 app.include_router(yield_prediction.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
+app.include_router(pest_disease_router, prefix="/api/v1")
 
 @app.get('/')
 async def root():

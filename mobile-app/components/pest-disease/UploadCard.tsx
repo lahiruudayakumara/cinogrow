@@ -6,14 +6,17 @@ import {
   Image,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Camera, Upload, CloudUpload } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
+import { detectPestDisease } from "@/services/pestDiseaseAPI";
 import { t } from "i18next";
 
 export default function UploadCard() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -68,6 +71,39 @@ export default function UploadCard() {
     }
   };
 
+  const submitForDetection = async () => {
+    if (!selectedImage) return;
+    try {
+      setLoading(true);
+      const res = await detectPestDisease(selectedImage);
+      if (res.status === "infected") {
+        Alert.alert(
+          t("pest_disease.result_title", { defaultValue: "Detection Result" }),
+          `${t("pest_disease.stage", { defaultValue: "Stage" })}: ${res.stage}`
+        );
+        // Navigate to a result page if available
+        try {
+          // @ts-ignore optional screen
+          router.push({
+            pathname: "/screens/pest-disease/ProcessResult",
+            params: { data: JSON.stringify(res), image: selectedImage },
+          });
+        } catch {}
+      } else if (res.status === "invalid") {
+        Alert.alert(t("common.error", { defaultValue: "Error" }), res.message);
+      } else {
+        Alert.alert(t("common.error", { defaultValue: "Error" }), res.message);
+      }
+    } catch (e: any) {
+      Alert.alert(
+        t("common.error", { defaultValue: "Error" }),
+        e?.message || "Unknown error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.uploadCard}>
       <View style={styles.plantIconContainer}>
@@ -77,7 +113,7 @@ export default function UploadCard() {
               source={{ uri: selectedImage }}
               style={[
                 styles.plantIcon,
-                { width: 120, height: 120, borderRadius: 12 },
+                selectedImage ? { width: 300, height: 240, borderRadius: 12, marginTop: 150 } : { width: 120, height: 120, borderRadius: 12 },
               ]}
               resizeMode="cover"
             />
@@ -98,31 +134,47 @@ export default function UploadCard() {
         )}
       </View>
 
-      <Text style={styles.uploadTitle}>{t("pest_disease.upload_photo")}</Text>
-      <Text style={styles.uploadSubtitle}>{t("pest_disease.upload_instructions")}</Text>
+      {!selectedImage ? (
+        <>
+          <Text style={styles.uploadTitle}>
+            {t("pest_disease.upload_photo")}
+          </Text>
+          <Text style={styles.uploadSubtitle}>
+            {t("pest_disease.upload_instructions")}
+          </Text>
+        </>
+      ) : (
+        <View style={{ height: 140 }}></View>
+      )}
 
       {selectedImage ? (
         <TouchableOpacity
           style={styles.processButton}
-          onPress={() => {
-            router.push({
-              pathname: "/screens/pest-disease/ProcessResult",
-              params: { image: selectedImage },
-            });
-          }}
+          onPress={submitForDetection}
+          disabled={loading}
         >
-          <CloudUpload color="#fff" size={20} style={{ marginRight: 8 }} />
-          <Text style={styles.chooseFileText}>{t("pest_disease.process_image")}</Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
+          ) : (
+            <CloudUpload color="#fff" size={20} style={{ marginRight: 8 }} />
+          )}
+          <Text style={styles.chooseFileText}>
+            {loading
+              ? t("pest_disease.processing", { defaultValue: "Processing..." })
+              : t("pest_disease.process_image")}
+          </Text>
         </TouchableOpacity>
       ) : (
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.cameraButton} onPress={takePhoto}>
+          <TouchableOpacity style={styles.cameraButton} onPress={takePhoto} disabled={loading}>
             <Camera color="#34A853" size={24} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.chooseFileButton} onPress={pickImage}>
+          <TouchableOpacity style={styles.chooseFileButton} onPress={pickImage} disabled={loading}>
             <Upload color="#fff" size={20} style={{ marginRight: 8 }} />
-            <Text style={styles.chooseFileText}>{t("pest_disease.choose_file")}</Text>
+            <Text style={styles.chooseFileText}>
+              {t("pest_disease.choose_file")}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -132,7 +184,6 @@ export default function UploadCard() {
 
 const styles = StyleSheet.create({
   uploadCard: {
-    
     backgroundColor: "rgba(255, 255, 255, 1)",
     borderRadius: 16,
     padding: 24,
@@ -203,12 +254,12 @@ const styles = StyleSheet.create({
   },
   removeOverlay: {
     position: "absolute",
-    bottom: 8,
+    bottom: -60,
     right: 8,
     backgroundColor: "#FF5252",
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 6,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,

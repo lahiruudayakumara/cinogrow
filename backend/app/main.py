@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 from datetime import datetime
 import platform
 import os
+from app.routers import auth
+from app.db import Base, engine
+from app.routers import pest_disease_router
 
 # Load environment variables FIRST before importing anything else
 load_dotenv(os.path.join(os.path.dirname(__file__), '../..', '.env'))
@@ -67,6 +70,7 @@ app.include_router(hybrid_prediction.router, prefix="/api/v1/yield-weather")
 app.include_router(hybrid_prediction_storage.router, prefix="/api/v1/yield-weather")
 app.include_router(hybrid_yield_router, prefix="/api/v1")  # New hybrid yield endpoints
 app.include_router(auth.router, prefix="/api/v1")
+app.include_router(pest_disease_router, prefix="/api/v1")
 
 @app.get('/')
 async def root():

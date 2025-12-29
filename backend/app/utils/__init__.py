@@ -1,1 +1,1 @@
-# Utils package
+from .image import load_image

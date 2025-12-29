@@ -1,10 +1,14 @@
 # Import all models to ensure they are registered with SQLModel
-from .yield_weather.farm import Farm, Plot, FarmActivity, PlantingRecord
+from .yield_weather.farm import Farm, Plot, FarmActivity, PlantingRecord, UserYieldRecord, YieldPrediction
 from .yield_weather.weather import WeatherRecord, WeatherResponse, LocationRequest, WeatherData
 from .yield_weather.farm_assistance import ActivityHistory
+from .yield_weather.hybrid_yield import HybridYieldResult
 
 # Import fertilizer prediction models
 from .fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis
+
+# Import fertilizer history model
+from .fertilizer_history import FertilizerHistory, FertilizerHistoryCreate, FertilizerHistoryResponse
 
 # Import fertilizer models from fertilizer package
 from .fertilizer.fertilizer import (
@@ -13,23 +17,16 @@ from .fertilizer.fertilizer import (
     FertilizerSchedule,
     FertilizerRecommendation
 )
-from .fertilizer.ml_metadata import (
-    MLAnalysisSession,
-    MLImageAnalysis,
-    MLTrainingDataset,
-    MLModelVersion
-)
-from .fertilizer.deficiency_detection import (
-    DeficiencyAnalysis,
-    CinnamonFertilizerRecommendation,
-    ImageAnalysisLog
-)
+
+from .user import User
 
 __all__ = [
     "Farm", 
     "Plot", 
     "FarmActivity", 
     "PlantingRecord",
+    "UserYieldRecord",
+    "YieldPrediction",
     "WeatherRecord", 
     "WeatherResponse", 
     "LocationRequest",
@@ -38,17 +35,11 @@ __all__ = [
     # Fertilizer models
     "FertilizerPrediction",
     "FertilizerAnalysis",
+    "FertilizerHistory",
+    "FertilizerHistoryCreate",
+    "FertilizerHistoryResponse",
     "FertilizerType",
     "FertilizerApplication",
     "FertilizerSchedule",
-    "FertilizerRecommendation",
-    # ML Metadata models
-    "MLAnalysisSession",
-    "MLImageAnalysis",
-    "MLTrainingDataset",
-    "MLModelVersion",
-    # Deficiency detection models
-    "DeficiencyAnalysis",
-    "CinnamonFertilizerRecommendation",
-    "ImageAnalysisLog"
+    "FertilizerRecommendation"
 ]

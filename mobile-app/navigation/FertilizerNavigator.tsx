@@ -8,11 +8,11 @@ import { FertilizerAnalysisResponse } from '../services/fertilizerAPI';
 import { LeafAnalysisMetadata } from '../services/imageAnalysisService';
 
 // Import screens
-import FertilizerHomeScreen from '../screens/Fertilizer/FertilizerHomeScreen';
-import UploadLeafScreen from '../screens/Fertilizer/UploadLeafScreen';
-import UploadSoilScreen from '../screens/Fertilizer/UploadSoilScreen';
-import PhotoPreview from '../screens/Fertilizer/PhotoPreview';
-import FertilizerResultScreen from '../screens/Fertilizer/FertilizerResultScreen';
+import FertilizerHomeScreen from '../app/screens/fertilizer/FertilizerHomeScreen';
+import UploadLeafScreen from '../app/screens/fertilizer/UploadLeafScreen';
+import UploadSoilScreen from '../app/screens/fertilizer/UploadSoilScreen';
+import PhotoPreview from '../app/screens/fertilizer/PhotoPreview';
+import FertilizerResultScreen from '../app/screens/fertilizer/FertilizerResultScreen';
 
 // Define the navigation parameter types for the Fertilizer stack
 export type FertilizerStackParamList = {
@@ -31,6 +31,8 @@ export type FertilizerStackParamList = {
         soilImage?: string;
         analysisType?: 'leaf-only' | 'comprehensive';
         mlAnalysis?: FertilizerAnalysisResponse; // Add ML analysis data
+        roboflowAnalysis?: any; // Add Roboflow workflow output
+        plantAge?: number; // Plant age in years for recommendations
     };
 };
 

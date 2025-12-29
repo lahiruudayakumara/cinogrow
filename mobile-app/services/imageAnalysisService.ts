@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 // Note: For production, you'll want to add: expo install expo-image-manipulator
 // For now, we'll use basic analysis without image manipulation
 

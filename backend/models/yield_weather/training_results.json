@@ -1,0 +1,23 @@
+{
+  "tree_cane_model": {
+    "model_name": "RandomForest",
+    "cv_r2": 0.38797100360159975,
+    "cv_std": 0.6851406244297911,
+    "test_r2": 0.8252384787472036,
+    "test_mae": 0.8649999999999999
+  },
+  "tree_weight_model": {
+    "model_name": "RandomForest",
+    "cv_r2": 0.842583103258266,
+    "cv_std": 0.14758686436969887,
+    "test_r2": 0.9480595121951216,
+    "test_mae": 0.12262500000000054
+  },
+  "plot_yield_model": {
+    "model_name": "RandomForest",
+    "cv_r2": 0.9294172765564792,
+    "cv_std": 0.032558536259027555,
+    "test_r2": 0.8975430300916447,
+    "test_mae": 343.22470256410304
+  }
+}

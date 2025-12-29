@@ -9,21 +9,29 @@ pandas
 scikit-learn
 xgboost
 joblib
-
-# --- Database & ORM ---
-sqlmodel
-psycopg2-binary
-
-# --- Security & Auth ---
-passlib[bcrypt]
-python-jose
-
-# --- Optional (Images, utilities) ---
-scikit-learn
-pandas
 pillow
 httpx
-python-multipart
-psycopg2-binary
+opencv-python
+statsmodels
+
+# --- Database & ORM ---
 sqlalchemy
+sqlmodel
 alembic
+psycopg2-binary
+python-multipart
+
+# --- Security & Auth ---
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
+python-jose[cryptography]
+
+# --- Email Validation ---
+pydantic[email]
+email-validator
+
+# --- Roboflow Integration ---
+inference-sdk
+
+# --- Kaggle Integration ---
+kaggle>=1.6.0

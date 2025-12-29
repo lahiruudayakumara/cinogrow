@@ -2,24 +2,24 @@
 import { Platform } from 'react-native';
 import apiConfig from '../../config/api';
 
-// Multiple fallback URLs for better connectivity
+// Multiple fallback URLs for better connectivity - Weather endpoints are at /api/v1/weather/
 const getApiUrls = () => {
   if (__DEV__) {
     if (Platform.OS === 'android') {
       return [
-        apiConfig.ENV.API_BASE_URL,           // Environment configured IP (PRIMARY)
+        `http://${apiConfig.ENV.API_BASE_HOST}:${apiConfig.ENV.API_PORT}/api/v1`,  // Environment configured IP (PRIMARY)
         'http://10.0.2.2:8000/api/v1',       // Android emulator special IP
         'http://127.0.0.1:8000/api/v1'       // Localhost fallback
       ];
     } else if (Platform.OS === 'ios') {
       return [
-        apiConfig.ENV.API_BASE_URL,          // Environment configured IP (PRIMARY)
+        `http://${apiConfig.ENV.API_BASE_HOST}:${apiConfig.ENV.API_PORT}/api/v1`,  // Environment configured IP (PRIMARY)
         'http://127.0.0.1:8000/api/v1',      // Localhost fallback
         'http://10.0.2.2:8000/api/v1'        // iOS simulator fallback
       ];
     } else {
       return [
-        apiConfig.ENV.API_BASE_URL,          // Environment configured IP (PRIMARY)
+        `http://${apiConfig.ENV.API_BASE_HOST}:${apiConfig.ENV.API_PORT}/api/v1`,  // Environment configured IP (PRIMARY)
         'http://127.0.0.1:8000/api/v1'       // Localhost fallback
       ];
     }
@@ -29,7 +29,7 @@ const getApiUrls = () => {
 };
 
 const API_URLS = getApiUrls();
-const PRIMARY_API_URL = API_URLS[0];
+const PRIMARY_API_URL = API_URLS[0]; // Use the first URL as primary
 
 export interface WeatherData {
   temperature: number;
@@ -143,24 +143,31 @@ class WeatherAPI {
    */
   async getWeatherByCity(cityName: string): Promise<WeatherResponse> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/weather/city?city=${encodeURIComponent(cityName)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      console.log(`🌤️  Fetching weather for city: ${cityName}`);
+      
+      return await this.tryMultipleUrls(async (baseUrl) => {
+        const response = await fetch(
+          `${baseUrl}/weather/city?city=${encodeURIComponent(cityName)}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        console.log(`📡 Response status: ${response.status}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: WeatherResponse = await response.json();
-      return data;
+        const data: WeatherResponse = await response.json();
+        console.log('✅ Weather data received successfully');
+        return data;
+      });
     } catch (error) {
-      console.error('Error fetching weather data by city:', error);
+      console.error('❌ Error fetching weather data by city:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to fetch weather data',
@@ -174,22 +181,29 @@ class WeatherAPI {
    */
   async postCurrentWeather(coordinates: LocationCoords): Promise<WeatherResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/weather/current`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(coordinates),
+      console.log(`🌤️  Posting coordinates for weather: ${coordinates.latitude}, ${coordinates.longitude}`);
+      
+      return await this.tryMultipleUrls(async (baseUrl) => {
+        const response = await fetch(`${baseUrl}/weather/current`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(coordinates),
+        });
+
+        console.log(`📡 Response status: ${response.status}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: WeatherResponse = await response.json();
+        console.log('✅ Weather data received successfully');
+        return data;
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: WeatherResponse = await response.json();
-      return data;
     } catch (error) {
-      console.error('Error posting weather data:', error);
+      console.error('❌ Error posting weather data:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to fetch weather data',
@@ -214,7 +228,7 @@ class WeatherAPI {
       return {
         status: 'unhealthy',
         service: 'weather',
-        message: error instanceof Error ? error.message : 'Service unavailable'
+        message: error instanceof Error ? error.message : 'Weather service unavailable'
       };
     }
   }

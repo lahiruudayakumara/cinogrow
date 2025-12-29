@@ -8,10 +8,10 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 # Load environment variables from .env file BEFORE importing database
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 from sqlmodel import Session
-from app.database import engine, create_db_and_tables
+from app.db.session import engine, create_db_and_tables
 from app.models.farm import Farm, Plot, PlotStatus
 
 

@@ -15,22 +15,17 @@ export default function TabLayout() {
   return (
     <Tabs
       initialRouteName="index"
+      // Removed sceneContainerStyle as it's not a valid property
       screenOptions={{
         tabBarActiveTintColor: '#2E7D32', // Green color for better visibility
         tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        sceneContainerStyle: {
-          paddingTop: insets.top,
-        },
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect
-            height: 60 + insets.bottom,
-            paddingBottom: insets.bottom,
-            paddingTop: 8,
-            paddingHorizontal: 20
+            height: 35 + insets.bottom,
+            paddingHorizontal: 20,
           },
           default: {
             // Add specific Android styling if needed

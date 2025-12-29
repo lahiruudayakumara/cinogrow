@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -13,23 +13,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
-import apiConfig from '../../config/api';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import apiConfig from '../../../config/api';
 import axios from 'axios';
-
-type FertilizerResultScreenNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerResult'
->;
-
-type FertilizerResultScreenRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerResult'>;
-
-interface FertilizerResultScreenProps {
-    navigation: FertilizerResultScreenNavigationProp;
-    route: FertilizerResultScreenRouteProp;
-}
+import { deserializeResultParams } from '../../fertilizer/types';
 
 interface RoboflowDetection {
     deficiency: string;
@@ -82,11 +69,16 @@ interface FertilizerRecommendation {
     };
 }
 
-const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
-    navigation,
-    route,
-}) => {
-    const { leafImage, roboflowAnalysis, plantAge } = route.params;
+const FertilizerResultScreen: React.FC = () => {
+    const router = useRouter();
+    const rawParams = useLocalSearchParams();
+
+    // Memoize deserialized params to prevent infinite loops
+    const { leafImage, roboflowAnalysis, plantAge } = useMemo(
+        () => deserializeResultParams(rawParams as any),
+        [rawParams.leafImage, rawParams.roboflowAnalysis, rawParams.plantAge]
+    );
+
     const insets = useSafeAreaInsets();
     const [detections, setDetections] = useState<RoboflowDetection[]>([]);
     const [recommendations, setRecommendations] = useState<FertilizerRecommendation | null>(null);
@@ -189,7 +181,7 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
                 <View style={styles.header}>
                     <TouchableOpacity
                         style={styles.backButton}
-                        onPress={() => navigation.goBack()}
+                        onPress={() => router.back()}
                         activeOpacity={0.7}
                     >
                         <Ionicons name="arrow-back" size={24} color="#111827" />
@@ -473,7 +465,7 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
                 <View style={styles.actionsContainer}>
                     <TouchableOpacity
                         style={styles.primaryButton}
-                        onPress={() => navigation.navigate('FertilizerHome')}
+                        onPress={() => router.push('/fertilizer')}
                         activeOpacity={0.8}
                     >
                         <Ionicons name="home" size={20} color="#FFFFFF" />
@@ -482,7 +474,7 @@ const FertilizerResultScreen: React.FC<FertilizerResultScreenProps> = ({
 
                     <TouchableOpacity
                         style={styles.secondaryButton}
-                        onPress={() => navigation.navigate('FertilizerUploadLeaf')}
+                        onPress={() => router.push('/fertilizer/upload-leaf')}
                         activeOpacity={0.8}
                     >
                         <Ionicons name="camera" size={20} color="#4CAF50" />

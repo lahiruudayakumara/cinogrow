@@ -15,26 +15,15 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { FertilizerStackParamList } from '../../navigation/FertilizerNavigator';
-import { fertilizerAPI, FertilizerAnalysisResponse } from '../../services/fertilizerAPI';
-import PlantAgeSelector from '../../components/PlantAgeSelector';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { fertilizerAPI, RoboflowAnalysisResponse } from '../../../services/fertilizerAPI';
+import PlantAgeSelector from '../../../components/PlantAgeSelector';
+import { deserializePhotoPreviewParams, serializeResultParams } from '../../fertilizer/types';
 
-type PhotoPreviewNavigationProp = StackNavigationProp<
-    FertilizerStackParamList,
-    'FertilizerPhotoPreview'
->;
-
-type PhotoPreviewRouteProp = RouteProp<FertilizerStackParamList, 'FertilizerPhotoPreview'>;
-
-interface PhotoPreviewProps {
-    navigation: PhotoPreviewNavigationProp;
-    route: PhotoPreviewRouteProp;
-}
-
-const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
-    const { imageUri, imageType, leafImage, soilImage, leafMetadata } = route.params;
+const PhotoPreview: React.FC = () => {
+    const router = useRouter();
+    const rawParams = useLocalSearchParams();
+    const { imageUri, imageType, leafImage, soilImage, leafMetadata } = deserializePhotoPreviewParams(rawParams as any);
     const insets = useSafeAreaInsets();
 
     // State for ML analysis
@@ -59,7 +48,7 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
     ];
 
     const handleRetakePhoto = () => {
-        navigation.goBack();
+        router.back();
     };
 
     const handleContinue = async () => {
@@ -69,10 +58,13 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
         } else if (imageType === 'soil') {
             // For now, go to results with basic soil analysis
             // TODO: Implement soil analysis API
-            navigation.navigate('FertilizerResult', {
-                leafImage: leafImage,
-                soilImage: imageUri,
-                analysisType: 'comprehensive'
+            router.push({
+                pathname: '/fertilizer/result',
+                params: serializeResultParams({
+                    leafImage: leafImage,
+                    soilImage: imageUri,
+                    analysisType: 'comprehensive'
+                })
             });
         }
     };
@@ -95,11 +87,14 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
             setIsAnalyzing(false);
 
             // Navigate directly to results with the analysis data
-            navigation.navigate('FertilizerResult', {
-                leafImage: imageUri,
-                analysisType: 'leaf-only' as const,
-                roboflowAnalysis: roboflowResult,
-                plantAge: plantAge
+            router.push({
+                pathname: '/fertilizer/result',
+                params: serializeResultParams({
+                    leafImage: imageUri,
+                    analysisType: 'leaf-only' as const,
+                    roboflowAnalysis: roboflowResult,
+                    plantAge: plantAge
+                })
             });
 
         } catch (error) {
@@ -127,9 +122,12 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
                         onPress: () => {
                             console.log('👤 User chose basic analysis fallback');
                             // Continue with basic analysis if ML fails
-                            navigation.navigate('FertilizerResult', {
-                                leafImage: imageUri,
-                                analysisType: 'leaf-only'
+                            router.push({
+                                pathname: '/fertilizer/result',
+                                params: serializeResultParams({
+                                    leafImage: imageUri,
+                                    analysisType: 'leaf-only'
+                                })
                             });
                         }
                     }
@@ -151,9 +149,12 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({ navigation, route }) => {
 
     const handleAddSoilAnalysis = () => {
         // Navigate to soil upload to enhance the analysis
-        navigation.navigate('FertilizerUploadSoil', {
-            fromLeaf: true,
-            leafImage: imageUri
+        router.push({
+            pathname: '/fertilizer/upload-soil',
+            params: {
+                fromLeaf: 'true',
+                leafImage: imageUri
+            }
         });
     };
 

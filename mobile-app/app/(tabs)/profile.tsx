@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, Pressable, Text, StyleSheet } from "react-native";
+import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n/i18n";
 
@@ -83,6 +84,33 @@ export default function ProfileScreen() {
         onClose={() => setSubscriptionModalVisible(false)}
         onSelectPlan={(id) => setCurrentPlan(id)}
       />
+
+      {/* Navigate to Home Screen */}
+      <Pressable
+        style={styles.navButton}
+        onPress={() => router.push("/screens/home/homeScreen")}
+        accessibilityRole="button"
+        accessibilityLabel="Go to Home"
+      >
+        <Text style={styles.navButtonText}>Go to Home</Text>
+      </Pressable>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  navButton: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 24,
+    backgroundColor: "#2E7D32",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  navButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+});

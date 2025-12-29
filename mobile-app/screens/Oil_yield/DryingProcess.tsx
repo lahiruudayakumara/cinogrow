@@ -7,17 +7,55 @@ import {
   ScrollView,
   Animated,
   StatusBar,
+  Alert,
+  Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Picker } from '@react-native-picker/picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import apiConfig from '../../config/api';
+
+// Use localhost for web platform, otherwise use the configured API URL
+const API_BASE_URL = Platform.OS === 'web'
+  ? 'http://localhost:8000/api/v1'
+  : apiConfig.API_BASE_URL;
 
 export default function DryingProcess() {
-  const [plantPart, setPlantPart] = useState('');
+  type MaterialBatch = {
+    id: number;
+    batch_name?: string | null;
+    cinnamon_type: string;
+    mass_kg: number;
+    plant_part: string;
+    plant_age_years: number;
+    harvest_season: string;
+  };
+
+  const [batches, setBatches] = useState<MaterialBatch[]>([]);
+  const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
+  const selectedBatch = batches.find(b => b.id === selectedBatchId) || null;
   const [isRunning, setIsRunning] = useState(false);
   const [time, setTime] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Load material batches
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/oil_yield/batch`);
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Failed to load batches: ${res.status} ${errText}`);
+        }
+        const data: MaterialBatch[] = await res.json();
+        setBatches(data);
+      } catch (e: any) {
+        console.error('❌ Failed to fetch batches', e);
+        Alert.alert('Load Error', e.message || 'Could not load material batches');
+      }
+    };
+    fetchBatches();
+  }, []);
 
   // Timer logic
   useEffect(() => {
@@ -31,13 +69,13 @@ export default function DryingProcess() {
     };
   }, [isRunning]);
 
-  // Algorithm for estimated drying time
+  // Algorithm for estimated drying time based on selected batch
   useEffect(() => {
-    if (plantPart === 'Bark') setEstimatedDuration(36);
-    else if (plantPart === 'Leaf') setEstimatedDuration(96); // 3-5 days (average 4 days)
-    else if (plantPart === 'Twigs') setEstimatedDuration(30);
+    const part = selectedBatch?.plant_part;
+    if (part === 'Leaves & Twigs') setEstimatedDuration(96); // 3-5 days (avg 4 days)
+    else if (part === 'Featherings & Chips') setEstimatedDuration(36);
     else setEstimatedDuration(null);
-  }, [plantPart]);
+  }, [selectedBatch]);
 
   const toggleTimer = () => setIsRunning((prev) => !prev);
 
@@ -62,9 +100,10 @@ export default function DryingProcess() {
   };
 
   const getRecommendation = () => {
-    if (plantPart === 'Bark') {
+    const part = selectedBatch?.plant_part;
+    if (part === 'Featherings & Chips') {
       return {
-        primary: 'Bark requires careful monitoring during drying to preserve essential oils.',
+        primary: 'Featherings & Chips require careful monitoring to preserve essential oils.',
         tips: [
           'Ensure steady air flow and direct sunlight exposure',
           'Check moisture levels every 6 hours',
@@ -72,7 +111,7 @@ export default function DryingProcess() {
         ],
         quality: 'Premium quality achievable with proper drying technique',
       };
-    } else if (plantPart === 'Leaf') {
+    } else if (part === 'Leaves & Twigs') {
       return {
         primary: 'Leaves from prunings and immature branches must be dried in the field for 3-5 days, then bundled and transported to oil extraction facility.',
         tips: [
@@ -85,9 +124,9 @@ export default function DryingProcess() {
       };
     } else {
       return {
-        primary: 'Twigs need balanced drying to maintain structural integrity.',
+        primary: 'Material requires balanced drying to maintain quality.',
         tips: [
-          'Rotate twigs evenly for uniform drying results',
+          'Rotate material evenly for uniform drying',
           'Bundle loosely to allow air circulation',
           'Avoid direct moisture exposure during process',
         ],
@@ -197,61 +236,57 @@ export default function DryingProcess() {
           <BlurView intensity={50} tint="light" style={styles.infoBannerBlur}>
             <View style={styles.infoBannerContent}>
               <MaterialCommunityIcons name="information" size={20} color="#FF9F0A" />
-              <Text style={styles.infoBannerText}>
-                Select plant part to begin monitoring
-              </Text>
+              <Text style={styles.infoBannerText}>Select a batch to begin monitoring</Text>
             </View>
           </BlurView>
         </View>
 
-        {/* Input Section */}
+        {/* Batch Selection Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Plant Selection</Text>
+          <Text style={styles.sectionTitle}>Material Batch</Text>
           <View style={styles.requiredBadge}>
             <Text style={styles.requiredText}>Required</Text>
           </View>
         </View>
 
-        {/* Plant Part Selection Card */}
+        {/* Material Batch Card */}
         <View style={styles.inputCard}>
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="nature" size={24} color="#FF9F0A" />
+                <MaterialCommunityIcons name="package-variant-closed" size={24} color="#FF9F0A" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Plant Part</Text>
-                <Text style={styles.labelSubtext}>Choose material to dry</Text>
+                <Text style={styles.label}>Select Batch</Text>
+                <Text style={styles.labelSubtext}>Choose material batch to monitor drying</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
-              <RadioOption
-                label="Bark - FIX THE CONCEPT"
-                value="Bark"
-                selected={plantPart === 'Bark'}
-                onSelect={() => setPlantPart('Bark')}
-                icon="nature-people"
-              />
-              <RadioOption
-                label="Leaves & Twigs (Prunings)"
-                value="Leaf"
-                selected={plantPart === 'Leaf'}
-                onSelect={() => setPlantPart('Leaf')}
-                icon="leaf"
-              />
-              {/* <RadioOption
-                label="Twigs"
-                value="Twigs"
-                selected={plantPart === 'Twigs'}
-                onSelect={() => setPlantPart('Twigs')}
-                icon="tree"
-              /> */}
+              {batches.length === 0 ? (
+                <Text style={styles.labelSubtext}>No batches found</Text>
+              ) : (
+                batches.map((b) => {
+                  const label = b.batch_name
+                    ? `${b.batch_name} • ${b.cinnamon_type} • ${b.plant_part} • ${b.mass_kg}kg`
+                    : `${b.cinnamon_type} • ${b.plant_part} • ${b.mass_kg}kg`;
+                  return (
+                    <RadioOption
+                      key={b.id}
+                      label={label}
+                      value={String(b.id)}
+                      selected={selectedBatchId === b.id}
+                      onSelect={() => setSelectedBatchId(b.id)}
+                      icon={b.plant_part === 'Leaves & Twigs' ? 'leaf' : 'nature'}
+                    />
+                  );
+                })
+              )}
             </View>
           </BlurView>
         </View>
 
         {/* Timer Section */}
-        {plantPart && (
+        {selectedBatch && (
           <>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Timer Control</Text>
@@ -303,6 +338,13 @@ export default function DryingProcess() {
                         <MaterialCommunityIcons name="progress-clock" size={14} color="#8E8E93" />
                         <Text style={styles.timerMetaText}>
                           {getProgress().toFixed(1)}% complete
+                        </Text>
+                      </View>
+                      <View style={styles.resultMetaDot} />
+                      <View style={styles.timerMetaItem}>
+                        <MaterialCommunityIcons name="leaf" size={14} color="#8E8E93" />
+                        <Text style={styles.timerMetaText}>
+                          {selectedBatch.cinnamon_type} • {selectedBatch.plant_part}
                         </Text>
                       </View>
                     </View>
@@ -357,7 +399,7 @@ export default function DryingProcess() {
                       </View>
                       <View style={styles.estimateHeaderText}>
                         <Text style={styles.estimateLabel}>Optimal Duration</Text>
-                        <Text style={styles.estimateSubtext}>Recommended drying time</Text>
+                        <Text style={styles.estimateSubtext}>Recommended for {selectedBatch?.plant_part}</Text>
                       </View>
                     </View>
                     <View style={styles.estimateValueContainer}>

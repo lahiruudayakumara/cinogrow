@@ -91,6 +91,104 @@ function Greeting() {
   );
 }
 
+function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      speed: 50,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 4,
+      tension: 50,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity
+        style={styles.primaryActionCard}
+        activeOpacity={1}
+        onPress={() => navigation.navigate('AddMaterialBatch')}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        <BlurView intensity={80} tint="light" style={styles.primaryActionBlur}>
+          <View style={styles.primaryActionContent}>
+            <View style={styles.primaryActionTop}>
+              <View style={styles.primaryActionLeft}>
+                <View style={styles.startBadge}>
+                  <MaterialCommunityIcons name="star" size={14} color="#FF9F0A" />
+                  <Text style={styles.startBadgeText}>START HERE</Text>
+                </View>
+                <Text style={styles.primaryActionTitle}>Add Material Batch</Text>
+                <Text style={styles.primaryActionSubtitle}>
+                  Record your cinnamon harvest to begin oil production analysis
+                </Text>
+              </View>
+              <Animated.View style={[styles.primaryActionIcon, { transform: [{ scale: pulseAnim }] }]}>
+                <MaterialCommunityIcons name="plus-circle" size={48} color="#30D158" />
+              </Animated.View>
+            </View>
+            <View style={styles.primaryActionBottom}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.primaryActionSteps}>
+                <View style={styles.stepItem}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>1</Text>
+                  </View>
+                  <Text style={styles.stepText}>Record batch</Text>
+                </View>
+                <MaterialCommunityIcons name="arrow-right" size={16} color="#8E8E93" />
+                <View style={styles.stepItem}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>2</Text>
+                  </View>
+                  <Text style={styles.stepText}>Use tools</Text>
+                </View>
+                <MaterialCommunityIcons name="arrow-right" size={16} color="#8E8E93" />
+                <View style={styles.stepItem}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>3</Text>
+                  </View>
+                  <Text style={styles.stepText}>Get insights</Text>
+                </View>
+              </ScrollView>
+              <View style={styles.primaryActionArrow}>
+                <MaterialCommunityIcons name="arrow-right" size={24} color="#30D158" />
+              </View>
+            </View>
+          </View>
+        </BlurView>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
 function GridCard({ 
   icon, 
   iconColor, 
@@ -200,9 +298,12 @@ export default function OilScreen() {
           {/* Greeting Card */}
           <Greeting />
 
+          {/* Primary Action Card - Add Material Batch */}
+          <PrimaryActionCard navigation={navigation} />
+
           {/* Grid Layout Title */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Oil Production</Text>
+            <Text style={styles.sectionTitle}>Oil Production Tools</Text>
             <Text style={styles.sectionCount}>5 tools</Text>
           </View>
 
@@ -255,15 +356,15 @@ export default function OilScreen() {
           </View>
 
           {/* Research Center Section */}
-          <View style={styles.sectionHeader}>
+          {/* <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Research Center Services</Text>
             <View style={styles.newBadge}>
               <Text style={styles.newBadgeText}>NEW</Text>
             </View>
-          </View>
+          </View> */}
 
           {/* Research Center Info Card */}
-          <View style={styles.researchInfoCard}>
+          {/* <View style={styles.researchInfoCard}>
             <BlurView intensity={60} tint="light" style={styles.researchInfoBlur}>
               <View style={styles.researchInfoHeader}>
                 <View style={styles.researchIconLarge}>
@@ -285,10 +386,10 @@ export default function OilScreen() {
                 </View>
               </View>
             </BlurView>
-          </View>
+          </View> */}
 
           {/* Research Center Feature Cards */}
-          <View style={styles.gridContainer}>
+          {/* <View style={styles.gridContainer}>
             <GridCard
               icon="school-outline"
               iconColor="#5E5CE6"
@@ -306,10 +407,10 @@ export default function OilScreen() {
               subtitle="Export standards"
               onPress={() => navigation.navigate('LabCertification')}
             />
-          </View>
+          </View> */}
 
           {/* Quick Stats Widget */}
-          <View style={styles.statsWidget}>
+          {/* <View style={styles.statsWidget}>
             <BlurView intensity={50} tint="light" style={styles.statsBlur}>
               <View style={styles.statsContent}>
                 <View style={styles.statItem}>
@@ -328,10 +429,10 @@ export default function OilScreen() {
                 </View>
               </View>
             </BlurView>
-          </View>
+          </View> */}
 
           {/* Footer */}
-          <View style={styles.footer}>
+          {/* <View style={styles.footer}>
             <View style={styles.footerBadge}>
               <MaterialCommunityIcons name="shield-check" size={14} color="#30D158" />
               <Text style={styles.footerBadgeText}>AI Powered</Text>
@@ -339,7 +440,7 @@ export default function OilScreen() {
             <Text style={styles.footerText}>
               Empowering Cinnamon Farmers
             </Text>
-          </View>
+          </View> */}
         </ScrollView>
       </ImageBackground>
     </>
@@ -413,7 +514,7 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 20,
     overflow: 'hidden',
-    marginBottom: 24,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -467,6 +568,124 @@ const styles = StyleSheet.create({
     letterSpacing: -0.24,
     fontWeight: '400',
     opacity: 0.8,
+  },
+  primaryActionCard: {
+    width: '100%',
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 28,
+    shadowColor: '#30D158',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  primaryActionBlur: {
+    flex: 1,
+    backgroundColor: 'rgba(48, 209, 88, 0.08)',
+    borderWidth: 2,
+    borderColor: 'rgba(48, 209, 88, 0.3)',
+  },
+  primaryActionContent: {
+    padding: 24,
+  },
+  primaryActionTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  primaryActionLeft: {
+    flex: 1,
+    gap: 8,
+    paddingRight: 16,
+  },
+  startBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 159, 10, 0.15)',
+    alignSelf: 'flex-start',
+    marginBottom: 4,
+  },
+  startBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FF9F0A',
+    letterSpacing: 0.6,
+  },
+  primaryActionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: 0.2,
+    marginBottom: 4,
+  },
+  primaryActionSubtitle: {
+    fontSize: 14,
+    color: '#3C3C43',
+    lineHeight: 20,
+    letterSpacing: -0.24,
+    opacity: 0.8,
+  },
+  primaryActionIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(48, 209, 88, 0.3)',
+  },
+  primaryActionBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(60, 60, 67, 0.12)',
+  },
+  primaryActionSteps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingRight: 8,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stepNumber: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(48, 209, 88, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumberText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#30D158',
+  },
+  stepText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#3C3C43',
+    letterSpacing: -0.08,
+  },
+  primaryActionArrow: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(48, 209, 88, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionHeader: {
     flexDirection: 'row',

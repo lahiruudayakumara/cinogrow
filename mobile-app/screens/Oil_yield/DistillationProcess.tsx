@@ -23,9 +23,19 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function DistillationProcess() {
-  const { t } = useTranslation();
-  const [plantPart, setPlantPart] = useState('');
-  const [cinnamonType, setCinnamonType] = useState('');
+  type MaterialBatch = {
+    id: number;
+    batch_name?: string | null;
+    cinnamon_type: string;
+    mass_kg: number;
+    plant_part: string;
+    plant_age_years: number;
+    harvest_season: string;
+  };
+
+  const [batches, setBatches] = useState<MaterialBatch[]>([]);
+  const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
+  const selectedBatch = batches.find(b => b.id === selectedBatchId) || null;
   const [distillCapacity, setDistillCapacity] = useState('');
   const [optimalTime, setOptimalTime] = useState<number | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -34,14 +44,33 @@ export default function DistillationProcess() {
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Load material batches
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/oil_yield/batch`);
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Failed to load batches: ${res.status} ${errText}`);
+        }
+        const data: MaterialBatch[] = await res.json();
+        setBatches(data);
+      } catch (e: any) {
+        console.error('❌ Failed to fetch batches', e);
+        Alert.alert('Load Error', e.message || 'Could not load material batches');
+      }
+    };
+    fetchBatches();
+  }, []);
+
   // API-based Calculation Logic
   const calculateOptimalTime = async () => {
     console.log('🔍 calculateOptimalTime called');
     console.log('API_BASE_URL:', API_BASE_URL);
 
-    if (!plantPart || !cinnamonType || !distillCapacity) {
+    if (!selectedBatch || !distillCapacity) {
       console.log('❌ Validation failed - missing fields');
-      Alert.alert('Missing Information', 'Please fill in all required fields.');
+      Alert.alert('Missing Information', 'Please select a batch and enter capacity.');
       return;
     }
 
@@ -56,15 +85,15 @@ export default function DistillationProcess() {
     setOptimalTime(null);
     setShowResults(false);
 
-    // Map plant part to API expected values
-    const plantPartMap: { [key: string]: string } = {
-      'Bark': 'Featherings & Chips',
-      'Leaf': 'Leaves & Twigs',
+    // Map cinnamon type to API expected literals
+    const cinnamonTypeMap: { [key: string]: string } = {
+      'Sri Gemunu': 'Sri Gamunu',
+      'Sri Vijaya': 'Sri Wijaya',
     };
 
     const requestBody = {
-      plant_part: plantPartMap[plantPart] || plantPart,
-      cinnamon_type: cinnamonType,
+      plant_part: selectedBatch.plant_part,
+      cinnamon_type: cinnamonTypeMap[selectedBatch.cinnamon_type] || selectedBatch.cinnamon_type,
       distillation_capacity_liters: capacity,
     };
 
@@ -160,7 +189,8 @@ export default function DistillationProcess() {
       quality: '',
     };
 
-    if (plantPart === 'Bark') {
+    const part = selectedBatch?.plant_part;
+    if (part === 'Featherings & Chips') {
       recommendations.primary = 'Bark oil contains 0.5-4% oil with 30-75% cinnamaldehyde. Used as flavoring agent in food, beverages, perfumes and medicines.';
       recommendations.tips = [
         'Use cinnamon quills, featherings, and chips as raw material',
@@ -169,7 +199,7 @@ export default function DistillationProcess() {
         'Higher cinnamaldehyde content = Superior grade (≥60%)',
       ];
       recommendations.quality = 'Superior grade achievable with ≥60% cinnamaldehyde content';
-    } else if (plantPart === 'Leaf') {
+    } else if (part === 'Leaves & Twigs') {
       recommendations.primary = 'Leaf oil contains up to 4% oil with 75-85% eugenol. Average yield: 100 kg oil/hectare/year (1-2% of leaf weight).';
       recommendations.tips = [
         'Use mature leaves and chopped leaves as raw material',
@@ -303,86 +333,50 @@ export default function DistillationProcess() {
           <BlurView intensity={50} tint="light" style={styles.infoBannerBlur}>
             <View style={styles.infoBannerContent}>
               <MaterialCommunityIcons name="information" size={20} color="#0A84FF" />
-              <Text style={styles.infoBannerText}>
-                Enter all parameters to calculate
-              </Text>
+              <Text style={styles.infoBannerText}>Select a batch and capacity</Text>
             </View>
           </BlurView>
         </View>
 
-        {/* Input Section */}
+        {/* Batch Selection */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Input Parameters</Text>
+          <Text style={styles.sectionTitle}>Material Batch</Text>
           <View style={styles.requiredBadge}>
             <Text style={styles.requiredText}>Required</Text>
           </View>
         </View>
-
-        {/* Plant Part Card */}
+        {/* Material Batch Card */}
         <View style={styles.inputCard}>
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="nature" size={24} color="#34C759" />
+                <MaterialCommunityIcons name="package-variant-closed" size={24} color="#34C759" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Plant Part</Text>
-                <Text style={styles.labelSubtext}>Select material type</Text>
+                <Text style={styles.label}>Select Batch</Text>
+                <Text style={styles.labelSubtext}>Choose material batch for distillation</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
-              <RadioOption
-                label="Featherings & Chips"
-                value="Bark"
-                selected={plantPart === 'Bark'}
-                onSelect={() => setPlantPart('Bark')}
-                icon="nature-people"
-              />
-              <RadioOption
-                label="Leaves & Twigs"
-                value="Leaf"
-                selected={plantPart === 'Leaf'}
-                onSelect={() => setPlantPart('Leaf')}
-                icon="leaf"
-              />
-              {/* <RadioOption
-                label="Twigs"
-                value="Twigs"
-                selected={plantPart === 'Twigs'}
-                onSelect={() => setPlantPart('Twigs')}
-                icon="tree"
-              /> */}
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Cinnamon Type Card */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="alpha-c-circle" size={24} color="#FF9F0A" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>{t('yield_weather.common.cinnamon_variety')}</Text>
-                <Text style={styles.labelSubtext}>{t('yield_weather.common.select_variety')}</Text>
-              </View>
-            </View>
-            <View style={styles.radioGroup}>
-              <RadioOption
-                label={t('yield_weather.common.sri_gemunu')}
-                value="Sri Gamunu"
-                selected={cinnamonType === 'Sri Gamunu'}
-                onSelect={() => setCinnamonType('Sri Gamunu')}
-                icon="spa"
-              />
-              <RadioOption
-                label={t('yield_weather.common.sri_wijaya')}
-                value="Sri Wijaya"
-                selected={cinnamonType === 'Sri Wijaya'}
-                onSelect={() => setCinnamonType('Sri Wijaya')}
-                icon="spa-outline"
-              />
+              {batches.length === 0 ? (
+                <Text style={styles.labelSubtext}>No batches found</Text>
+              ) : (
+                batches.map((b) => {
+                  const label = b.batch_name
+                    ? `${b.batch_name} • ${b.cinnamon_type} • ${b.plant_part} • ${b.mass_kg}kg`
+                    : `${b.cinnamon_type} • ${b.plant_part} • ${b.mass_kg}kg`;
+                  return (
+                    <RadioOption
+                      key={b.id}
+                      label={label}
+                      value={String(b.id)}
+                      selected={selectedBatchId === b.id}
+                      onSelect={() => setSelectedBatchId(b.id)}
+                      icon={b.plant_part === 'Leaves & Twigs' ? 'leaf' : 'nature'}
+                    />
+                  );
+                })
+              )}
             </View>
           </BlurView>
         </View>
@@ -427,7 +421,7 @@ export default function DistillationProcess() {
             isPrimary={true}
             icon="calculator"
             text="Calculate Optimal Time"
-            disabled={!plantPart || !cinnamonType || !distillCapacity}
+            disabled={!selectedBatch || !distillCapacity}
           />
         )}
 
@@ -467,10 +461,10 @@ export default function DistillationProcess() {
                 <View style={styles.resultDivider} />
                 <View style={styles.resultMeta}>
                   <MaterialCommunityIcons name="leaf" size={14} color="#8E8E93" />
-                  <Text style={styles.resultMetaText}>{plantPart}</Text>
+                  <Text style={styles.resultMetaText}>{selectedBatch?.plant_part || '-'}</Text>
                   <View style={styles.resultMetaDot} />
                   <MaterialCommunityIcons name="spa" size={14} color="#8E8E93" />
-                  <Text style={styles.resultMetaText}>{cinnamonType}</Text>
+                  <Text style={styles.resultMetaText}>{selectedBatch?.cinnamon_type || '-'}</Text>
                   <View style={styles.resultMetaDot} />
                   <MaterialCommunityIcons name="cup-water" size={14} color="#8E8E93" />
                   <Text style={styles.resultMetaText}>{distillCapacity}L</Text>
@@ -637,7 +631,7 @@ export default function DistillationProcess() {
                   <Text style={styles.infoTitle}>Quality Standards</Text>
                 </View>
                 <View style={styles.infoContent}>
-                  {plantPart === 'Leaf' ? (
+                  {selectedBatch?.plant_part === 'Leaves & Twigs' ? (
                     <>
                       <View style={styles.infoItem}>
                         <MaterialCommunityIcons name="file-document" size={16} color="#0A84FF" />

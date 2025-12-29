@@ -41,7 +41,7 @@ type NavigationProp = StackNavigationProp<YieldWeatherStackParamList>;
 const YieldPredictorScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  
+
   // State management
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,7 +49,7 @@ const YieldPredictorScreen = () => {
   const [availablePlots, setAvailablePlots] = useState<PlotWithFarmInfo[]>([]);
   const [availableFarms, setAvailableFarms] = useState<Farm[]>([]);
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
-  
+
   // Form state for predictions
   const [selectedPlotId, setSelectedPlotId] = useState<number | null>(null);
 
@@ -65,7 +65,7 @@ const YieldPredictorScreen = () => {
   const [recentPredictions, setRecentPredictions] = useState<any[]>([]);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
   const [readyToCollectTreeData, setReadyToCollectTreeData] = useState(false);
-  
+
   // Collapsible sections state
   const [showHowToUse, setShowHowToUse] = useState(false);
   const [showNextSteps, setShowNextSteps] = useState(false);
@@ -74,7 +74,7 @@ const YieldPredictorScreen = () => {
   // Tree input interface
   interface TreeInputData {
     treeCode: string;
-    stem_diameter_mm: string;     // numeric - main predictor
+    stem_circumference_inches: string;     // numeric - main predictor (circumference in inches)
     num_existing_stems: string;   // numeric - stem count
     fertilizer_used_tree: boolean; // binary - fertilizer usage
     diseases_tree: string;        // categorical - disease status
@@ -91,7 +91,7 @@ const YieldPredictorScreen = () => {
     for (let i = 0; i < 3; i++) {
       trees.push({
         treeCode: `TREE_${i + 1}`,
-        stem_diameter_mm: '',
+        stem_circumference_inches: '',
         num_existing_stems: '',
         fertilizer_used_tree: false,
         diseases_tree: 'none',
@@ -127,7 +127,7 @@ const YieldPredictorScreen = () => {
       // Get selected farm ID from AsyncStorage
       const savedFarmId = await AsyncStorage.getItem('selectedFarmId');
       let targetFarmId = selectedFarmId;
-      
+
       if (savedFarmId) {
         targetFarmId = parseInt(savedFarmId);
         if (targetFarmId !== selectedFarmId) {
@@ -140,7 +140,7 @@ const YieldPredictorScreen = () => {
 
       console.log(`🏭 Loaded ${farmsData.length} farms:`, farmsData.map(f => f.name));
       setAvailableFarms(farmsData);
-      
+
       // Set selected farm if none is selected
       if (!targetFarmId && farmsData.length > 0 && farmsData[0].id) {
         targetFarmId = farmsData[0].id;
@@ -150,7 +150,7 @@ const YieldPredictorScreen = () => {
 
       // Get plots only from selected farm (or all if no farm selected)
       let allPlots: PlotWithFarmInfo[] = [];
-      
+
       if (targetFarmId) {
         // Load plots only from selected farm
         const selectedFarm = farmsData.find(f => f.id === targetFarmId);
@@ -158,7 +158,7 @@ const YieldPredictorScreen = () => {
           try {
             const farmPlots = await farmAPI.getFarmPlots(targetFarmId);
             console.log(`🌱 Selected Farm "${selectedFarm.name}" has ${farmPlots.length} plots:`, farmPlots.map(p => p.name));
-            
+
             // Add farm context to each plot
             const plotsWithFarmInfo: PlotWithFarmInfo[] = farmPlots.map(plot => ({
               ...plot,
@@ -188,7 +188,7 @@ const YieldPredictorScreen = () => {
           }
         }
       }
-      
+
       console.log(`📊 Plots loaded for selected farm: ${allPlots.length}`);
       console.log(`📝 Plot details:`, allPlots.map(p => ({
         name: p.name,
@@ -197,7 +197,7 @@ const YieldPredictorScreen = () => {
         area: p.area,
         status: p.status
       })));
-      
+
       setAvailablePlots(allPlots);
 
       // Load recent hybrid predictions
@@ -303,7 +303,7 @@ const YieldPredictorScreen = () => {
   const submitTreeData = async () => {
     // Validate current tree data
     const currentTree = treeData[currentTreeIndex];
-    if (!currentTree.stem_diameter_mm || !currentTree.num_existing_stems) {
+    if (!currentTree.stem_circumference_inches || !currentTree.num_existing_stems) {
       Alert.alert(t('yield_weather.common.error'), t('yield_weather.my_yield.fill_stem_data'));
       return;
     }
@@ -318,7 +318,7 @@ const YieldPredictorScreen = () => {
         fertilizerUsed: currentTree.fertilizer_used_tree,
         diseaseStatus: currentTree.diseases_tree,
         measurement: {
-          stemDiameterMm: parseFloat(currentTree.stem_diameter_mm),
+          stemCircumferenceInches: parseFloat(currentTree.stem_circumference_inches),
           numExistingStems: parseInt(currentTree.num_existing_stems),
         }
       };
@@ -327,9 +327,9 @@ const YieldPredictorScreen = () => {
       console.log('Tree data to submit:', treePayload);
       // TODO: Implement actual API call
       // const treeResponse = await yieldAPI.createTree(treePayload);
-      
+
       Alert.alert(t('yield_weather.common.success'), t('yield_weather.my_yield.tree_data_saved', { number: currentTreeIndex + 1 }));
-      
+
       // Move to next tree or trigger hybrid prediction if all trees are done
       if (currentTreeIndex < 2) {
         nextTree();
@@ -348,28 +348,28 @@ const YieldPredictorScreen = () => {
   const runHybridPrediction = async () => {
     try {
       setTreeSubmitting(true);
-      
+
       // Run hybrid prediction for the selected plot with all 3 trees
       console.log('Running hybrid prediction for plot:', selectedPlotId);
       console.log('Tree data to submit:', treeData.map((tree, index) => ({
         tree_code: tree.treeCode,
-        stem_diameter_mm: parseFloat(tree.stem_diameter_mm) || 0,
+        stem_circumference_inches: parseFloat(tree.stem_circumference_inches) || 0,
         fertilizer_used: tree.fertilizer_used_tree,
         disease_status: tree.diseases_tree as 'none' | 'mild' | 'severe',
         num_existing_stems: parseInt(tree.num_existing_stems) || 0,
       })));
-      
+
       // Prepare tree sample data for API
       const sampleTrees = treeData.map(tree => ({
         tree_code: tree.treeCode,
-        stem_diameter_mm: parseFloat(tree.stem_diameter_mm) || 0,
+        stem_circumference_inches: parseFloat(tree.stem_circumference_inches) || 0,
         fertilizer_used: tree.fertilizer_used_tree,
         fertilizer_type: tree.fertilizer_used_tree ? 'organic' as const : null,
         disease_status: tree.diseases_tree as 'none' | 'mild' | 'severe',
         num_existing_stems: parseInt(tree.num_existing_stems) || 1,
         tree_age_years: 4.0 // Default age for mobile predictions
-      })).filter(tree => tree.stem_diameter_mm > 0 && tree.num_existing_stems > 0); // Only include valid trees
-      
+      })).filter(tree => tree.stem_circumference_inches > 0 && tree.num_existing_stems > 0); // Only include valid trees
+
       if (sampleTrees.length < 3) {
         Alert.alert(t('yield_weather.my_yield.error_label'), t('yield_weather.my_yield.at_least_trees_required'));
         return;
@@ -386,7 +386,7 @@ const YieldPredictorScreen = () => {
         Alert.alert(t('yield_weather.my_yield.error_label'), t('yield_weather.my_yield.total_less_than_sample', { total: totalTrees, sample: sampleTrees.length }));
         return;
       }
-      
+
       // Call real hybrid prediction API
       const hybridResult = await yieldAPI.predictHybridYield(
         selectedPlotId!,
@@ -397,14 +397,14 @@ const YieldPredictorScreen = () => {
         },
         totalTrees // Pass total trees as parameter
       );
-      
+
       console.log('🎯 Real Hybrid Prediction Result:', hybridResult);
-      
+
       // Calculate economic projections
       const marketPricePerKg = VARIETY_PRICES['Default']; // Use default price for now
       const estimatedDryBark = hybridResult.final_hybrid_yield_kg * (hybridResult.estimated_dry_bark_percentage / 100);
       const estimatedRevenue = estimatedDryBark * marketPricePerKg;
-      
+
       // Transform API result to match our UI expectations
       const transformedResult = {
         plotId: selectedPlotId,
@@ -440,7 +440,7 @@ const YieldPredictorScreen = () => {
           priceSource: 'Tridge Mar 2025 (Default)'
         }
       };
-      
+
       // Save prediction to database
       try {
         await yieldAPI.saveHybridPrediction({
@@ -464,14 +464,14 @@ const YieldPredictorScreen = () => {
         console.error('❌ Failed to save prediction to database:', saveError);
         // Don't fail the whole process if save fails
       }
-      
+
       // Store the result and mark trees as completed for this plot
       setHybridYieldResult(transformedResult);
       setTreesCompletedForPlot(selectedPlotId);
       setShowTreeInputModal(false);
-      
+
       Alert.alert(
-        t('yield_weather.my_yield.hybrid_prediction_complete'), 
+        t('yield_weather.my_yield.hybrid_prediction_complete'),
         t('yield_weather.my_yield.prediction_summary', {
           yield: transformedResult.hybridYield.toFixed(1),
           perHa: transformedResult.yieldPerHectare.toFixed(1),
@@ -484,7 +484,7 @@ const YieldPredictorScreen = () => {
     } catch (error) {
       console.error('Error running hybrid prediction:', error);
       Alert.alert(
-        t('yield_weather.my_yield.hybrid_prediction_error'), 
+        t('yield_weather.my_yield.hybrid_prediction_error'),
         `${t('yield_weather.my_yield.failed_hybrid_prediction')}: ${error instanceof Error ? error.message : t('yield_weather.my_yield.unknown_error')}\n\n${t('yield_weather.my_yield.check_tree_data')}`
       );
     } finally {
@@ -497,37 +497,39 @@ const YieldPredictorScreen = () => {
       Alert.alert(t('yield_weather.my_yield.notice'), t('yield_weather.my_yield.please_select_plot'));
       return;
     }
-    
+
     // Check if selected plot is suitable for tree input (age > 3, planted)
     const selectedPlot = availablePlots.find(p => p.id === selectedPlotId);
     if (!selectedPlot) {
       Alert.alert(t('yield_weather.my_yield.error_label'), t('yield_weather.my_yield.selected_plot_not_found'));
       return;
     }
-    
+
     // Check if plot meets criteria for hybrid prediction
     const plotAgeMonths = selectedPlot.age_months || 0;
     const plotAgeYears = plotAgeMonths / 12;
     if (plotAgeYears <= 3) {
       Alert.alert(
-        t('yield_weather.my_yield.plot_not_ready'), 
+        t('yield_weather.my_yield.plot_not_ready'),
         t('yield_weather.my_yield.plot_age_message', { age: plotAgeYears.toFixed(1) }),
         [{ text: t('yield_weather.my_yield.ok') }]
       );
       return;
     }
-    
+
     Alert.alert(
       t('yield_weather.my_yield.tree_data_collection'),
       t('yield_weather.my_yield.collection_message', { plotName: selectedPlot.name }),
       [
         { text: t('yield_weather.my_yield.cancel'), style: 'cancel' },
-        { text: t('yield_weather.my_yield.start_collection'), onPress: () => {
-          initializeTreeData();
-          setTotalTreesInPlot(''); // Reset total trees input
-          setIsEnteringTotalTrees(true); // Start with total trees step
-          setShowTreeInputModal(true);
-        }}
+        {
+          text: t('yield_weather.my_yield.start_collection'), onPress: () => {
+            initializeTreeData();
+            setTotalTreesInPlot(''); // Reset total trees input
+            setIsEnteringTotalTrees(true); // Start with total trees step
+            setShowTreeInputModal(true);
+          }
+        }
       ]
     );
   };
@@ -545,7 +547,7 @@ const YieldPredictorScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -585,14 +587,14 @@ const YieldPredictorScreen = () => {
                 <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
                 <Text style={styles.resultHeaderText}>{t('yield_weather.my_yield.ai_prediction_results')}</Text>
               </View>
-              
+
               {hybridYieldResult && (
                 <View style={styles.hybridResultContainer}>
                   <View style={styles.resultCard}>
                     <Text style={styles.plotName}>
                       {availablePlots.find(p => p.id === selectedPlotId)?.name || 'Selected Plot'}
                     </Text>
-                    
+
                     <View style={styles.predictionBreakdown}>
                       {/* Final Hybrid Result (Most Prominent) */}
                       <View style={styles.finalPrediction}>
@@ -617,8 +619,8 @@ const YieldPredictorScreen = () => {
                       </View>
                     </View>
                   </View>
-                  
-                  <TouchableOpacity 
+
+                  <TouchableOpacity
                     style={styles.resetButton}
                     onPress={() => {
                       setTreesCompletedForPlot(null);
@@ -635,31 +637,31 @@ const YieldPredictorScreen = () => {
           ) : (
             /* Show Instructions and Selection UI */
             <View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.instructionHeader}
                 onPress={() => !selectedPlotId ? setShowHowToUse(!showHowToUse) : setShowNextSteps(!showNextSteps)}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                  <Ionicons name="information-circle-outline" size={20} color="#4CAF50" style={{marginRight: 8}} />
+                  <Ionicons name="information-circle-outline" size={20} color="#4CAF50" style={{ marginRight: 8 }} />
                   <Text style={styles.instructionHeaderText}>
                     {selectedPlotId ? t('yield_weather.my_yield.ready_tree_data_collection') : t('yield_weather.my_yield.select_plot_begin')}
                   </Text>
-                  <Ionicons 
-                    name={(!selectedPlotId ? showHowToUse : showNextSteps) ? "chevron-up" : "chevron-down"} 
-                    size={20} 
-                    color="#4CAF50" 
-                    style={{marginLeft: 'auto'}}
+                  <Ionicons
+                    name={(!selectedPlotId ? showHowToUse : showNextSteps) ? "chevron-up" : "chevron-down"}
+                    size={20}
+                    color="#4CAF50"
+                    style={{ marginLeft: 'auto' }}
                   />
                 </View>
               </TouchableOpacity>
-              
+
               {!selectedPlotId && showHowToUse && (
                 <View style={styles.instructionContainer}>
                   <Text style={styles.instructionTitle}>{t('yield_weather.my_yield.how_to_use_hybrid')}</Text>
                   <Text style={styles.instructionText}>{t('yield_weather.my_yield.step_1_select_plot')}</Text>
                   <Text style={styles.instructionText}>{t('yield_weather.my_yield.step_2_add_tree_data')}</Text>
                   <Text style={styles.instructionText}>{t('yield_weather.my_yield.step_3_get_prediction')}</Text>
-                  
+
                   <View style={styles.benefitsContainer}>
                     <Text style={styles.benefitsTitle}>{t('yield_weather.my_yield.why_hybrid_title')}</Text>
                     <Text style={styles.benefitsText}>{t('yield_weather.my_yield.benefit_1_accuracy')}</Text>
@@ -668,7 +670,7 @@ const YieldPredictorScreen = () => {
                   </View>
                 </View>
               )}
-              
+
               {selectedPlotId && showNextSteps && (
                 <View style={styles.instructionContainer}>
                   <Text style={styles.instructionTitle}>{t('yield_weather.my_yield.next_step_tree_data')}</Text>
@@ -688,15 +690,15 @@ const YieldPredictorScreen = () => {
                     <Ionicons name="business-outline" size={18} color="#374151" />
                     <Text style={styles.selectionLabel}>{t('yield_weather.my_yield.select_farm')}</Text>
                   </View>
-                  
-                  <TouchableOpacity 
+
+                  <TouchableOpacity
                     style={styles.selectionDropdown}
                     onPress={() => {
                       if (availableFarms.length === 0) {
                         Alert.alert(t('yield_weather.my_yield.no_farms_available'), t('yield_weather.my_yield.no_farms_message'));
                         return;
                       }
-                      
+
                       Alert.alert(
                         t('yield_weather.my_yield.select_farm'),
                         t('yield_weather.my_yield.select_farm_message'),
@@ -704,7 +706,7 @@ const YieldPredictorScreen = () => {
                           text: `${farm.name} (${farm.num_plots} ${t('yield_weather.my_yield.plots_info')}, ${farm.total_area} ${t('yield_weather.my_yield.ha_suffix')})`,
                           onPress: () => handleFarmChange(farm.id!),
                         })).concat([
-                          { text: t('yield_weather.my_yield.cancel'), onPress: () => {} }
+                          { text: t('yield_weather.my_yield.cancel'), onPress: () => { } }
                         ])
                       );
                     }}
@@ -748,30 +750,32 @@ const YieldPredictorScreen = () => {
                     <Ionicons name="location-outline" size={18} color="#374151" />
                     <Text style={styles.selectionLabel}>{t('yield_weather.my_yield.select_plot_analysis')}</Text>
                   </View>
-                  
-                  <TouchableOpacity 
+
+                  <TouchableOpacity
                     style={styles.selectionDropdown}
                     onPress={() => {
                       if (!selectedFarmId) {
                         Alert.alert(t('yield_weather.my_yield.no_farm_selected'), t('yield_weather.my_yield.no_farms_message'));
                         return;
                       }
-                      
+
                       const filteredPlots = getFilteredPlots();
                       if (filteredPlots.length === 0) {
                         Alert.alert(
-                          t('yield_weather.my_yield.no_plots_available'), 
+                          t('yield_weather.my_yield.no_plots_available'),
                           t('yield_weather.my_yield.no_plots_message', { farmName: getSelectedFarmName() }),
                           [
                             { text: t('yield_weather.my_yield.cancel') },
-                            { text: t('yield_weather.my_yield.go_to_farms'), onPress: () => {
-                              console.log('Navigate to farms tab');
-                            }}
+                            {
+                              text: t('yield_weather.my_yield.go_to_farms'), onPress: () => {
+                                console.log('Navigate to farms tab');
+                              }
+                            }
                           ]
                         );
                         return;
                       }
-                      
+
                       const plotOptions = filteredPlots
                         .filter(plot => {
                           return plot.status === 'HARVESTING'; // Only show plots ready for harvesting
@@ -780,24 +784,24 @@ const YieldPredictorScreen = () => {
                           text: `${plot.name} (${plot.farm_name || t('yield_weather.my_yield.unknown_plot')}) - ${t('yield_weather.my_yield.status_label')}: ${plot.status}, ${plot.area} ${t('yield_weather.my_yield.ha_suffix')}`,
                           onPress: () => setSelectedPlotId(plot.id!)
                         }));
-                      
+
                       if (plotOptions.length === 0) {
                         const totalPlots = filteredPlots.length;
                         const harvestingPlots = filteredPlots.filter(plot => plot.status === 'HARVESTING');
                         const otherStatusPlots = filteredPlots.filter(plot => plot.status !== 'HARVESTING');
-                        
+
                         Alert.alert(
-                          t('yield_weather.my_yield.no_plots_harvesting'), 
-                          t('yield_weather.my_yield.found_plots_message', { 
-                            total: totalPlots, 
-                            other: otherStatusPlots.length, 
+                          t('yield_weather.my_yield.no_plots_harvesting'),
+                          t('yield_weather.my_yield.found_plots_message', {
+                            total: totalPlots,
+                            other: otherStatusPlots.length,
                             statuses: otherStatusPlots.map(p => p.status).join(', ')
                           }),
                           [{ text: t('yield_weather.my_yield.ok') }]
                         );
                         return;
                       }
-                      
+
                       // Add option to clear selection
                       plotOptions.push({
                         text: t('yield_weather.my_yield.clear_selection'),
@@ -807,7 +811,7 @@ const YieldPredictorScreen = () => {
                           setHybridYieldResult(null);
                         }
                       });
-                      
+
                       Alert.alert(
                         t('yield_weather.my_yield.select_plot'),
                         t('yield_weather.my_yield.select_plot_message'),
@@ -820,7 +824,7 @@ const YieldPredictorScreen = () => {
                     </Text>
                     <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
                   </TouchableOpacity>
-                  
+
                   {selectedPlotId && (
                     <View style={styles.infoBox}>
                       {(() => {
@@ -851,9 +855,9 @@ const YieldPredictorScreen = () => {
                       })()}
                     </View>
                   )}
-                  
+
                   {selectedPlotId && !readyToCollectTreeData && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.primaryButton}
                       onPress={() => setReadyToCollectTreeData(true)}
                     >
@@ -867,22 +871,22 @@ const YieldPredictorScreen = () => {
               {/* Ready to Collect Tree Data */}
               {selectedPlotId && readyToCollectTreeData && !(treesCompletedForPlot && treesCompletedForPlot === selectedPlotId) && (
                 <View style={styles.treeDataSection}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.instructionHeader}
                     onPress={() => setShowReadyInstructions(!showReadyInstructions)}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                      <Ionicons name="leaf-outline" size={20} color="#4CAF50" style={{marginRight: 8}} />
+                      <Ionicons name="leaf-outline" size={20} color="#4CAF50" style={{ marginRight: 8 }} />
                       <Text style={styles.instructionHeaderText}>{t('yield_weather.my_yield.ready_tree_data_collection')}</Text>
-                      <Ionicons 
-                        name={showReadyInstructions ? "chevron-up" : "chevron-down"} 
-                        size={20} 
-                        color="#4CAF50" 
-                        style={{marginLeft: 'auto'}}
+                      <Ionicons
+                        name={showReadyInstructions ? "chevron-up" : "chevron-down"}
+                        size={20}
+                        color="#4CAF50"
+                        style={{ marginLeft: 'auto' }}
                       />
                     </View>
                   </TouchableOpacity>
-                  
+
                   {showReadyInstructions && (
                     <View style={styles.instructionContainer}>
                       <Text style={styles.instructionText}>
@@ -891,7 +895,7 @@ const YieldPredictorScreen = () => {
                     </View>
                   )}
 
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.primaryButton}
                     onPress={openTreeInputModal}
                   >
@@ -922,50 +926,50 @@ const YieldPredictorScreen = () => {
               <Ionicons name="archive-outline" size={24} color="#6366F1" />
               <Text style={styles.historyHeaderText}>{t('yield_weather.my_yield.recent_ai_predictions')}</Text>
             </View>
-            
+
             {loadingPredictions ? (
-              <ActivityIndicator size="small" color="#6366F1" style={{marginTop: 16}} />
+              <ActivityIndicator size="small" color="#6366F1" style={{ marginTop: 16 }} />
             ) : (
               <View style={styles.historyCardsContainer}>
                 {recentPredictions.slice(0, 2).map((prediction, index) => {
-                    const plotName = availablePlots.find(p => p.id === prediction.plot_id)?.name || `Plot ${prediction.plot_id}`;
-                    const predictionDate = new Date(prediction.calculated_at);
-                    
-                    return (
-                      <View key={prediction.id || index} style={styles.historyCard}>
-                        <View style={styles.historyCardHeader}>
-                          <View style={styles.historyCardTitleRow}>
-                            <Ionicons name="location" size={16} color="#6366F1" />
-                            <Text style={styles.historyPlotName}>{plotName}</Text>
-                          </View>
-                          <Text style={styles.historyDate}>
-                            {predictionDate.toLocaleDateString()}
+                  const plotName = availablePlots.find(p => p.id === prediction.plot_id)?.name || `Plot ${prediction.plot_id}`;
+                  const predictionDate = new Date(prediction.calculated_at);
+
+                  return (
+                    <View key={prediction.id || index} style={styles.historyCard}>
+                      <View style={styles.historyCardHeader}>
+                        <View style={styles.historyCardTitleRow}>
+                          <Ionicons name="location" size={16} color="#6366F1" />
+                          <Text style={styles.historyPlotName}>{plotName}</Text>
+                        </View>
+                        <Text style={styles.historyDate}>
+                          {predictionDate.toLocaleDateString()}
+                        </Text>
+                      </View>
+                      <View style={styles.historyCardContent}>
+                        <View style={styles.historyStat}>
+                          <Text style={styles.historyStatLabel}>{t('yield_weather.my_yield.predicted_yield')}</Text>
+                          <Text style={styles.historyStatValue}>
+                            {prediction.final_hybrid_yield?.toFixed(1) || 'N/A'} {t('yield_weather.my_yield.kg_suffix')}
                           </Text>
                         </View>
-                        <View style={styles.historyCardContent}>
-                          <View style={styles.historyStat}>
-                            <Text style={styles.historyStatLabel}>{t('yield_weather.my_yield.predicted_yield')}</Text>
-                            <Text style={styles.historyStatValue}>
-                              {prediction.final_hybrid_yield?.toFixed(1) || 'N/A'} {t('yield_weather.my_yield.kg_suffix')}
-                            </Text>
-                          </View>
-                          <View style={styles.historyStatDivider} />
-                          <View style={styles.historyStat}>
-                            <Text style={styles.historyStatLabel}>{t('yield_weather.my_yield.confidence')}</Text>
-                            <Text style={styles.historyStatValue}>
-                              {((prediction.confidence_score || 0) * 100).toFixed(0)}%
-                            </Text>
-                          </View>
-                          <View style={styles.historyStatDivider} />
-                          <View style={styles.historyStat}>
-                            <Text style={styles.historyStatLabel}>{t('yield_weather.my_yield.trees')}</Text>
-                            <Text style={styles.historyStatValue}>
-                              {prediction.total_trees || 0}
-                            </Text>
-                          </View>
+                        <View style={styles.historyStatDivider} />
+                        <View style={styles.historyStat}>
+                          <Text style={styles.historyStatLabel}>{t('yield_weather.my_yield.confidence')}</Text>
+                          <Text style={styles.historyStatValue}>
+                            {((prediction.confidence_score || 0) * 100).toFixed(0)}%
+                          </Text>
+                        </View>
+                        <View style={styles.historyStatDivider} />
+                        <View style={styles.historyStat}>
+                          <Text style={styles.historyStatLabel}>{t('yield_weather.my_yield.trees')}</Text>
+                          <Text style={styles.historyStatValue}>
+                            {prediction.total_trees || 0}
+                          </Text>
                         </View>
                       </View>
-                    );
+                    </View>
+                  );
                 })}
               </View>
             )}
@@ -989,7 +993,7 @@ const YieldPredictorScreen = () => {
               <Ionicons name="close" size={24} color="#666666" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>
-              {isEnteringTotalTrees 
+              {isEnteringTotalTrees
                 ? t('yield_weather.my_yield.total_trees')
                 : `${t('yield_weather.my_yield.tree_input_method')} - ${t('yield_weather.my_yield.tree_of', { current: currentTreeIndex + 1, total: 3 })}`
               }
@@ -998,7 +1002,7 @@ const YieldPredictorScreen = () => {
             {!isEnteringTotalTrees && (
               <View style={styles.progressContainer}>
                 <View style={styles.progressBar}>
-                  <View 
+                  <View
                     style={[styles.progressFill, { width: `${((currentTreeIndex + 1) / 3) * 100}%` }]}
                   />
                 </View>
@@ -1050,12 +1054,12 @@ const YieldPredictorScreen = () => {
                   </View>
 
                   <View style={styles.formGroup}>
-                    <Text style={styles.label}>{t('yield_weather.my_yield.stem_diameter')} *</Text>
+                    <Text style={styles.label}>{t('yield_weather.my_yield.stem_circumference')} *</Text>
                     <TextInput
                       style={styles.input}
-                      value={treeData[currentTreeIndex].stem_diameter_mm}
-                      onChangeText={(text) => updateTreeData(currentTreeIndex, 'stem_diameter_mm', text)}
-                      placeholder={t('yield_weather.my_yield.enter_diameter_placeholder')}
+                      value={treeData[currentTreeIndex].stem_circumference_inches}
+                      onChangeText={(text) => updateTreeData(currentTreeIndex, 'stem_circumference_inches', text)}
+                      placeholder={t('yield_weather.my_yield.enter_circumference_placeholder')}
                       keyboardType="numeric"
                     />
                   </View>
@@ -1073,17 +1077,17 @@ const YieldPredictorScreen = () => {
 
                   <View style={styles.formGroup}>
                     <Text style={styles.label}>{t('yield_weather.my_yield.fertilizer_used_label')}</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={[styles.dropdown, treeData[currentTreeIndex].fertilizer_used_tree && styles.activeOption]}
                       onPress={() => updateTreeData(currentTreeIndex, 'fertilizer_used_tree', !treeData[currentTreeIndex].fertilizer_used_tree)}
                     >
                       <Text style={styles.dropdownText}>
                         {treeData[currentTreeIndex].fertilizer_used_tree ? t('yield_weather.my_yield.yes') : t('yield_weather.my_yield.no')}
                       </Text>
-                      <Ionicons 
-                        name={treeData[currentTreeIndex].fertilizer_used_tree ? "checkmark-circle" : "ellipse-outline"} 
-                        size={20} 
-                        color={treeData[currentTreeIndex].fertilizer_used_tree ? "#4CAF50" : "#9CA3AF"} 
+                      <Ionicons
+                        name={treeData[currentTreeIndex].fertilizer_used_tree ? "checkmark-circle" : "ellipse-outline"}
+                        size={20}
+                        color={treeData[currentTreeIndex].fertilizer_used_tree ? "#4CAF50" : "#9CA3AF"}
                       />
                     </TouchableOpacity>
                   </View>
@@ -1092,8 +1096,8 @@ const YieldPredictorScreen = () => {
                     <Text style={styles.label}>{t('yield_weather.my_yield.disease_status_label')}</Text>
                     <View style={styles.optionGroup}>
                       {['none', 'mild', 'severe'].map((status) => {
-                        const labelKey = status === 'none' ? 'disease_none_label' : 
-                                        status === 'mild' ? 'disease_mild_label' : 'disease_severe_label';
+                        const labelKey = status === 'none' ? 'disease_none_label' :
+                          status === 'mild' ? 'disease_mild_label' : 'disease_severe_label';
                         return (
                           <TouchableOpacity
                             key={status}

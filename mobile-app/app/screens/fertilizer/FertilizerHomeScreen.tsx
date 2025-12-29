@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import {
     fetchFertilizerHistory,
     formatAnalysisDate,
@@ -27,6 +28,7 @@ import { FertilizerHomeParams } from '../../fertilizer/types';
 const Fertilizer: React.FC = () => {
     const router = useRouter();
     const params = useLocalSearchParams<FertilizerHomeParams>();
+    const { t } = useTranslation();
     const [leafImage, setLeafImage] = useState<string | null>(null);
     const [soilImage, setSoilImage] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
@@ -174,7 +176,7 @@ const Fertilizer: React.FC = () => {
                     <View style={styles.completedOverlay}>
                         <View style={styles.completedBadge}>
                             <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                            <Text style={styles.completedText}>Uploaded</Text>
+                            <Text style={styles.completedText}>{t('fertilizer.home.uploaded')}</Text>
                         </View>
                     </View>
                 )}
@@ -211,7 +213,7 @@ const Fertilizer: React.FC = () => {
                 <View style={styles.actionRow}>
                     <View style={styles.actionContent}>
                         <Ionicons name="analytics-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
-                        <Text style={styles.actionText}>Confidence: {confidence}</Text>
+                        <Text style={styles.actionText}>{t('fertilizer.home.confidence')}: {confidence}</Text>
                     </View>
                     {item.plant_age && (
                         <View style={styles.actionContent}>
@@ -248,9 +250,9 @@ const Fertilizer: React.FC = () => {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.welcomeSection}>
-                        <Text style={styles.title}>Fertilizer Analysis</Text>
+                        <Text style={styles.title}>{t('fertilizer.home.title')}</Text>
                         <Text style={styles.subtitle}>
-                            Get AI-powered fertilizer recommendations for your cinnamon crops
+                            {t('fertilizer.home.subtitle')}
                         </Text>
                     </View>
 
@@ -259,12 +261,12 @@ const Fertilizer: React.FC = () => {
                         <View style={styles.instructionCard}>
                             <View style={styles.instructionHeader}>
                                 <Ionicons name="information-circle" size={20} color="#4CAF50" />
-                                <Text style={styles.instructionTitle}>Quick Start Guide</Text>
+                                <Text style={styles.instructionTitle}>{t('fertilizer.home.quick_start_guide')}</Text>
                             </View>
                             <Text style={styles.instructionText}>
-                                1. Start with a <Text style={styles.highlightText}>leaf sample</Text> for instant recommendations{'\n'}
-                                2. Optionally add a <Text style={styles.highlightText}>soil sample</Text> for enhanced results{'\n'}
-                                3. Get personalized fertilizer advice in seconds
+                                1. {t('fertilizer.home.step_1')}{'\n'}
+                                2. {t('fertilizer.home.step_2')}{'\n'}
+                                3. {t('fertilizer.home.step_3')}
                             </Text>
                         </View>
                     )}
@@ -272,21 +274,21 @@ const Fertilizer: React.FC = () => {
 
                 {/* Upload Section */}
                 <View style={styles.uploadSection}>
-                    <Text style={styles.sectionTitle}>Sample Analysis</Text>
+                    <Text style={styles.sectionTitle}>{t('fertilizer.home.sample_analysis')}</Text>
 
                     <View style={styles.uploadRow}>
                         {renderUploadCard(
                             'leaf-outline',
-                            'Leaf Sample',
-                            'Detect nutrient deficiencies',
+                            t('fertilizer.home.leaf_sample'),
+                            t('fertilizer.home.leaf_sample_subtitle'),
                             handleUploadLeafSample,
                             ['#4CAF50', '#45A049'],
                             !!leafImage
                         )}
                         {renderUploadCard(
                             'earth-outline',
-                            'Soil Sample',
-                            'Analyze soil conditions',
+                            t('fertilizer.home.soil_sample'),
+                            t('fertilizer.home.soil_sample_subtitle'),
                             handleUploadSoilSample,
                             ['#8B7355', '#7A5F47'],
                             !!soilImage
@@ -305,8 +307,8 @@ const Fertilizer: React.FC = () => {
                             />
                         </View>
                         <Text style={styles.progressText}>
-                            {leafImage && soilImage ? 'Ready for Analysis' :
-                                leafImage || soilImage ? '1 of 2 samples uploaded' : 'Upload samples to begin analysis'}
+                            {leafImage && soilImage ? t('fertilizer.home.ready_for_analysis') :
+                                leafImage || soilImage ? t('fertilizer.home.samples_uploaded') : t('fertilizer.home.upload_to_begin')}
                         </Text>
                     </View>
                 </View>
@@ -316,13 +318,13 @@ const Fertilizer: React.FC = () => {
                     <View style={styles.sectionHeader}>
                         <View style={styles.sectionTitleContainer}>
                             <Ionicons name="time-outline" size={20} color="#4CAF50" />
-                            <Text style={styles.sectionTitle}>Recent Analysis</Text>
+                            <Text style={styles.sectionTitle}>{t('fertilizer.home.recent_analysis')}</Text>
                         </View>
                         <TouchableOpacity
                             style={styles.viewAllButton}
                             onPress={handleViewAllHistory}
                         >
-                            <Text style={styles.viewAllText}>View All</Text>
+                            <Text style={styles.viewAllText}>{t('fertilizer.home.view_all')}</Text>
                             <Ionicons name="chevron-forward" size={16} color="#4CAF50" />
                         </TouchableOpacity>
                     </View>
@@ -330,16 +332,16 @@ const Fertilizer: React.FC = () => {
                     {loadingHistory ? (
                         <View style={styles.historyLoadingContainer}>
                             <ActivityIndicator size="small" color="#4CAF50" />
-                            <Text style={styles.historyLoadingText}>Loading recent analyses...</Text>
+                            <Text style={styles.historyLoadingText}>{t('fertilizer.home.loading_analyses')}</Text>
                         </View>
                     ) : recentAnalyses.length > 0 ? (
                         recentAnalyses.map((item) => renderHistoryCard(item))
                     ) : (
                         <View style={styles.emptyHistoryContainer}>
                             <Ionicons name="flask-outline" size={48} color="#D1D5DB" />
-                            <Text style={styles.emptyHistoryText}>No analysis history yet</Text>
+                            <Text style={styles.emptyHistoryText}>{t('fertilizer.home.no_history')}</Text>
                             <Text style={styles.emptyHistorySubtext}>
-                                Start by analyzing a leaf sample
+                                {t('fertilizer.home.start_analyzing')}
                             </Text>
                         </View>
                     )}

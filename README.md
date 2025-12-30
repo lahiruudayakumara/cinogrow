@@ -51,8 +51,8 @@ The **CinoGrow** system aims to:
 
 ## Components
 
-### 🧴 Cinnamon Oil Yield Prediction and Distillation Support (Malmi W.U.)
-   ✔️ Predict cinnamon oil yield using **XGBoost regression** based on farm and process data.  
+### 🧴 Cinnamon Oil Yield Prediction and Decision Support (Malmi W.U.)
+   ✔️ Predict cinnamon oil yield using **Regression** based on farm and process data.  
    ✔️ Recommend **optimal drying and distillation durations** to improve efficiency.  
    ✔️ Visualize expected yield outcomes and performance trends.  
    ✔️ Report Generation.  

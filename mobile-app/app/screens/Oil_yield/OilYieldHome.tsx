@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ImageBackground,
   StatusBar,
   ScrollView,
   Animated,
@@ -14,6 +13,7 @@ import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/OilYieldNavigator';
 
@@ -265,14 +265,13 @@ function GridCard({
 export default function OilScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
+  const router = useRouter();
 
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      <ImageBackground
-        source={require('../../assets/images/img/1.jpg')}
+      <View
         style={styles.background}
-        imageStyle={{ opacity: 0.05 }}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
@@ -318,7 +317,7 @@ export default function OilScreen() {
               backgroundColor="rgba(48, 209, 88, 0.15)"
               title={t('oil_yield.home.cards.yield_predictor_title')}
               subtitle={t('oil_yield.home.cards.yield_predictor_subtitle')}
-              onPress={() => navigation.navigate('OilYieldPredictorSecond')}
+              onPress={() => router.push('/oil-yield/predictor-second')}
             />
             
             {/* <GridCard
@@ -336,7 +335,7 @@ export default function OilScreen() {
               backgroundColor="rgba(48, 209, 88, 0.15)"
               title={t('oil_yield.home.cards.distillation_title')}
               subtitle={t('oil_yield.home.cards.distillation_subtitle')}
-              onPress={() => navigation.navigate('DistillationProcess')}
+              onPress={() => router.push('/oil-yield/distillation-process')}
             />
             
             <GridCard
@@ -345,7 +344,7 @@ export default function OilScreen() {
               backgroundColor="rgba(48, 209, 88, 0.15)"
               title={t('oil_yield.home.cards.quality_title')}
               subtitle={t('oil_yield.home.cards.quality_subtitle')}
-              onPress={() => navigation.navigate('OilQualityGuide')}
+              onPress={() => router.push('/oil-yield/quality-guide')}
             />
             
             <GridCard
@@ -354,7 +353,7 @@ export default function OilScreen() {
               backgroundColor="rgba(48, 209, 88, 0.15)"
               title={t('oil_yield.home.cards.price_predictor_title')}
               subtitle={t('oil_yield.home.cards.price_predictor_subtitle')}
-              onPress={() => navigation.navigate('OilPricePredictor')}
+              onPress={() => router.push('/oil-yield/price-predictor')}
             />
           </View>
 
@@ -445,7 +444,7 @@ export default function OilScreen() {
             </Text>
           </View> */}
         </ScrollView>
-      </ImageBackground>
+      </View>
     </>
   );
 }

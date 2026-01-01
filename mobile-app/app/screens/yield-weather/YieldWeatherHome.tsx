@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   greeting: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '800',
     color: '#111827',
     marginBottom: 6,

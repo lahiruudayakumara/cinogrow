@@ -432,11 +432,13 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         textAlign: 'center',
         marginBottom: 4,
+        flexWrap: 'wrap',
     },
     cardSubtitle: {
         fontSize: 13,
         color: 'rgba(255,255,255,0.8)',
         textAlign: 'center',
+        flexWrap: 'wrap',
     },
     completedOverlay: {
         position: 'absolute',

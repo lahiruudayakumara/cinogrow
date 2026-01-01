@@ -11,6 +11,7 @@ import {
   TextInput,
   Modal,
   FlatList,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -677,6 +678,7 @@ const MyPlantingRecords = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: Platform.OS === 'android' ? 0 : -70,
     backgroundColor: '#FAFBFC',
   },
   scrollView: {

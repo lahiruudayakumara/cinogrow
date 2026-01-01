@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/OilYieldNavigator';
@@ -92,6 +93,7 @@ function Greeting() {
 }
 
 function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
+  const { t } = useTranslation();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
 
@@ -144,11 +146,11 @@ function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
               <View style={styles.primaryActionLeft}>
                 <View style={styles.startBadge}>
                   <MaterialCommunityIcons name="star" size={14} color="#FF9F0A" />
-                  <Text style={styles.startBadgeText}>START HERE</Text>
+                  <Text style={styles.startBadgeText}>{t('oil_yield.home.primary_action.start_badge')}</Text>
                 </View>
-                <Text style={styles.primaryActionTitle}>Add Material Batch</Text>
+                <Text style={styles.primaryActionTitle}>{t('oil_yield.home.primary_action.title')}</Text>
                 <Text style={styles.primaryActionSubtitle}>
-                  Record your cinnamon harvest to begin oil production analysis
+                  {t('oil_yield.home.primary_action.subtitle')}
                 </Text>
               </View>
               <Animated.View style={[styles.primaryActionIcon, { transform: [{ scale: pulseAnim }] }]}>
@@ -262,6 +264,7 @@ function GridCard({
 
 export default function OilScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
 
   return (
     <>
@@ -303,7 +306,7 @@ export default function OilScreen() {
 
           {/* Grid Layout Title */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Oil Production Tools</Text>
+            <Text style={styles.sectionTitle}>{t('oil_yield.home.tools_title')}</Text>
             {/* <Text style={styles.sectionCount}>5 tools</Text> */}
           </View>
 
@@ -313,8 +316,8 @@ export default function OilScreen() {
               icon="flask-outline"
               iconColor="#4aab4e"
               backgroundColor="rgba(48, 209, 88, 0.15)"
-              title="Oil Yield Predictor"
-              subtitle="Estimate yield"
+              title={t('oil_yield.home.cards.yield_predictor_title')}
+              subtitle={t('oil_yield.home.cards.yield_predictor_subtitle')}
               onPress={() => navigation.navigate('OilYieldPredictorSecond')}
             />
             
@@ -331,8 +334,8 @@ export default function OilScreen() {
               icon="steam"
               iconColor="#4aab4e"
               backgroundColor="rgba(48, 209, 88, 0.15)"
-              title="Distillation"
-              subtitle="Track progress"
+              title={t('oil_yield.home.cards.distillation_title')}
+              subtitle={t('oil_yield.home.cards.distillation_subtitle')}
               onPress={() => navigation.navigate('DistillationProcess')}
             />
             
@@ -340,8 +343,8 @@ export default function OilScreen() {
               icon="clipboard-check-outline"
               iconColor="#4aab4e"
               backgroundColor="rgba(48, 209, 88, 0.15)"
-              title="Oil Quality"
-              subtitle="Assess quality"
+              title={t('oil_yield.home.cards.quality_title')}
+              subtitle={t('oil_yield.home.cards.quality_subtitle')}
               onPress={() => navigation.navigate('OilQualityGuide')}
             />
             
@@ -349,8 +352,8 @@ export default function OilScreen() {
               icon="chart-line"
               iconColor="#4aab4e"
               backgroundColor="rgba(48, 209, 88, 0.15)"
-              title="Oil Price Predictor"
-              subtitle="Market forecast"
+              title={t('oil_yield.home.cards.price_predictor_title')}
+              subtitle={t('oil_yield.home.cards.price_predictor_subtitle')}
               onPress={() => navigation.navigate('OilPricePredictor')}
             />
           </View>

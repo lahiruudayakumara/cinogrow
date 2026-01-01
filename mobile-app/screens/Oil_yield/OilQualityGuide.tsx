@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import apiConfig from '../../config/api';
 
 // Use localhost for web platform, otherwise use the configured API URL
@@ -21,6 +22,7 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function PreliminaryOilQualityAssessment() {
+  const { t } = useTranslation();
   const [color, setColor] = useState('');
   const [clarity, setClarity] = useState('');
   const [aroma, setAroma] = useState('');
@@ -53,7 +55,7 @@ export default function PreliminaryOilQualityAssessment() {
         const data = await response.json();
         setBatches(Array.isArray(data) ? data : []);
       } catch (e: any) {
-        Alert.alert('Failed to load batches', e?.message || 'Unknown error');
+        Alert.alert(t('oil_yield.quality.messages.failed_load_batches'), e?.message || t('yield_weather.common.unknown_error'));
       }
     };
     fetchBatches();
@@ -279,9 +281,9 @@ export default function PreliminaryOilQualityAssessment() {
               <MaterialCommunityIcons name="flask-outline" size={28} color="#4aab4e" />
             </View>
           </View>
-          <Text style={styles.header}>Preliminary Oil Quality Assessment</Text>
+          <Text style={styles.header}>{t('oil_yield.quality.header.title')}</Text>
           <Text style={styles.headerSubtitle}>
-            Field & sensory evaluation for cinnamon oil (non-laboratory)
+            {t('oil_yield.quality.header.subtitle')}
           </Text>
         </View>
 
@@ -301,7 +303,7 @@ export default function PreliminaryOilQualityAssessment() {
 
         {/* Input Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Quality Attributes</Text>
+          <Text style={styles.sectionTitle}>{t('oil_yield.quality.attributes_section.title')}</Text>
           
         </View>
 
@@ -313,42 +315,42 @@ export default function PreliminaryOilQualityAssessment() {
                 <MaterialCommunityIcons name="palette" size={24} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Color</Text>
-                <Text style={styles.labelSubtext}>Visual appearance</Text>
+                <Text style={styles.label}>{t('oil_yield.quality.color.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.color.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Pale Yellow"
+                label={t('oil_yield.quality.color.pale_yellow')}
                 value="pale_yellow"
                 selected={color === 'pale_yellow'}
                 onSelect={() => setColor('pale_yellow')}
                 icon="circle"
-                subtitle="Premium quality indicator"
+                subtitle={t('oil_yield.quality.color.pale_yellow_sub')}
               />
               <RadioOption
-                label="Golden"
+                label={t('oil_yield.quality.color.golden')}
                 value="golden"
                 selected={color === 'golden'}
                 onSelect={() => setColor('golden')}
                 icon="circle"
-                subtitle="High quality standard"
+                subtitle={t('oil_yield.quality.color.golden_sub')}
               />
               <RadioOption
-                label="Amber"
+                label={t('oil_yield.quality.color.amber')}
                 value="amber"
                 selected={color === 'amber'}
                 onSelect={() => setColor('amber')}
                 icon="circle"
-                subtitle="Good quality range"
+                subtitle={t('oil_yield.quality.color.amber_sub')}
               />
               <RadioOption
-                label="Dark"
+                label={t('oil_yield.quality.color.dark')}
                 value="dark"
                 selected={color === 'dark'}
                 onSelect={() => setColor('dark')}
                 icon="circle"
-                subtitle="May indicate issues"
+                subtitle={t('oil_yield.quality.color.dark_sub')}
               />
             </View>
           </BlurView>
@@ -362,34 +364,34 @@ export default function PreliminaryOilQualityAssessment() {
                 <MaterialCommunityIcons name="water" size={24} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Clarity</Text>
-                <Text style={styles.labelSubtext}>Transparency level</Text>
+                <Text style={styles.label}>{t('oil_yield.quality.clarity.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.clarity.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Clear"
+                label={t('oil_yield.quality.clarity.clear')}
                 value="clear"
                 selected={clarity === 'clear'}
                 onSelect={() => setClarity('clear')}
                 icon="water"
-                subtitle="Excellent transparency"
+                subtitle={t('oil_yield.quality.clarity.clear_sub')}
               />
               <RadioOption
-                label="Slightly Cloudy"
+                label={t('oil_yield.quality.clarity.slightly_cloudy')}
                 value="slightly_cloudy"
                 selected={clarity === 'slightly_cloudy'}
                 onSelect={() => setClarity('slightly_cloudy')}
                 icon="water-opacity"
-                subtitle="Minor impurities present"
+                subtitle={t('oil_yield.quality.clarity.slightly_cloudy_sub')}
               />
               <RadioOption
-                label="Cloudy"
+                label={t('oil_yield.quality.clarity.cloudy')}
                 value="cloudy"
                 selected={clarity === 'cloudy'}
                 onSelect={() => setClarity('cloudy')}
                 icon="water-off"
-                subtitle="Requires filtration"
+                subtitle={t('oil_yield.quality.clarity.cloudy_sub')}
               />
             </View>
           </BlurView>
@@ -403,34 +405,34 @@ export default function PreliminaryOilQualityAssessment() {
                 <MaterialCommunityIcons name="flower" size={24} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Aroma</Text>
-                <Text style={styles.labelSubtext}>Scent intensity</Text>
+                <Text style={styles.label}>{t('oil_yield.quality.aroma.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.aroma.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Mild"
+                label={t('oil_yield.quality.aroma.mild')}
                 value="mild"
                 selected={aroma === 'mild'}
                 onSelect={() => setAroma('mild')}
                 icon="flower-outline"
-                subtitle="Subtle fragrance"
+                subtitle={t('oil_yield.quality.aroma.mild_sub')}
               />
               <RadioOption
-                label="Aromatic"
+                label={t('oil_yield.quality.aroma.aromatic')}
                 value="aromatic"
                 selected={aroma === 'aromatic'}
                 onSelect={() => setAroma('aromatic')}
                 icon="flower"
-                subtitle="Strong pleasant scent"
+                subtitle={t('oil_yield.quality.aroma.aromatic_sub')}
               />
               <RadioOption
-                label="Pungent"
+                label={t('oil_yield.quality.aroma.pungent')}
                 value="pungent"
                 selected={aroma === 'pungent'}
                 onSelect={() => setAroma('pungent')}
                 icon="flower-pollen"
-                subtitle="Intense sharp odor"
+                subtitle={t('oil_yield.quality.aroma.pungent_sub')}
               />
             </View>
           </BlurView>
@@ -444,13 +446,13 @@ export default function PreliminaryOilQualityAssessment() {
                 <MaterialCommunityIcons name="database" size={24} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Material Batch</Text>
-                <Text style={styles.labelSubtext}>Select from recorded batches</Text>
+                <Text style={styles.label}>{t('oil_yield.quality.batch.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.batch.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               {batches.length === 0 ? (
-                <Text style={styles.labelSubtext}>No batches found. Create one in Oil Yield.</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.batch.no_batches')}</Text>
               ) : (
                 batches.map((b) => (
                   <RadioOption
@@ -474,7 +476,7 @@ export default function PreliminaryOilQualityAssessment() {
             onPress={calculateQuality}
             isPrimary={true}
             icon="check-decagram"
-            text="Evaluate Preliminary Quality"
+            text={t('oil_yield.quality.buttons.evaluate')}
             disabled={!selectedBatch || !color || !clarity || !aroma}
           />
         </View>
@@ -483,10 +485,10 @@ export default function PreliminaryOilQualityAssessment() {
         {score !== null && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Assessment Results</Text>
+              <Text style={styles.sectionTitle}>{t('oil_yield.quality.results.title')}</Text>
               <View style={styles.successBadge}>
                 <MaterialCommunityIcons name="check-circle" size={14} color="#4aab4e" />
-                <Text style={styles.successText}>Complete</Text>
+                <Text style={styles.successText}>{t('oil_yield.quality.results.status_complete')}</Text>
               </View>
             </View>
 
@@ -503,12 +505,12 @@ export default function PreliminaryOilQualityAssessment() {
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.resultTitle}>Quality Score</Text>
+                <Text style={styles.resultTitle}>{t('oil_yield.quality.results.quality_score')}</Text>
                 <View style={styles.resultValueRow}>
                   <Text style={[styles.resultValue, { color: getQualityColor() }]}>
                     {score}
                   </Text>
-                  <Text style={styles.resultValueUnit}>/100</Text>
+                  <Text style={styles.resultValueUnit}>{t('oil_yield.quality.results.unit_over_100')}</Text>
                 </View>
                 <View style={styles.resultDivider} />
                 <View style={styles.resultMeta}>
@@ -555,7 +557,7 @@ export default function PreliminaryOilQualityAssessment() {
                   <View style={styles.decisionIconCircle}>
                     <MaterialCommunityIcons name="clipboard-check-outline" size={24} color="#4aab4e" />
                   </View>
-                  <Text style={styles.decisionTitle}>Laboratory Testing Recommendation</Text>
+                  <Text style={styles.decisionTitle}>{t('oil_yield.quality.results.lab_recommendation_title')}</Text>
                 </View>
                 <Text style={styles.decisionText}>{labAdvice}</Text>
               </BlurView>
@@ -572,7 +574,7 @@ export default function PreliminaryOilQualityAssessment() {
 
             {/* Clear Button */}
             <TouchableOpacity onPress={clearForm} style={styles.clearButton} activeOpacity={0.7}>
-              <Text style={styles.clearText}>Clear Assessment</Text>
+              <Text style={styles.clearText}>{t('oil_yield.quality.buttons.clear')}</Text>
             </TouchableOpacity>
           </>
         )}

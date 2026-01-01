@@ -23,6 +23,7 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function DistillationProcess() {
+  const { t } = useTranslation();
   type MaterialBatch = {
     id: number;
     batch_name?: string | null;
@@ -57,7 +58,7 @@ export default function DistillationProcess() {
         setBatches(data);
       } catch (e: any) {
         console.error('❌ Failed to fetch batches', e);
-        Alert.alert('Load Error', e.message || 'Could not load material batches');
+        Alert.alert(t('oil_yield.distillation.alerts.load_error'), e.message || t('yield_weather.common.unknown_error'));
       }
     };
     fetchBatches();
@@ -70,14 +71,14 @@ export default function DistillationProcess() {
 
     if (!selectedBatch || !distillCapacity) {
       console.log('❌ Validation failed - missing fields');
-      Alert.alert('Missing Information', 'Please select a batch and enter capacity.');
+      Alert.alert(t('oil_yield.distillation.alerts.missing_info'), t('oil_yield.distillation.alerts.missing_fields'));
       return;
     }
 
     const capacity = parseFloat(distillCapacity);
     if (isNaN(capacity) || capacity <= 0) {
       console.log('❌ Invalid capacity value');
-      Alert.alert('Invalid Input', 'Please enter a valid capacity value.');
+      Alert.alert(t('oil_yield.distillation.alerts.invalid_input'), t('oil_yield.distillation.alerts.invalid_capacity'));
       return;
     }
 
@@ -134,7 +135,7 @@ export default function DistillationProcess() {
       console.error('❌ Error message:', error.message);
       console.error('❌ Error stack:', error.stack);
       Alert.alert(
-        'Prediction Failed',
+        t('oil_yield.distillation.alerts.prediction_failed'),
         `Unable to connect to the prediction service.\n\nError: ${error.message}\n\nAPI URL: ${API_BASE_URL}/oil_yield/predict_distillation_time\n\nPlease check your connection and try again.`
       );
     } finally {
@@ -322,9 +323,9 @@ export default function DistillationProcess() {
               <MaterialCommunityIcons name="flask" size={28} color="#4aab4e" />
             </View>
           </View>
-          <Text style={styles.header}>Steam Distillation</Text>
+          <Text style={styles.header}>{t('oil_yield.distillation.header.title')}</Text>
           <Text style={styles.headerSubtitle}>
-            Monitor cinnamon oil extraction process (5-7 hours)
+            {t('oil_yield.distillation.header.subtitle')}
           </Text>
         </View>
 
@@ -340,7 +341,7 @@ export default function DistillationProcess() {
 
         {/* Batch Selection */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Material Batch</Text>
+          <Text style={styles.sectionTitle}>{t('oil_yield.distillation.batch.title')}</Text>
           
         </View>
         {/* Material Batch Card */}
@@ -351,13 +352,13 @@ export default function DistillationProcess() {
                 <MaterialCommunityIcons name="package-variant-closed" size={24} color="#34C759" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Select Batch</Text>
-                <Text style={styles.labelSubtext}>Choose material batch for distillation</Text>
+                <Text style={styles.label}>{t('oil_yield.distillation.batch.select_batch')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.distillation.batch.select_batch_subtext')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               {batches.length === 0 ? (
-                <Text style={styles.labelSubtext}>No batches found</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.distillation.batch.no_batches')}</Text>
               ) : (
                 batches.map((b) => {
                   const label = b.batch_name
@@ -387,21 +388,21 @@ export default function DistillationProcess() {
                 <MaterialCommunityIcons name="cup-water" size={24} color="#5E5CE6" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Distillation Capacity</Text>
-                <Text style={styles.labelSubtext}>In liters</Text>
+                <Text style={styles.label}>{t('oil_yield.distillation.capacity.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.distillation.capacity.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Enter capacity (e.g., 50)"
+                placeholder={t('oil_yield.distillation.capacity.placeholder')}
                 placeholderTextColor="#C7C7CC"
                 keyboardType="numeric"
                 value={distillCapacity}
                 onChangeText={setDistillCapacity}
               />
               <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>L</Text>
+                <Text style={styles.inputSuffixText}>{t('oil_yield.distillation.capacity.suffix_l')}</Text>
               </View>
             </View>
           </BlurView>
@@ -411,14 +412,14 @@ export default function DistillationProcess() {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#4aab4e" />
-            <Text style={styles.loadingText}>Calculating optimal time...</Text>
+            <Text style={styles.loadingText}>{t('oil_yield.distillation.buttons.calculating')}</Text>
           </View>
         ) : (
           <ControlButton
             onPress={calculateOptimalTime}
             isPrimary={true}
             icon="calculator"
-            text="Calculate Optimal Time"
+            text={t('oil_yield.distillation.buttons.calculate')}
             disabled={!selectedBatch || !distillCapacity}
           />
         )}
@@ -427,7 +428,7 @@ export default function DistillationProcess() {
         {showResults && optimalTime && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Results</Text>
+              <Text style={styles.sectionTitle}>{t('oil_yield.distillation.results.title')}</Text>
               <View style={[styles.successBadge, isRunning && styles.activeBadge]}>
                 <MaterialCommunityIcons 
                   name={isRunning ? "clock-fast" : "check-circle"} 
@@ -435,7 +436,7 @@ export default function DistillationProcess() {
                   color={isRunning ? '#4aab4e' : '#30D158'} 
                 />
                 <Text style={[styles.successText, isRunning && styles.activeText]}>
-                  {isRunning ? 'Running' : 'Complete'}
+                  {isRunning ? t('oil_yield.distillation.results.status_running') : t('oil_yield.distillation.results.status_complete')}
                 </Text>
               </View>
             </View>
@@ -451,10 +452,10 @@ export default function DistillationProcess() {
                     <Text style={styles.resultBadgeText}>Calculated</Text>
                   </View>
                 </View>
-                <Text style={styles.resultTitle}>Optimal Distillation Time</Text>
+                <Text style={styles.resultTitle}>{t('oil_yield.distillation.results.optimal_time_title')}</Text>
                 <View style={styles.resultValueRow}>
                   <Text style={styles.resultValue}>{optimalTime}</Text>
-                  <Text style={styles.resultValueUnit}>hours</Text>
+                  <Text style={styles.resultValueUnit}>{t('oil_yield.distillation.results.unit_hours')}</Text>
                 </View>
                 <View style={styles.resultDivider} />
                 <View style={styles.resultMeta}>
@@ -483,13 +484,13 @@ export default function DistillationProcess() {
                   </View>
                   <View style={styles.timerBadge}>
                     <Text style={styles.timerBadgeText}>
-                      {remainingTime === 0 ? 'Completed' : (isRunning ? 'In Progress' : 'Paused')}
+                      {remainingTime === 0 ? t('oil_yield.distillation.results.timer.completed') : (isRunning ? t('oil_yield.distillation.results.timer.in_progress') : t('oil_yield.distillation.results.timer.paused'))}
                     </Text>
                   </View>
                 </View>
                 
                 <Text style={styles.timerLabel}>
-                  {remainingTime === 0 ? 'Process Complete' : 'Time Remaining'}
+                  {remainingTime === 0 ? t('oil_yield.distillation.results.timer.process_complete') : t('oil_yield.distillation.results.timer.time_remaining')}
                 </Text>
                 <Text style={styles.timerValue}>{formatTime(remainingTime)}</Text>
                 
@@ -498,7 +499,7 @@ export default function DistillationProcess() {
                   <View style={styles.timerMetaItem}>
                     <MaterialCommunityIcons name="progress-clock" size={14} color="#8E8E93" />
                     <Text style={styles.timerMetaText}>
-                      {getProgress().toFixed(1)}% complete
+                      {getProgress().toFixed(1)}{t('oil_yield.distillation.results.timer.progress_complete')}
                     </Text>
                   </View>
                 </View>
@@ -521,14 +522,14 @@ export default function DistillationProcess() {
                 onPress={handleStartPause}
                 isPrimary={false}
                 icon={isRunning ? "pause" : "play"}
-                text={isRunning ? "Pause" : "Start"}
+                text={isRunning ? t('oil_yield.distillation.buttons.pause') : t('oil_yield.distillation.buttons.start')}
                 disabled={remainingTime === 0}
               />
               <ControlButton
                 onPress={handleReset}
                 isPrimary={false}
                 icon="restart"
-                text="Reset"
+                text={t('oil_yield.distillation.buttons.reset')}
                 disabled={remainingTime === Math.round(optimalTime * 60)}
               />
             </View>

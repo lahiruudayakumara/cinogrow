@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import apiConfig from '../../config/api';
+import apiConfig from '../../../config/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

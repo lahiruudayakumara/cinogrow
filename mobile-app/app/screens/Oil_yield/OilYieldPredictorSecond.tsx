@@ -14,7 +14,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import apiConfig from '../../config/api';
+import apiConfig from '../../../config/api';
 
 // Use localhost for web platform, otherwise use the configured API URL
 const API_BASE_URL = Platform.OS === 'web' 

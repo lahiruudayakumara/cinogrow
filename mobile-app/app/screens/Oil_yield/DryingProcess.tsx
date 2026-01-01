@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import apiConfig from '../../config/api';
+import apiConfig from '../../../config/api';
 
 // Use localhost for web platform, otherwise use the configured API URL
 const API_BASE_URL = Platform.OS === 'web'

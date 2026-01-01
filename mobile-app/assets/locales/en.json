@@ -755,4 +755,312 @@
       "sri_wijaya": "Sri Wijaya"
     }
   }
+  ,
+  "oil_yield": {
+    "home": {
+      "primary_action": {
+        "start_badge": "START HERE",
+        "title": "Add Material Batch",
+        "subtitle": "Record your cinnamon harvest to begin oil production analysis"
+      },
+      "tools_title": "Oil Production Tools",
+      "cards": {
+        "yield_predictor_title": "Oil Yield Predictor",
+        "yield_predictor_subtitle": "Estimate yield",
+        "distillation_title": "Distillation",
+        "distillation_subtitle": "Track progress",
+        "quality_title": "Oil Quality",
+        "quality_subtitle": "Assess quality",
+        "price_predictor_title": "Oil Price Predictor",
+        "price_predictor_subtitle": "Market forecast"
+      }
+    },
+    "predictor": {
+      "header": {
+        "title": "Oil Yield Predictor",
+        "subtitle": "Get accurate predictions for your cinnamon oil yield"
+      },
+      "batch": {
+        "title": "Material Batch",
+        "select_batch": "Select Batch",
+        "select_batch_subtext": "Choose material batch to predict",
+        "no_batches": "No batches found"
+      },
+      "buttons": {
+        "predict": "Predict Yield",
+        "predicting": "Predicting..."
+      },
+      "results": {
+        "title": "Results",
+        "status_complete": "Complete",
+        "badge_predicted": "Predicted",
+        "yield_title": "Oil Yield",
+        "unit_ml": "mL",
+        "meta_just_now": "Just now",
+        "input_summary": {
+          "title": "Input Summary",
+          "subtitle": "Parameters used",
+          "dried_mass": "Dried Mass:",
+          "species": "Species:",
+          "plant_part": "Plant Part:",
+          "age": "Age:",
+          "years_suffix": "years",
+          "season": "Season:"
+        },
+        "recommendations": {
+          "title": "Recommendations",
+          "best_practices": "Best Practices"
+        }
+      },
+      "alerts": {
+        "load_error": "Load Error",
+        "missing_info": "Missing Information",
+        "select_batch_prompt": "Please select a material batch.",
+        "prediction_failed": "Prediction Failed"
+      }
+    },
+    "distillation": {
+      "header": {
+        "title": "Steam Distillation",
+        "subtitle": "Monitor cinnamon oil extraction process (5-7 hours)"
+      },
+      "batch": {
+        "title": "Material Batch",
+        "select_batch": "Select Batch",
+        "select_batch_subtext": "Choose material batch for distillation",
+        "no_batches": "No batches found"
+      },
+      "capacity": {
+        "title": "Distillation Capacity",
+        "subtitle": "In liters",
+        "placeholder": "Enter capacity (e.g., 50)",
+        "suffix_l": "L"
+      },
+      "buttons": {
+        "calculating": "Calculating optimal time...",
+        "calculate": "Calculate Optimal Time",
+        "start": "Start",
+        "pause": "Pause",
+        "reset": "Reset"
+      },
+      "results": {
+        "title": "Results",
+        "status_complete": "Complete",
+        "status_running": "Running",
+        "badge_calculated": "Calculated",
+        "optimal_time_title": "Optimal Distillation Time",
+        "unit_hours": "hours",
+        "timer": {
+          "completed": "Completed",
+          "in_progress": "In Progress",
+          "paused": "Paused",
+          "process_complete": "Process Complete",
+          "time_remaining": "Time Remaining",
+          "progress_complete": "% complete"
+        }
+      },
+      "alerts": {
+        "load_error": "Load Error",
+        "missing_info": "Missing Information",
+        "missing_fields": "Please select a batch and enter capacity.",
+        "invalid_input": "Invalid Input",
+        "invalid_capacity": "Please enter a valid capacity value.",
+        "prediction_failed": "Prediction Failed"
+      }
+    },
+    "quality": {
+      "header": {
+        "title": "Preliminary Oil Quality Assessment",
+        "subtitle": "Field & sensory evaluation for cinnamon oil (non-laboratory)"
+      },
+      "attributes_section": {
+        "title": "Quality Attributes"
+      },
+      "color": {
+        "title": "Color",
+        "subtitle": "Visual appearance",
+        "pale_yellow": "Pale Yellow",
+        "pale_yellow_sub": "Premium quality indicator",
+        "golden": "Golden",
+        "golden_sub": "High quality standard",
+        "amber": "Amber",
+        "amber_sub": "Good quality range",
+        "dark": "Dark",
+        "dark_sub": "May indicate issues"
+      },
+      "clarity": {
+        "title": "Clarity",
+        "subtitle": "Transparency level",
+        "clear": "Clear",
+        "clear_sub": "Excellent transparency",
+        "slightly_cloudy": "Slightly Cloudy",
+        "slightly_cloudy_sub": "Minor impurities present",
+        "cloudy": "Cloudy",
+        "cloudy_sub": "Requires filtration"
+      },
+      "aroma": {
+        "title": "Aroma",
+        "subtitle": "Scent intensity",
+        "mild": "Mild",
+        "mild_sub": "Subtle fragrance",
+        "aromatic": "Aromatic",
+        "aromatic_sub": "Strong pleasant scent",
+        "pungent": "Pungent",
+        "pungent_sub": "Intense sharp odor"
+      },
+      "batch": {
+        "title": "Material Batch",
+        "subtitle": "Select from recorded batches",
+        "no_batches": "No batches found. Create one in Oil Yield."
+      },
+      "buttons": {
+        "evaluate": "Evaluate Preliminary Quality",
+        "clear": "Clear Assessment"
+      },
+      "results": {
+        "title": "Assessment Results",
+        "status_complete": "Complete",
+        "quality_score": "Quality Score",
+        "unit_over_100": "/100",
+        "lab_recommendation_title": "Laboratory Testing Recommendation"
+      },
+      "messages": {
+        "missing_info": "Missing Information",
+        "missing_fields": "Please select a material batch and all quality attributes.",
+        "failed_load_batches": "Failed to load batches"
+      },
+      "quality_labels": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "fair": "Fair",
+        "poor": "Poor"
+      },
+      "quality_recommendations": {
+        "excellent_price": "$120 – $200 / L",
+        "excellent_recs": [
+          "Suitable for premium markets and export preparation",
+          "Highly recommended for laboratory certification",
+          "Maintain controlled storage to preserve volatile compounds"
+        ],
+        "excellent_lab_advice": "Proceed with full laboratory analysis for certification and export.",
+        "good_price": "$70 – $120 / L",
+        "good_recs": [
+          "Minor purification may improve market value",
+          "Recommended to refine distillation parameters"
+        ],
+        "good_lab_advice": "Improve quality slightly before investing in laboratory testing.",
+        "fair_price": "$30 – $70 / L",
+        "fair_recs": [
+          "Filtering or redistillation is advised",
+          "Review raw material handling and drying process"
+        ],
+        "fair_lab_advice": "Laboratory testing not cost-effective at this stage.",
+        "poor_price": "$5 – $30 / L",
+        "poor_recs": [
+          "Do not proceed with laboratory testing",
+          "Investigate contamination or processing failures"
+        ],
+        "poor_lab_advice": "Resolve quality issues before any certification attempts.",
+        "part_notes": {
+          "leaves_note": "Leaves & Twigs often show higher eugenol; expect stronger aroma.",
+          "bark_note": "Featherings & Chips tend to have higher cinnamaldehyde; color may be richer."
+        }
+      }
+    },
+    "price": {
+      "header": {
+        "title": "Leaf Oil Price Forecast",
+        "subtitle": "ML forecast for cinnamon leaf oil prices"
+      },
+      "view": {
+        "title": "View",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly"
+      },
+      "loading": {
+        "forecast": "Loading forecast...",
+        "failed": "Forecast Failed"
+      },
+      "chart": {
+        "title": "Price Trend",
+        "subtitle": "SARIMA forecast visualization",
+        "legend_predicted": "Predicted Price (LKR/kg)"
+      },
+      "stats": {
+        "title": "Forecast Statistics",
+        "average": "Average",
+        "min": "Min",
+        "max": "Max"
+      }
+    },
+    "add_batch": {
+      "header": {
+        "title": "Material Batch",
+        "subtitle": "Create and manage cinnamon material batches"
+      },
+      "section_new": {
+        "title": "New Batch"
+      },
+      "form": {
+        "batch_name": {
+          "label": "Batch Name",
+          "subtitle": "Enter batch name",
+          "placeholder": "Batch A - Leaves"
+        },
+        "cinnamon_type": {
+          "label": "Cinnamon Type",
+          "subtitle": "Select variety",
+          "options": ["Sri Gemunu", "Sri Vijaya"]
+        },
+        "mass": {
+          "label": "Mass (kg)",
+          "subtitle": "Enter weight",
+          "placeholder": "25.5",
+          "suffix": "kg"
+        },
+        "plant_part": {
+          "label": "Plant Part",
+          "subtitle": "Select part",
+          "options": ["Leaves & Twigs", "Featherings & Chips"]
+        },
+        "plant_age": {
+          "label": "Plant Age",
+          "subtitle": "Enter age",
+          "placeholder": "3.2",
+          "suffix": "years"
+        },
+        "harvest_season": {
+          "label": "Harvest Season",
+          "subtitle": "Select season",
+          "options": ["May–August", "January–April"]
+        }
+      },
+      "buttons": {
+        "creating": "Creating Batch...",
+        "create": "Create Batch"
+      },
+      "list": {
+        "title": "All Batches",
+        "loading": "Loading batches...",
+        "empty_title": "No Batches Yet",
+        "empty_subtitle": "Create your first material batch using the form above",
+        "detail_labels": {
+          "type": "Type",
+          "mass": "Mass",
+          "part": "Part",
+          "age": "Age",
+          "season": "Season"
+        }
+      },
+      "alerts": {
+        "error": "Error",
+        "failed_load": "Failed to load batches",
+        "validation": "Validation",
+        "fill_fields": "Please fill all fields correctly.",
+        "success": "Success",
+        "batch_created": "Batch created successfully"
+      }
+    }
+  }
 }

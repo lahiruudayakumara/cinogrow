@@ -164,8 +164,9 @@ def get_price_forecast(data: PriceForecastInput):
                 detail="Only Leaf oil forecasting is currently supported"
             )
         
-        # Generate forecast
-        result = forecast_prices(data.time_range)
+        # Generate forecast with optional steps override
+        steps_override = getattr(data, 'steps', None)
+        result = forecast_prices(data.time_range, steps_override)
         
         return result
         

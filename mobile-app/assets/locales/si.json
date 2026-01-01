@@ -770,5 +770,281 @@
       "sri_gemunu": "ශ්‍රී ගැමුණු",
       "sri_wijaya": "ශ්‍රී විජය"
     }
+  },
+  "oil_yield": {
+    "home": {
+      "primary_action": {
+        "start_badge": "මෙතනින් ආරම්භ කරන්න",
+        "title": "ද්‍රව්‍ය බැච් එක එක් කරන්න",
+        "subtitle": "තෙල් නිෂ්පාදන විශ්ලේෂණය ආරම්භ කිරීමට ඔබේ දාලචීනි අස්වැන්න සටහන් කරන්න"
+      },
+      "tools_title": "තෙල් නිෂ්පාදන මෙවලම්",
+      "cards": {
+        "yield_predictor_title": "තෙල් ප්‍රමාණ අනාවැකිය",
+        "yield_predictor_subtitle": "ලැබෙන ප්‍රමාණය ඇස්තමේන්තු කරන්න",
+        "distillation_title": "ආසවනය",
+        "distillation_subtitle": "ක්‍රියාවලිය නිරීක්ෂණය කරන්න",
+        "quality_title": "තෙල් ගුණාත්මකභාවය",
+        "quality_subtitle": "ගුණාත්මකභාවය ඇගයීම",
+        "price_predictor_title": "තෙල් මිල අනාවැකිය",
+        "price_predictor_subtitle": "වෙළඳපොළ අනාවැකිය"
+      }
+    },
+    "predictor": {
+      "header": {
+        "title": "තෙල් ප්‍රමාණ අනාවැකිය",
+        "subtitle": "ඔබගේ දාලචීනි තෙල් ලැබීම සඳහා නිවැරදි අනාවැකියක් ලබාගන්න"
+      },
+      "batch": {
+        "title": "ද්‍රව්‍ය බැච්",
+        "select_batch": "බැච් එක තෝරන්න",
+        "select_batch_subtext": "අනාවැකිය සඳහා ද්‍රව්‍ය බැච් එක තෝරන්න",
+        "no_batches": "බැච් කිසිවක් හමු නොවීය"
+      },
+      "buttons": {
+        "predict": "තෙල් ප්‍රමාණය අනාවැකි කරන්න",
+        "predicting": "අනාවැකි කරමින්..."
+      },
+      "results": {
+        "title": "ප්‍රතිඵල",
+        "status_complete": "සම්පූර්ණයි",
+        "badge_predicted": "අනාවැකි කර ඇත",
+        "yield_title": "තෙල් ප්‍රමාණය",
+        "unit_ml": "මි.ලි.",
+        "meta_just_now": "දැන්ම",
+        "input_summary": {
+          "title": "ආදාන සාරාංශය",
+          "subtitle": "භාවිතා කළ පරාමිතීන්",
+          "dried_mass": "වියළූ බර:",
+          "species": "වර්ගය:",
+          "plant_part": "ශාක කොටස:",
+          "age": "වයස:",
+          "years_suffix": "අවුරුදු",
+          "season": "කාලය:"
+        },
+        "recommendations": {
+          "title": "නිර්දේශ",
+          "best_practices": "හොඳම ක්‍රියාමාර්ග"
+        }
+      },
+      "alerts": {
+        "load_error": "ලෝඩ් කිරීමේ දෝෂයක්",
+        "missing_info": "තොරතුරු අසම්පූර්ණයි",
+        "select_batch_prompt": "කරුණාකර ද්‍රව්‍ය බැච් එකක් තෝරන්න.",
+        "prediction_failed": "අනාවැකි කිරීම අසාර්ථකයි"
+      }
+    },
+    "distillation": {
+      "header": {
+        "title": "වाष්ප ආසවනය",
+        "subtitle": "දාලචීනි තෙල් නිස්සාරණ ක්‍රියාවලිය නිරීක්ෂණය කරන්න (පැය 5–7)"
+      },
+      "batch": {
+        "title": "ද්‍රව්‍ය බැච්",
+        "select_batch": "බැච් එක තෝරන්න",
+        "select_batch_subtext": "ආසවනය සඳහා ද්‍රව්‍ය බැච් එක තෝරන්න",
+        "no_batches": "බැච් කිසිවක් හමු නොවීය"
+      },
+      "capacity": {
+        "title": "ආසවනයේ ධාරිතාව",
+        "subtitle": "ලිටර් වලින්",
+        "placeholder": "ධාරිතාව ඇතුළත් කරන්න (උදා: 50)",
+        "suffix_l": "ලි."
+      },
+      "buttons": {
+        "calculating": "හොඳම කාලය ගණනය කරමින්...",
+        "calculate": "හොඳම ආසවන කාලය ගණනය කරන්න",
+        "start": "ආරම්භ කරන්න",
+        "pause": "තාවකාලිකව නවත්වන්න",
+        "reset": "නැවත සකසන්න"
+      },
+      "results": {
+        "title": "ප්‍රතිඵල",
+        "status_complete": "සම්පූර්ණයි",
+        "status_running": "ක්‍රියාත්මක වෙමින්",
+        "badge_calculated": "ගණනය කර ඇත",
+        "optimal_time_title": "හොඳම ආසවන කාලය",
+        "unit_hours": "පැය",
+        "timer": {
+          "completed": "සම්පූර්ණයි",
+          "in_progress": "සිදුවෙමින්",
+          "paused": "තාවකාලිකව නවතා ඇත",
+          "process_complete": "ක්‍රියාවලිය අවසන්",
+          "time_remaining": "ඉතිරි කාලය",
+          "progress_complete": "% සම්පූර්ණයි"
+        }
+      },
+      "alerts": {
+        "load_error": "ලෝඩ් කිරීමේ දෝෂයක්",
+        "missing_info": "තොරතුරු අසම්පූර්ණයි",
+        "missing_fields": "කරුණාකර බැච් එකක් තෝරා ධාරිතාව ඇතුළත් කරන්න.",
+        "invalid_input": "අවලංගු ආදානයක්",
+        "invalid_capacity": "කරුණාකර වලංගු ධාරිතාවක් ඇතුළත් කරන්න.",
+        "prediction_failed": "අනාවැකි කිරීම අසාර්ථකයි"
+      }
+    },
+    "quality": {
+      "header": {
+        "title": "මූලික තෙල් ගුණාත්මකභාව ඇගයීම",
+        "subtitle": "දාලචීනි තෙල් සඳහා ක්ෂේත්‍ර හා සංවේදී ඇගයීම (ලැබ් පරීක්ෂාවක් නොවේ)"
+      },
+      "attributes_section": {
+        "title": "ගුණාත්මක ලක්ෂණ"
+      },
+      "color": {
+        "title": "වර්ණය",
+        "subtitle": "දෘශ්‍ය පෙනුම",
+        "pale_yellow": "ලයිට් කහ",
+        "pale_yellow_sub": "උසස් ගුණාත්මකභාවය දක්වන ලක්ෂණයක්",
+        "golden": "රන් පැහැය",
+        "golden_sub": "උසස් ගුණාත්මක මට්ටම",
+        "amber": "ඇම්බර්",
+        "amber_sub": "හොඳ ගුණාත්මක පරාසය",
+        "dark": "ගැඹුරු පැහැය",
+        "dark_sub": "ගැටළු ඇති බව දක්විය හැක"
+      },
+      "clarity": {
+        "title": "පැහැදිලිභාවය",
+        "subtitle": "පාරදෘශ්‍යතාව",
+        "clear": "පැහැදිලි",
+        "clear_sub": "ඉතා හොඳ පැහැදිලිභාවය",
+        "slightly_cloudy": "තරමක් මැලිය",
+        "slightly_cloudy_sub": "කුඩා අපවිත්‍රතා ඇත",
+        "cloudy": "මැලිය",
+        "cloudy_sub": "පෙරහන් කිරීම අවශ්‍යයි"
+      },
+      "aroma": {
+        "title": "සුවඳ",
+        "subtitle": "සුවඳේ තීව්‍රතාව",
+        "mild": "මෘදු",
+        "mild_sub": "සුළු සුවඳක්",
+        "aromatic": "සුවඳැති",
+        "aromatic_sub": "තද හා ප්‍රිය සුවඳක්",
+        "pungent": "තීව්‍ර",
+        "pungent_sub": "තද හා කඩුළු සුවඳක්"
+      },
+      "batch": {
+        "title": "ද්‍රව්‍ය බැච්",
+        "subtitle": "සටහන් කර ඇති බැච් වලින් තෝරන්න",
+        "no_batches": "බැච් කිසිවක් නැත. තෙල් ප්‍රමාණ කොටසෙන් එකක් සාදන්න."
+      },
+      "buttons": {
+        "evaluate": "මූලික ගුණාත්මකභාවය ඇගයීම",
+        "clear": "ඇගයීම ඉවත් කරන්න"
+      },
+      "results": {
+        "title": "ඇගයීම් ප්‍රතිඵල",
+        "status_complete": "සම්පූර්ණයි",
+        "quality_score": "ගුණාත්මක ලකුණු",
+        "unit_over_100": "/100",
+        "lab_recommendation_title": "ලැබ් පරීක්ෂා නිර්දේශය"
+      },
+      "messages": {
+        "missing_info": "තොරතුරු අසම්පූර්ණයි",
+        "missing_fields": "කරුණාකර බැච් එකක් සහ සියලු ගුණාත්මක ලක්ෂණ තෝරන්න.",
+        "failed_load_batches": "බැච් ලෝඩ් කිරීම අසාර්ථකයි"
+      },
+      "quality_labels": {
+        "excellent": "ඉතා හොඳයි",
+        "good": "හොඳයි",
+        "fair": "සාමාන්‍යයි",
+        "poor": "දුර්වලයි"
+      }
+    },
+    "price": {
+      "header": {
+        "title": "පත්‍ර තෙල් මිල අනාවැකිය",
+        "subtitle": "දාලචීනි පත්‍ර තෙල් මිල සඳහා ML අනාවැකිය"
+      },
+      "view": {
+        "title": "දර්ශනය",
+        "daily": "දිනපතා",
+        "weekly": "සතිපතා",
+        "monthly": "මාසික"
+      },
+      "loading": {
+        "forecast": "අනාවැකිය ලෝඩ් වෙමින්...",
+        "failed": "අනාවැකිය අසාර්ථකයි"
+      },
+      "chart": {
+        "title": "මිල ප්‍රවණතාව",
+        "subtitle": "SARIMA අනාවැකි දෘශ්‍යකරණය",
+        "legend_predicted": "අනාවැකි කළ මිල (LKR/kg)"
+      },
+      "stats": {
+        "title": "අනාවැකි සංඛ්‍යාත",
+        "average": "සාමාන්‍යය",
+        "min": "අවම",
+        "max": "උපරිම"
+      }
+    },
+    "add_batch": {
+      "header": {
+        "title": "ද්‍රව්‍ය බැච්",
+        "subtitle": "දාලචීනි ද්‍රව්‍ය බැච් සාදන්න හා කළමනාකරණය කරන්න"
+      },
+      "section_new": {
+        "title": "නව බැච්"
+      },
+      "form": {
+        "batch_name": {
+          "label": "බැච් නාමය",
+          "subtitle": "බැච් නාමය ඇතුළත් කරන්න",
+          "placeholder": "බැච් A - පත්‍ර"
+        },
+        "cinnamon_type": {
+          "label": "දාලචීනි වර්ගය",
+          "subtitle": "වර්ගය තෝරන්න",
+          "options": ["ශ්‍රී ගැමුණු", "ශ්‍රී විජය"]
+        },
+        "mass": {
+          "label": "බර (කි.ග්‍රෑ.)",
+          "subtitle": "බර ඇතුළත් කරන්න",
+          "placeholder": "25.5",
+          "suffix": "කි.ග්‍රෑ."
+        },
+        "plant_part": {
+          "label": "ශාක කොටස",
+          "subtitle": "කොටස තෝරන්න",
+          "options": ["පත්‍ර සහ කුඩු කඳන්", "පොතු සහ චිප්ස්"]
+        },
+        "plant_age": {
+          "label": "ශාක වයස",
+          "subtitle": "වයස ඇතුළත් කරන්න",
+          "placeholder": "3.2",
+          "suffix": "අවුරුදු"
+        },
+        "harvest_season": {
+          "label": "අස්වැන්න කාලය",
+          "subtitle": "කාලය තෝරන්න",
+          "options": ["මැයි–අගෝස්තු", "ජනවාරි–අප්‍රේල්"]
+        }
+      },
+      "buttons": {
+        "creating": "බැච් එක සාදමින්...",
+        "create": "බැච් එක සාදන්න"
+      },
+      "list": {
+        "title": "සියලු බැච්",
+        "loading": "බැච් ලෝඩ් වෙමින්...",
+        "empty_title": "තවම බැච් නැත",
+        "empty_subtitle": "ඉහත පෝරමය භාවිතා කර ඔබගේ පළමු බැච් එක සාදන්න",
+        "detail_labels": {
+          "type": "වර්ගය",
+          "mass": "බර",
+          "part": "කොටස",
+          "age": "වයස",
+          "season": "කාලය"
+        }
+      },
+      "alerts": {
+        "error": "දෝෂයක්",
+        "failed_load": "බැච් ලෝඩ් කිරීම අසාර්ථකයි",
+        "validation": "සත්‍යාපනය",
+        "fill_fields": "කරුණාකර සියලු ක්ෂේත්‍ර නිවැරදිව පුරවන්න.",
+        "success": "සාර්ථකයි",
+        "batch_created": "බැච් එක සාර්ථකව සාදන ලදී"
+      }
+    }
   }
 }

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/OilYieldNavigator';
@@ -63,7 +64,7 @@ function Greeting() {
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.greetingContainer}
         activeOpacity={1}
         onPress={handlePress}
@@ -86,12 +87,13 @@ function Greeting() {
             </Text>
           </View>
         </BlurView>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </Animated.View>
   );
 }
 
 function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
+  const { t } = useTranslation();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
 
@@ -144,18 +146,18 @@ function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
               <View style={styles.primaryActionLeft}>
                 <View style={styles.startBadge}>
                   <MaterialCommunityIcons name="star" size={14} color="#FF9F0A" />
-                  <Text style={styles.startBadgeText}>START HERE</Text>
+                  <Text style={styles.startBadgeText}>{t('oil_yield.home.primary_action.start_badge')}</Text>
                 </View>
-                <Text style={styles.primaryActionTitle}>Add Material Batch</Text>
+                <Text style={styles.primaryActionTitle}>{t('oil_yield.home.primary_action.title')}</Text>
                 <Text style={styles.primaryActionSubtitle}>
-                  Record your cinnamon harvest to begin oil production analysis
+                  {t('oil_yield.home.primary_action.subtitle')}
                 </Text>
               </View>
               <Animated.View style={[styles.primaryActionIcon, { transform: [{ scale: pulseAnim }] }]}>
-                <MaterialCommunityIcons name="plus-circle" size={48} color="#30D158" />
+                <MaterialCommunityIcons name="plus-circle" size={48} color="#4aab4e" />
               </Animated.View>
             </View>
-            <View style={styles.primaryActionBottom}>
+            {/* <View style={styles.primaryActionBottom}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.primaryActionSteps}>
                 <View style={styles.stepItem}>
                   <View style={styles.stepNumber}>
@@ -179,9 +181,9 @@ function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
                 </View>
               </ScrollView>
               <View style={styles.primaryActionArrow}>
-                <MaterialCommunityIcons name="arrow-right" size={24} color="#30D158" />
+                <MaterialCommunityIcons name="arrow-right" size={24} color="#4aab4e" />
               </View>
-            </View>
+            </View> */}
           </View>
         </BlurView>
       </TouchableOpacity>
@@ -262,6 +264,7 @@ function GridCard({
 
 export default function OilScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
 
   return (
     <>
@@ -277,10 +280,10 @@ export default function OilScreen() {
           bounces={true}
         >
           {/* Header with Floating Action */}
-          <View style={styles.headerContainer}>
+          {/* <View style={styles.headerContainer}>
             <View style={styles.headerLeft}>
               <View style={styles.logoContainer}>
-                <MaterialCommunityIcons name="leaf" size={24} color="#30D158" />
+                <MaterialCommunityIcons name="leaf" size={24} color="#4aab4e" />
               </View>
               <View>
                 <Text style={styles.header}>CinoGrow</Text>
@@ -293,7 +296,7 @@ export default function OilScreen() {
             <TouchableOpacity style={styles.profileButton} activeOpacity={0.7}>
               <MaterialCommunityIcons name="account-circle" size={32} color="#8E8E93" />
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           {/* Greeting Card */}
           <Greeting />
@@ -303,54 +306,54 @@ export default function OilScreen() {
 
           {/* Grid Layout Title */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Oil Production Tools</Text>
-            <Text style={styles.sectionCount}>5 tools</Text>
+            <Text style={styles.sectionTitle}>{t('oil_yield.home.tools_title')}</Text>
+            {/* <Text style={styles.sectionCount}>5 tools</Text> */}
           </View>
 
           {/* Grid Cards - 2 Column Layout */}
           <View style={styles.gridContainer}>
             <GridCard
               icon="flask-outline"
-              iconColor="#30D158"
+              iconColor="#4aab4e"
               backgroundColor="rgba(48, 209, 88, 0.15)"
-              title="Oil Yield Predictor"
-              subtitle="Estimate yield"
+              title={t('oil_yield.home.cards.yield_predictor_title')}
+              subtitle={t('oil_yield.home.cards.yield_predictor_subtitle')}
               onPress={() => navigation.navigate('OilYieldPredictorSecond')}
             />
             
-            <GridCard
+            {/* <GridCard
               icon="white-balance-sunny"
-              iconColor="#FF9F0A"
-              backgroundColor="rgba(255, 159, 10, 0.15)"
+              iconColor="#4aab4e"
+              backgroundColor="rgba(48, 209, 88, 0.15)"
               title="Drying Process"
               subtitle="Optimize time"
               onPress={() => navigation.navigate('DryingProcess')}
-            />
+            /> */}
             
             <GridCard
               icon="steam"
-              iconColor="#5E5CE6"
-              backgroundColor="rgba(94, 92, 230, 0.15)"
-              title="Distillation"
-              subtitle="Track progress"
+              iconColor="#4aab4e"
+              backgroundColor="rgba(48, 209, 88, 0.15)"
+              title={t('oil_yield.home.cards.distillation_title')}
+              subtitle={t('oil_yield.home.cards.distillation_subtitle')}
               onPress={() => navigation.navigate('DistillationProcess')}
             />
             
             <GridCard
               icon="clipboard-check-outline"
-              iconColor="#0A84FF"
-              backgroundColor="rgba(10, 132, 255, 0.15)"
-              title="Oil Quality"
-              subtitle="Assess quality"
+              iconColor="#4aab4e"
+              backgroundColor="rgba(48, 209, 88, 0.15)"
+              title={t('oil_yield.home.cards.quality_title')}
+              subtitle={t('oil_yield.home.cards.quality_subtitle')}
               onPress={() => navigation.navigate('OilQualityGuide')}
             />
             
             <GridCard
               icon="chart-line"
-              iconColor="#FF3B30"
-              backgroundColor="rgba(255, 59, 48, 0.15)"
-              title="Oil Price Predictor"
-              subtitle="Market forecast"
+              iconColor="#4aab4e"
+              backgroundColor="rgba(48, 209, 88, 0.15)"
+              title={t('oil_yield.home.cards.price_predictor_title')}
+              subtitle={t('oil_yield.home.cards.price_predictor_subtitle')}
               onPress={() => navigation.navigate('OilPricePredictor')}
             />
           </View>
@@ -375,7 +378,7 @@ export default function OilScreen() {
                   <Text style={styles.researchInfoSubtitle}>Palolpitiya, Thihagoda, Matara</Text>
                   <View style={styles.researchBadgesRow}>
                     <View style={styles.researchMicroBadge}>
-                      <MaterialCommunityIcons name="certificate" size={12} color="#30D158" />
+                      <MaterialCommunityIcons name="certificate" size={12} color="#4aab4e" />
                       <Text style={styles.researchMicroBadgeText}>Free Training</Text>
                     </View>
                     <View style={styles.researchMicroBadge}>
@@ -434,7 +437,7 @@ export default function OilScreen() {
           {/* Footer */}
           {/* <View style={styles.footer}>
             <View style={styles.footerBadge}>
-              <MaterialCommunityIcons name="shield-check" size={14} color="#30D158" />
+              <MaterialCommunityIcons name="shield-check" size={14} color="#4aab4e" />
               <Text style={styles.footerBadgeText}>AI Powered</Text>
             </View>
             <Text style={styles.footerText}>
@@ -495,12 +498,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#30D158',
+    backgroundColor: '#4aab4e',
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#30D158',
+    color: '#4aab4e',
     letterSpacing: -0.08,
   },
   profileButton: {
@@ -574,7 +577,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     marginBottom: 28,
-    shadowColor: '#30D158',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 20,
@@ -671,7 +674,7 @@ const styles = StyleSheet.create({
   stepNumberText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#30D158',
+    color: '#4aab4e',
   },
   stepText: {
     fontSize: 12,
@@ -842,7 +845,7 @@ const styles = StyleSheet.create({
   footerBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#30D158',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   footerText: {

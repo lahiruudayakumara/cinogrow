@@ -26,6 +26,7 @@ class DistillationTimeOutput(BaseModel):
 class PriceForecastInput(BaseModel):
     oil_type: Literal["Leaf", "Bark"] = Field(..., description="Type of cinnamon oil")
     time_range: Literal["days", "months", "years"] = Field(..., description="Forecast time range")
+    steps: int | None = Field(None, description="Override the default number of forecast steps for the given range")
 
 class PriceForecastOutput(BaseModel):
     forecast: list[float] = Field(..., description="List of forecasted prices")

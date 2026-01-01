@@ -318,14 +318,14 @@ export default function OilScreen() {
               onPress={() => navigation.navigate('OilYieldPredictorSecond')}
             />
             
-            <GridCard
+            {/* <GridCard
               icon="white-balance-sunny"
               iconColor="#4aab4e"
               backgroundColor="rgba(48, 209, 88, 0.15)"
               title="Drying Process"
               subtitle="Optimize time"
               onPress={() => navigation.navigate('DryingProcess')}
-            />
+            /> */}
             
             <GridCard
               icon="steam"

@@ -294,7 +294,7 @@ export default function OilYieldPredictorSecond() {
         <View style={styles.headerContainer}>
           <View style={styles.headerIconContainer}>
             <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="flask-outline" size={28} color="#30D158" />
+              <MaterialCommunityIcons name="flask-outline" size={28} color="#4aab4e" />
             </View>
           </View>
           <Text style={styles.header}>Oil Yield Predictor</Text>
@@ -304,20 +304,20 @@ export default function OilYieldPredictorSecond() {
         </View>
 
         {/* Quick Info Banner */}
-        <View style={styles.infoBanner}>
+        {/* <View style={styles.infoBanner}>
           <BlurView intensity={50} tint="light" style={styles.infoBannerBlur}>
             <View style={styles.infoBannerContent}>
               <MaterialCommunityIcons name="information" size={20} color="#0A84FF" />
               <Text style={styles.infoBannerText}>Select a batch to predict</Text>
             </View>
           </BlurView>
-        </View>
+        </View> */}
 
         {/* Batch Selection Section */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Material Batch</Text>
           <View style={styles.requiredBadge}>
-            <Text style={styles.requiredText}>Required</Text>
+            {/* <Text style={styles.requiredText}>Required</Text> */}
           </View>
         </View>
         
@@ -366,7 +366,7 @@ export default function OilYieldPredictorSecond() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Results</Text>
               <View style={styles.successBadge}>
-                <MaterialCommunityIcons name="check-circle" size={14} color="#30D158" />
+                <MaterialCommunityIcons name="check-circle" size={14} color="#4aab4e" />
                 <Text style={styles.successText}>Complete</Text>
               </View>
             </View>
@@ -376,7 +376,7 @@ export default function OilYieldPredictorSecond() {
               <BlurView intensity={70} tint="light" style={styles.resultBlur}>
                 <View style={styles.resultHeader}>
                   <View style={styles.resultIconContainer}>
-                    <MaterialCommunityIcons name="flask" size={32} color="#30D158" />
+                    <MaterialCommunityIcons name="flask" size={32} color="#4aab4e" />
                   </View>
                   <View style={styles.resultBadge}>
                     <Text style={styles.resultBadgeText}>Predicted</Text>
@@ -503,7 +503,7 @@ export default function OilYieldPredictorSecond() {
                     <>
                       {/* Primary Recommendation */}
                       <View style={styles.recommendationPrimary}>
-                        <MaterialCommunityIcons name="check-circle" size={18} color="#30D158" />
+                        <MaterialCommunityIcons name="check-circle" size={18} color="#4aab4e" />
                         <Text style={styles.recommendationPrimaryText}>{rec.primary}</Text>
                       </View>
 
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
   successText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#30D158',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   inputCard: {
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginVertical: 24,
-    shadowColor: '#30D158',
+    shadowColor: '#4aab4e',
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 16,
@@ -787,7 +787,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: '#30D158',
+    backgroundColor: '#4aab4e',
   },
   predictText: {
     color: '#FFFFFF',
@@ -799,7 +799,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#30D158',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
   resultBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#30D158',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   resultTitle: {
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
   resultValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#30D158',
+    color: '#4aab4e',
     letterSpacing: 0.36,
   },
   resultValueUnit: {

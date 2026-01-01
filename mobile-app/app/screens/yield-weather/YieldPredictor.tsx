@@ -556,7 +556,15 @@ const YieldPredictorScreen = () => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>{t('yield_weather.my_yield.prediction_title')}</Text>
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#1F2937" />
+            </TouchableOpacity>
+            <Text style={styles.title}>{t('yield_weather.my_yield.prediction_title')}</Text>
+          </View>
           <Text style={styles.subtitle}>
             {t('yield_weather.my_yield.prediction_subtitle')}
           </Text>
@@ -605,6 +613,27 @@ const YieldPredictorScreen = () => {
                         <Text style={styles.yieldPerHectare}>
                           ({hybridYieldResult.yieldPerHectare?.toFixed(1) || 'N/A'} {t('yield_weather.my_yield.kg_ha_suffix')})
                         </Text>
+                        
+                        {/* Dry Yield and Market Value Section */}
+                        <View style={styles.economicInfo}>
+                          <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>
+                              {t('yield_weather.my_yield.dry_yield_label')}
+                            </Text>
+                            <Text style={styles.infoValue}>
+                              {((hybridYieldResult.hybridYield || 0) * 0.05).toFixed(1)} {t('yield_weather.my_yield.kg_suffix')}
+                            </Text>
+                          </View>
+                          <View style={styles.infoRow}>
+                            <Text style={styles.infoLabelBold}>
+                              {t('yield_weather.my_yield.market_value_label')}
+                            </Text>
+                            <Text style={styles.infoValueBold}>
+                              LKR {(((hybridYieldResult.hybridYield || 0) * 0.05) * 3685).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                            </Text>
+                          </View>
+                        </View>
+
                         <Text style={styles.confidenceText}>
                           {t('yield_weather.my_yield.overall_confidence')}: {((hybridYieldResult.confidence || 0) * 100).toFixed(1)}%
                         </Text>
@@ -1210,11 +1239,19 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 24,
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
@@ -1563,7 +1600,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#059669',
     fontWeight: '500',
-    marginBottom: 8,
+    marginBottom: 16,
+  },
+  economicInfo: {
+    gap: 8,
+    marginBottom: 14,
+    alignItems: 'center',
+  },
+  infoRow: {
+    alignItems: 'center',
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: '#047857',
+    fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 15,
+    color: '#047857',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  infoLabelBold: {
+    fontSize: 14,
+    color: '#065F46',
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  infoValueBold: {
+    fontSize: 17,
+    color: '#047857',
+    fontWeight: '800',
+    textAlign: 'center',
   },
   confidenceText: {
     fontSize: 13,

@@ -578,6 +578,8 @@
       "ha_suffix": "ha",
       "rs_suffix": "ரூ.",
       "per_kg": "/kg",
+      "dry_yield_label": "உலர் விளைச்சல் (5%)",
+      "market_value_label": "சந்தை மதிப்பு",
       "notice": "அறிவிப்பு",
       "error_label": "பிழை",
       "ok": "சரி",

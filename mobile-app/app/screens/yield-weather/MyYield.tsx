@@ -223,6 +223,15 @@ const MyYieldScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} />
         }
       >
+        {/* Header with Back Button */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          </TouchableOpacity>
+        </View>
         {/* Actual Yield Records Title & Subtitle */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
           <Ionicons name="document-text" size={24} color="#4CAF50" />
@@ -403,6 +412,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+  },
+  header: {
+    marginBottom: 16,
+  },
+  backButton: {
+    padding: 4,
+    marginBottom: 12,
   },
   centerContent: {
     flex: 1,

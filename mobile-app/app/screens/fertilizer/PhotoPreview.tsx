@@ -652,6 +652,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#6B7280',
         fontWeight: '600',
+        flexShrink: 1,
+        flexWrap: 'wrap',
     },
     continueButton: {
         borderRadius: 16,
@@ -672,11 +674,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
+        flexWrap: 'wrap',
+        minHeight: 56,
     },
     continueButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '700',
+        flexShrink: 1,
+        textAlign: 'center',
     },
     leafAnalysisButtons: {
         gap: 12,
@@ -706,6 +712,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
         flex: 1,
+        flexWrap: 'wrap',
     },
 });
 

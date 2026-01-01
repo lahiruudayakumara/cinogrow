@@ -51,8 +51,8 @@ The **CinoGrow** system aims to:
 
 ## Components
 
-### 🧴 Cinnamon Oil Yield Prediction and Distillation Support (Malmi W.U.)
-   ✔️ Predict cinnamon oil yield using **XGBoost regression** based on farm and process data.  
+### 🧴 Cinnamon Oil Yield Prediction and Decision Support (Malmi W.U.)
+   ✔️ Predict cinnamon oil yield using **Regression** based on farm and process data.  
    ✔️ Recommend **optimal drying and distillation durations** to improve efficiency.  
    ✔️ Visualize expected yield outcomes and performance trends.  
    ✔️ Report Generation.  
@@ -60,7 +60,7 @@ The **CinoGrow** system aims to:
 ---
 
 ### 🌾 Smart Fertilizer Recommendation via Dual-Image Analysis (Nimsara N.A.D.)
-   ✔️ Analyze **leaf and soil images** using **CNN models (TensorFlow + OpenCV)**.  
+   ✔️ Analyze **leaf and soil images** using **DinoV3 model Roboflow**.  
    ✔️ Detect nutrient deficiencies and recommend suitable fertilizer type and quantity.  
    ✔️ Help farmers reduce costs and environmental impact.  
    ✔️ Report Generation.  
@@ -70,7 +70,7 @@ The **CinoGrow** system aims to:
 ### 🌦️ Weather-Aware Yield Prediction and Crop Planning (Jayawardana N.G.U.D.)
    ✔️ Integrate **real-time weather data** with historical yield records.  
    ✔️ Predict **crop yield** using **Random Forest regression models**.  
-   ✔️ Provide **actionable insights** on planting, pruning, and harvesting schedules.  
+   ✔️ Provide **weather based actionable insights** on planting, pruning, and harvesting schedules.  
    ✔️ Report Generation.  
 
 ---
@@ -95,11 +95,11 @@ The **CinoGrow** system aims to:
 - **Containerization**: Docker
 
 ### **Database**
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL(hosted on AWS)
 
-### **Machine Learning**
-- **Frameworks**: TensorFlow, Scikit-learn, XGBoost  
-- **Libraries**: OpenCV, Pandas, NumPy  
+### **Machine Learning & Image Processing**
+- **Frameworks**: Scikit-learn, XGBoost  
+- **Tools**: Roboflow (for image processing & model training), Kaggle, Pandas, NumPy  
 
 ### **Other Tools**
 - **Weather API**: OpenWeatherMap  
@@ -128,15 +128,18 @@ The **CinoGrow** system aims to:
 
 ## Key Technologies Used
 
-| Category | Tools |
-|-----------|--------|
-| Machine Learning | TensorFlow, Scikit-learn, XGBoost |
-| Backend | FastAPI, Docker |
-| Frontend | React Native, Expo |
-| Database | PostgreSQL |
-| Image Processing | OpenCV |
-| External APIs | OpenWeatherMap |
-| Version Control | GitHub |
+Category             | Tools
+-------------------- | -----------------------------------------------
+Machine Learning     | Scikit-learn, XGBoost, Random Forest Regression
+Image Processing     | Roboflow
+Backend              | FastAPI, Docker
+Frontend             | React Native, Expo
+Database             | PostgreSQL (AWS hosted)
+Data Handling        | Pandas, NumPy
+External APIs        | OpenWeatherMap
+Data Sources         | Kaggle
+Version Control      | GitHub
+Deployment           | Docker, CI/CD Pipelines
 
 ---
 

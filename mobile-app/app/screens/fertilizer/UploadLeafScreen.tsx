@@ -70,8 +70,7 @@ const UploadLeafScreen: React.FC = () => {
 
             const result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [1, 1],
+                allowsEditing: false,
                 quality: 0.8,
             });
 
@@ -103,8 +102,7 @@ const UploadLeafScreen: React.FC = () => {
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [1, 1],
+                allowsEditing: false,
                 quality: 0.8,
             });
 
@@ -195,6 +193,14 @@ const UploadLeafScreen: React.FC = () => {
             >
                 {/* Header */}
                 <View style={styles.header}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => router.back()}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#111827" />
+                    </TouchableOpacity>
+
                     <Text style={styles.headerTitle}>{t('fertilizer.upload_leaf.header.title')}</Text>
                     <Text style={styles.headerSubtitle}>
                         {t('fertilizer.upload_leaf.header.subtitle')}
@@ -276,6 +282,20 @@ const styles = StyleSheet.create({
     header: {
         marginTop: 20,
         marginBottom: 32,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     headerTitle: {
         fontSize: 28,
@@ -360,6 +380,7 @@ const styles = StyleSheet.create({
         padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
+        minHeight: 88,
     },
     actionIconContainer: {
         width: 48,
@@ -369,6 +390,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
+        flexShrink: 0,
     },
     actionTextContainer: {
         flex: 1,
@@ -378,10 +400,12 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#FFFFFF',
         marginBottom: 4,
+        flexWrap: 'wrap',
     },
     actionSubtitle: {
         fontSize: 14,
         color: 'rgba(255,255,255,0.8)',
+        flexWrap: 'wrap',
     },
     previewSection: {
         marginBottom: 32,

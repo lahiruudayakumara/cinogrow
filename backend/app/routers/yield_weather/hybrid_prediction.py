@@ -30,16 +30,16 @@ def _analyze_tree_samples(sample_trees: List) -> Dict[str, Any]:
     if not sample_trees:
         return {}
     
-    # Extract measurements
-    diameters = [t.stem_diameter_mm for t in sample_trees]
+    # Extract measurements (circumference in inches)
+    circumferences_inches = [t.stem_circumference_inches for t in sample_trees]
     stems = [t.num_existing_stems for t in sample_trees]
     ages = [t.tree_age_years for t in sample_trees]
     fertilized_count = sum(1 for t in sample_trees if t.fertilizer_used)
     diseased_count = sum(1 for t in sample_trees if t.disease_status != 'none')
     
     # Calculate statistics
-    avg_diameter = np.mean(diameters)
-    diameter_cv = np.std(diameters) / avg_diameter if avg_diameter > 0 else 0
+    avg_circumference_inches = np.mean(circumferences_inches)
+    circumference_cv = np.std(circumferences_inches) / avg_circumference_inches if avg_circumference_inches > 0 else 0
     avg_stems = np.mean(stems)
     avg_age = np.mean(ages) if ages else 4.0
     
@@ -47,26 +47,27 @@ def _analyze_tree_samples(sample_trees: List) -> Dict[str, Any]:
     fertilization_rate = fertilized_count / len(sample_trees)
     disease_rate = diseased_count / len(sample_trees)
     
-    # Vigor classification based on diameter
-    if avg_diameter >= 60:
+    # Vigor classification based on circumference (1.77 inches ≈ 45mm diameter)
+    # Circumference = π × diameter, so: 1.4" = 35mm dia, 1.77" = 45mm dia, 2.4" = 60mm dia
+    if avg_circumference_inches >= 2.4:
         vigor_class = "excellent"
-    elif avg_diameter >= 45:
+    elif avg_circumference_inches >= 1.77:
         vigor_class = "good"  
-    elif avg_diameter >= 30:
+    elif avg_circumference_inches >= 1.18:
         vigor_class = "moderate"
     else:
         vigor_class = "poor"
     
     return {
         "sample_size": len(sample_trees),
-        "avg_diameter_mm": avg_diameter,
-        "diameter_coefficient_variation": diameter_cv,
+        "avg_circumference_inches": avg_circumference_inches,
+        "circumference_coefficient_variation": circumference_cv,
         "avg_stems_per_tree": avg_stems,
         "avg_tree_age_years": avg_age,
         "fertilization_rate": fertilization_rate,
         "disease_rate": disease_rate,
         "vigor_class": vigor_class,
-        "uniformity_score": max(0, 1 - diameter_cv)  # Higher is more uniform
+        "uniformity_score": max(0, 1 - circumference_cv)  # Higher is more uniform
     }
 
 
@@ -76,8 +77,10 @@ def _predict_individual_tree_yields(sample_trees: List) -> Dict[str, Any]:
     
     for tree in sample_trees:
         # Research-based cane prediction model (empirical formula)
-        # Based on Sri Lankan cinnamon research: canes ∝ diameter² × stems
-        diameter_factor = (tree.stem_diameter_mm / 45.0) ** 1.8  # Optimal diameter is ~45mm
+        # Based on Sri Lankan cinnamon research: canes ∝ (circumference/π)² × stems
+        # Optimal circumference is ~1.77 inches (45mm diameter)
+        # Circumference to diameter: diameter = circumference / π
+        circumference_factor = (tree.stem_circumference_inches / 1.77) ** 1.8  # Optimal is ~1.77 inches
         stem_factor = min(tree.num_existing_stems / 3.0, 2.0)  # Optimal stems ~3, max factor 2.0
         age_factor = min(tree.tree_age_years / 4.0, 1.2) if tree.tree_age_years else 1.0
         
@@ -85,7 +88,7 @@ def _predict_individual_tree_yields(sample_trees: List) -> Dict[str, Any]:
         base_canes = 25
         
         # Calculate predicted canes
-        predicted_canes = base_canes * diameter_factor * stem_factor * age_factor
+        predicted_canes = base_canes * circumference_factor * stem_factor * age_factor
         
         # Apply management factors
         if tree.fertilizer_used:
@@ -100,7 +103,8 @@ def _predict_individual_tree_yields(sample_trees: List) -> Dict[str, Any]:
         predicted_canes *= disease_factor
         
         # Fresh weight prediction (research-based: 0.12-0.18 kg per cane)
-        weight_per_cane = 0.15 * (tree.stem_diameter_mm / 45.0)  # Thicker canes are heavier
+        # Thicker stems (larger circumference) produce heavier canes
+        weight_per_cane = 0.15 * (tree.stem_circumference_inches / 1.77)  # Scale with circumference
         fresh_weight_kg = predicted_canes * weight_per_cane
         
         # Dry bark conversion (5% of fresh weight becomes dry bark)
@@ -111,7 +115,7 @@ def _predict_individual_tree_yields(sample_trees: List) -> Dict[str, Any]:
             "predicted_canes": predicted_canes,
             "fresh_weight_kg": fresh_weight_kg,
             "dry_weight_kg": dry_weight_kg,
-            "diameter_factor": diameter_factor,
+            "circumference_factor": circumference_factor,
             "stem_factor": stem_factor,
             "age_factor": age_factor,
             "disease_factor": disease_factor
@@ -257,21 +261,25 @@ def _generate_prediction_result(
     """Generate comprehensive prediction result"""
     
     # Economic calculations
-    avg_diameter = tree_analysis.get("avg_diameter_mm", 45)
+    # Convert circumference to diameter equivalent for quality assessment
+    # Average circumference in inches, convert to effective diameter (circumference/π)
+    avg_circumference_inches = tree_analysis.get("avg_circumference_inches", 1.77)
+    avg_diameter_equivalent = avg_circumference_inches / np.pi * 25.4  # Convert to mm equivalent
     disease_rate = tree_analysis.get("disease_rate", 0)
     
     # Quality-based pricing
     base_price = 1000  # LKR per kg
-    quality_multiplier = min(1.3, max(0.7, (avg_diameter / 45.0) * (1 - disease_rate * 0.3)))
+    quality_multiplier = min(1.3, max(0.7, (avg_diameter_equivalent / 45.0) * (1 - disease_rate * 0.3)))
     estimated_price = base_price * quality_multiplier
     
     final_yield = adjusted_yield["final_adjusted_yield_kg"]
     estimated_revenue = final_yield * estimated_price
     
-    # Harvest timing recommendation
-    if avg_diameter >= 45 and tree_analysis.get("avg_tree_age_years", 0) >= 3:
+    # Harvest timing recommendation (using circumference thresholds)
+    # 1.77\" circ ≈ 45mm diameter, 1.38\" circ ≈ 35mm diameter
+    if avg_circumference_inches >= 1.77 and tree_analysis.get("avg_tree_age_years", 0) >= 3:
         harvest_recommendation = "Ready for harvest - optimal maturity achieved"
-    elif avg_diameter >= 35:
+    elif avg_circumference_inches >= 1.38:
         harvest_recommendation = "Approaching harvest readiness - monitor for 2-3 months"
     else:
         harvest_recommendation = "Continue growth - harvest not recommended yet"
@@ -313,7 +321,7 @@ def _generate_prediction_result(
         },
         
         features_used={
-            "tree_features": ["stem_diameter_mm", "num_existing_stems", "tree_age_years", "fertilizer_used", "disease_status"],
+            "tree_features": ["stem_circumference_inches", "num_existing_stems", "tree_age_years", "fertilizer_used", "disease_status"],
             "plot_features": ["area", "planting_density", "management_quality"],
             "environmental_factors": ["site_conditions", "disease_pressure", "uniformity"]
         },
@@ -325,7 +333,7 @@ def _generate_prediction_result(
         harvest_recommendation=harvest_recommendation,
         
         quality_indicators={
-            "avg_stem_diameter": avg_diameter,
+            "avg_stem_circumference_inches": avg_circumference_inches,
             "tree_vigor": tree_analysis.get("vigor_class", "moderate"),
             "disease_pressure": "low" if disease_rate < 0.1 else "medium" if disease_rate < 0.3 else "high",
             "management_quality": "good" if tree_analysis.get("fertilization_rate", 0) > 0.5 else "fair",
@@ -564,7 +572,7 @@ async def predict_hybrid_yield(
 @router.post("/hybrid-prediction/quick")
 async def quick_hybrid_prediction(
     plot_id: int,
-    avg_diameter: float,
+    avg_circumference_inches: float,
     tree_count: int = 10,
     fertilized_trees: int = 5,
     diseased_trees: int = 0,
@@ -573,6 +581,7 @@ async def quick_hybrid_prediction(
     """
     Quick hybrid prediction with simplified tree sampling
     Automatically generates sample trees based on average characteristics
+    Measurements use stem circumference in inches (1 inch = 25.4mm)
     """
     try:
         # Validate plot
@@ -585,9 +594,9 @@ async def quick_hybrid_prediction(
         
         sample_trees = []
         for i in range(min(tree_count, 20)):  # Limit to 20 samples
-            # Vary diameter around average (±10%)
-            diameter_variation = avg_diameter * 0.1
-            tree_diameter = avg_diameter + np.random.uniform(-diameter_variation, diameter_variation)
+            # Vary circumference around average (±10%)
+            circumference_variation = avg_circumference_inches * 0.1
+            tree_circumference = avg_circumference_inches + np.random.uniform(-circumference_variation, circumference_variation)
             
             # Determine fertilizer use
             fertilizer_used = i < fertilized_trees
@@ -601,7 +610,7 @@ async def quick_hybrid_prediction(
             
             sample_tree = TreeSampleMeasurement(
                 tree_code=f"Sample_{i+1}",
-                stem_diameter_mm=tree_diameter,
+                stem_circumference_inches=tree_circumference,
                 fertilizer_used=fertilizer_used,
                 fertilizer_type=fertilizer_type,
                 disease_status=disease_status,
@@ -735,11 +744,11 @@ async def get_plot_tree_analytics(plot_id: int, db: Session = Depends(get_sessio
     fertilized_trees = len([t for t in trees if t.fertilizer_used])
     
     if measurements:
-        diameters = [m.stem_diameter_mm for m in measurements]
-        avg_diameter = np.mean(diameters)
-        min_diameter = min(diameters)
-        max_diameter = max(diameters)
-        diameter_std = np.std(diameters)
+        circumferences = [m.stem_circumference_inches for m in measurements]
+        avg_circumference = np.mean(circumferences)
+        min_circumference = min(circumferences)
+        max_circumference = max(circumferences)
+        circumference_std = np.std(circumferences)
         
         # Disease analysis
         diseased_trees = len([t for t in trees if t.disease_status != 'none'])
@@ -748,7 +757,7 @@ async def get_plot_tree_analytics(plot_id: int, db: Session = Depends(get_sessio
         ages = [t.tree_age_years for t in trees if t.tree_age_years]
         avg_age = np.mean(ages) if ages else 0
     else:
-        avg_diameter = min_diameter = max_diameter = diameter_std = 0
+        avg_circumference = min_circumference = max_circumference = circumference_std = 0
         diseased_trees = 0
         avg_age = 0
     
@@ -765,11 +774,11 @@ async def get_plot_tree_analytics(plot_id: int, db: Session = Depends(get_sessio
             "disease_rate": diseased_trees / tree_count if tree_count > 0 else 0,
             "average_age_years": avg_age
         },
-        "diameter_analytics": {
-            "average_diameter_mm": avg_diameter,
-            "min_diameter_mm": min_diameter,
-            "max_diameter_mm": max_diameter,
-            "diameter_variability": diameter_std
+        "circumference_analytics": {
+            "average_circumference_inches": avg_circumference,
+            "min_circumference_inches": min_circumference,
+            "max_circumference_inches": max_circumference,
+            "circumference_variability": circumference_std
         },
         "measurement_count": len(measurements),
         "readiness_for_hybrid_prediction": {

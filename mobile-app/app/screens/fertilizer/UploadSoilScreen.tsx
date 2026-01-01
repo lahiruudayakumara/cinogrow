@@ -76,8 +76,7 @@ const UploadSoilScreen: React.FC = () => {
 
             const result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [1, 1],
+                allowsEditing: false,
                 quality: 0.8,
             });
 
@@ -128,8 +127,7 @@ const UploadSoilScreen: React.FC = () => {
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [1, 1],
+                allowsEditing: false,
                 quality: 0.8,
             });
 
@@ -498,6 +496,7 @@ const styles = StyleSheet.create({
         padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
+        minHeight: 88,
     },
     actionIconContainer: {
         width: 48,
@@ -507,6 +506,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
+        flexShrink: 0,
     },
     actionTextContainer: {
         flex: 1,
@@ -516,10 +516,12 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#FFFFFF',
         marginBottom: 4,
+        flexWrap: 'wrap',
     },
     actionSubtitle: {
         fontSize: 14,
         color: 'rgba(255,255,255,0.8)',
+        flexWrap: 'wrap',
     },
     previewSection: {
         marginBottom: 32,

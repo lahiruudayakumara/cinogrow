@@ -105,26 +105,40 @@ const FertilizerResultScreen: React.FC = () => {
                     const predictions = predictionsData.predictions || [];
 
                     predictions.forEach((pred: any) => {
-                        allDetections.push({
-                            deficiency: pred.class || 'Unknown',
-                            confidence: pred.confidence || 0,
-                            severity: pred.confidence > 0.7 ? 'High' : pred.confidence > 0.4 ? 'Moderate' : 'Low',
-                            class: pred.class || 'Unknown'
-                        });
+                        // Filter out healthy leaves - only include actual deficiencies
+                        const className = (pred.class || 'Unknown').toLowerCase();
+                        const isHealthy = className.includes('healthy') || className === 'healthy';
+
+                        if (!isHealthy) {
+                            allDetections.push({
+                                deficiency: pred.class || 'Unknown',
+                                confidence: pred.confidence || 0,
+                                severity: pred.confidence > 0.7 ? 'High' : pred.confidence > 0.4 ? 'Moderate' : 'Low',
+                                class: pred.class || 'Unknown'
+                            });
+                        } else {
+                            console.log('✅ Healthy leaf detected - skipping fertilizer recommendation');
+                        }
                     });
                 }
             });
 
-            console.log('📊 Processed detections:', allDetections);
+            console.log('📊 Processed deficiency detections (healthy filtered):', allDetections);
             setDetections(allDetections);
 
-            // Use recommendations from roboflowAnalysis if available
-            if (roboflowAnalysis.recommendations) {
-                console.log('✅ Using recommendations from analysis response');
-                setRecommendations(roboflowAnalysis.recommendations);
-            } else if (plantAge && allDetections.length > 0) {
-                // Fallback: fetch recommendations if not included in response
-                fetchRecommendations(allDetections[0]);
+            // Only fetch recommendations if there are actual deficiencies
+            if (allDetections.length > 0) {
+                // Use recommendations from roboflowAnalysis if available
+                if (roboflowAnalysis.recommendations) {
+                    console.log('✅ Using recommendations from analysis response');
+                    setRecommendations(roboflowAnalysis.recommendations);
+                } else if (plantAge) {
+                    // Fallback: fetch recommendations if not included in response
+                    fetchRecommendations(allDetections[0]);
+                }
+            } else {
+                console.log('🌱 No deficiencies detected - leaf is healthy!');
+                setRecommendations(null);
             }
         }
     }, [roboflowAnalysis, plantAge]);
@@ -278,8 +292,8 @@ const FertilizerResultScreen: React.FC = () => {
                     )}
                 </View>
 
-                {/* Fertilizer Recommendations Section */}
-                {plantAge && (
+                {/* Fertilizer Recommendations Section - Only show if deficiencies detected */}
+                {plantAge && detections.length > 0 && (
                     <View style={styles.recommendationsContainer}>
                         <View style={styles.recommendationsHeader}>
                             <Ionicons name="leaf-outline" size={24} color="#4CAF50" />
@@ -703,6 +717,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#FFFFFF',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+        textAlign: 'center',
     },
     secondaryButton: {
         flex: 1,
@@ -711,6 +728,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: '#FFFFFF',
         paddingVertical: 16,
+        paddingHorizontal: 12,
         borderRadius: 12,
         gap: 8,
         borderWidth: 2,
@@ -725,6 +743,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#4CAF50',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+        textAlign: 'center',
     },
     // Recommendations styles
     recommendationsContainer: {

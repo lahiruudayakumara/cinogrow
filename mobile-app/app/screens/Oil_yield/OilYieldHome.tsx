@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,18 +8,19 @@ import {
   ScrollView,
   Animated,
   Dimensions,
-} from 'react-native';
-import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '@/navigation/OilYieldNavigator';
+} from "react-native";
+import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { useTranslation } from "react-i18next";
+import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import type { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "@/navigation/OilYieldNavigator";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 52) / 2;
 
 function Greeting() {
@@ -54,12 +55,12 @@ function Greeting() {
         }),
       ]),
     ]).start();
-    setLiked(v => !v);
+    setLiked((v) => !v);
   };
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
+    outputRange: ["0deg", "360deg"],
   });
 
   return (
@@ -136,7 +137,7 @@ function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
       <TouchableOpacity
         style={styles.primaryActionCard}
         activeOpacity={1}
-        onPress={() => navigation.navigate('AddMaterialBatch')}
+        onPress={() => navigation.navigate("AddMaterialBatch")}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
@@ -145,16 +146,33 @@ function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
             <View style={styles.primaryActionTop}>
               <View style={styles.primaryActionLeft}>
                 <View style={styles.startBadge}>
-                  <MaterialCommunityIcons name="star" size={14} color="#FF9F0A" />
-                  <Text style={styles.startBadgeText}>{t('oil_yield.home.primary_action.start_badge')}</Text>
+                  <MaterialCommunityIcons
+                    name="star"
+                    size={14}
+                    color="#FF9F0A"
+                  />
+                  <Text style={styles.startBadgeText}>
+                    {t("oil_yield.home.primary_action.start_badge")}
+                  </Text>
                 </View>
-                <Text style={styles.primaryActionTitle}>{t('oil_yield.home.primary_action.title')}</Text>
+                <Text style={styles.primaryActionTitle}>
+                  {t("oil_yield.home.primary_action.title")}
+                </Text>
                 <Text style={styles.primaryActionSubtitle}>
-                  {t('oil_yield.home.primary_action.subtitle')}
+                  {t("oil_yield.home.primary_action.subtitle")}
                 </Text>
               </View>
-              <Animated.View style={[styles.primaryActionIcon, { transform: [{ scale: pulseAnim }] }]}>
-                <MaterialCommunityIcons name="plus-circle" size={48} color="#4aab4e" />
+              <Animated.View
+                style={[
+                  styles.primaryActionIcon,
+                  { transform: [{ scale: pulseAnim }] },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="plus-circle"
+                  size={48}
+                  color="#4aab4e"
+                />
               </Animated.View>
             </View>
             {/* <View style={styles.primaryActionBottom}>
@@ -191,12 +209,12 @@ function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
   );
 }
 
-function GridCard({ 
-  icon, 
-  iconColor, 
-  backgroundColor, 
-  title, 
-  subtitle, 
+function GridCard({
+  icon,
+  iconColor,
+  backgroundColor,
+  title,
+  subtitle,
   onPress,
   isLarge = false,
 }: {
@@ -228,10 +246,10 @@ function GridCard({
   };
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         { transform: [{ scale: scaleAnim }] },
-        isLarge ? styles.gridCardLarge : styles.gridCard
+        isLarge ? styles.gridCardLarge : styles.gridCard,
       ]}
     >
       <TouchableOpacity
@@ -244,15 +262,27 @@ function GridCard({
         <BlurView intensity={70} tint="light" style={styles.gridCardBlur}>
           <View style={styles.gridCardInner}>
             <View style={[styles.gridIconCircle, { backgroundColor }]}>
-              <MaterialCommunityIcons name={icon as any} size={isLarge ? 36 : 32} color={iconColor} />
+              <MaterialCommunityIcons
+                name={icon as any}
+                size={isLarge ? 36 : 32}
+                color={iconColor}
+              />
             </View>
             <View style={styles.gridCardTextContainer}>
-              <Text style={styles.gridCardTitle} numberOfLines={2}>{title}</Text>
-              <Text style={styles.gridCardSubtitle} numberOfLines={2}>{subtitle}</Text>
+              <Text style={styles.gridCardTitle} numberOfLines={2}>
+                {title}
+              </Text>
+              <Text style={styles.gridCardSubtitle} numberOfLines={2}>
+                {subtitle}
+              </Text>
             </View>
             <View style={styles.gridArrowContainer}>
               <View style={styles.gridArrowCircle}>
-                <MaterialCommunityIcons name="arrow-right" size={16} color={iconColor} />
+                <MaterialCommunityIcons
+                  name="arrow-right"
+                  size={16}
+                  color={iconColor}
+                />
               </View>
             </View>
           </View>
@@ -269,17 +299,20 @@ export default function OilScreen() {
 
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      <View
-        style={styles.background}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-        >
-          {/* Header with Floating Action */}
-          {/* <View style={styles.headerContainer}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent
+        />
+        <View style={styles.background}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+          >
+            {/* Header with Floating Action */}
+            {/* <View style={styles.headerContainer}>
             <View style={styles.headerLeft}>
               <View style={styles.logoContainer}>
                 <MaterialCommunityIcons name="leaf" size={24} color="#4aab4e" />
@@ -297,30 +330,32 @@ export default function OilScreen() {
             </TouchableOpacity>
           </View> */}
 
-          {/* Greeting Card */}
-          <Greeting />
+            {/* Greeting Card */}
+            <Greeting />
 
-          {/* Primary Action Card - Add Material Batch */}
-          <PrimaryActionCard navigation={navigation} />
+            {/* Primary Action Card - Add Material Batch */}
+            <PrimaryActionCard navigation={navigation} />
 
-          {/* Grid Layout Title */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('oil_yield.home.tools_title')}</Text>
-            {/* <Text style={styles.sectionCount}>5 tools</Text> */}
-          </View>
+            {/* Grid Layout Title */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {t("oil_yield.home.tools_title")}
+              </Text>
+              {/* <Text style={styles.sectionCount}>5 tools</Text> */}
+            </View>
 
-          {/* Grid Cards - 2 Column Layout */}
-          <View style={styles.gridContainer}>
-            <GridCard
-              icon="flask-outline"
-              iconColor="#4aab4e"
-              backgroundColor="rgba(48, 209, 88, 0.15)"
-              title={t('oil_yield.home.cards.yield_predictor_title')}
-              subtitle={t('oil_yield.home.cards.yield_predictor_subtitle')}
-              onPress={() => router.push('/oil-yield/predictor-second')}
-            />
-            
-            {/* <GridCard
+            {/* Grid Cards - 2 Column Layout */}
+            <View style={styles.gridContainer}>
+              <GridCard
+                icon="flask-outline"
+                iconColor="#4aab4e"
+                backgroundColor="rgba(48, 209, 88, 0.15)"
+                title={t("oil_yield.home.cards.yield_predictor_title")}
+                subtitle={t("oil_yield.home.cards.yield_predictor_subtitle")}
+                onPress={() => router.push("/oil-yield/predictor-second")}
+              />
+
+              {/* <GridCard
               icon="white-balance-sunny"
               iconColor="#4aab4e"
               backgroundColor="rgba(48, 209, 88, 0.15)"
@@ -328,45 +363,45 @@ export default function OilScreen() {
               subtitle="Optimize time"
               onPress={() => navigation.navigate('DryingProcess')}
             /> */}
-            
-            <GridCard
-              icon="steam"
-              iconColor="#4aab4e"
-              backgroundColor="rgba(48, 209, 88, 0.15)"
-              title={t('oil_yield.home.cards.distillation_title')}
-              subtitle={t('oil_yield.home.cards.distillation_subtitle')}
-              onPress={() => router.push('/oil-yield/distillation-process')}
-            />
-            
-            <GridCard
-              icon="clipboard-check-outline"
-              iconColor="#4aab4e"
-              backgroundColor="rgba(48, 209, 88, 0.15)"
-              title={t('oil_yield.home.cards.quality_title')}
-              subtitle={t('oil_yield.home.cards.quality_subtitle')}
-              onPress={() => router.push('/oil-yield/quality-guide')}
-            />
-            
-            <GridCard
-              icon="chart-line"
-              iconColor="#4aab4e"
-              backgroundColor="rgba(48, 209, 88, 0.15)"
-              title={t('oil_yield.home.cards.price_predictor_title')}
-              subtitle={t('oil_yield.home.cards.price_predictor_subtitle')}
-              onPress={() => router.push('/oil-yield/price-predictor')}
-            />
-          </View>
 
-          {/* Research Center Section */}
-          {/* <View style={styles.sectionHeader}>
+              <GridCard
+                icon="steam"
+                iconColor="#4aab4e"
+                backgroundColor="rgba(48, 209, 88, 0.15)"
+                title={t("oil_yield.home.cards.distillation_title")}
+                subtitle={t("oil_yield.home.cards.distillation_subtitle")}
+                onPress={() => router.push("/oil-yield/distillation-process")}
+              />
+
+              <GridCard
+                icon="clipboard-check-outline"
+                iconColor="#4aab4e"
+                backgroundColor="rgba(48, 209, 88, 0.15)"
+                title={t("oil_yield.home.cards.quality_title")}
+                subtitle={t("oil_yield.home.cards.quality_subtitle")}
+                onPress={() => router.push("/oil-yield/quality-guide")}
+              />
+
+              <GridCard
+                icon="chart-line"
+                iconColor="#4aab4e"
+                backgroundColor="rgba(48, 209, 88, 0.15)"
+                title={t("oil_yield.home.cards.price_predictor_title")}
+                subtitle={t("oil_yield.home.cards.price_predictor_subtitle")}
+                onPress={() => router.push("/oil-yield/price-predictor")}
+              />
+            </View>
+
+            {/* Research Center Section */}
+            {/* <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Research Center Services</Text>
             <View style={styles.newBadge}>
               <Text style={styles.newBadgeText}>NEW</Text>
             </View>
           </View> */}
 
-          {/* Research Center Info Card */}
-          {/* <View style={styles.researchInfoCard}>
+            {/* Research Center Info Card */}
+            {/* <View style={styles.researchInfoCard}>
             <BlurView intensity={60} tint="light" style={styles.researchInfoBlur}>
               <View style={styles.researchInfoHeader}>
                 <View style={styles.researchIconLarge}>
@@ -390,8 +425,8 @@ export default function OilScreen() {
             </BlurView>
           </View> */}
 
-          {/* Research Center Feature Cards */}
-          {/* <View style={styles.gridContainer}>
+            {/* Research Center Feature Cards */}
+            {/* <View style={styles.gridContainer}>
             <GridCard
               icon="school-outline"
               iconColor="#5E5CE6"
@@ -411,8 +446,8 @@ export default function OilScreen() {
             />
           </View> */}
 
-          {/* Quick Stats Widget */}
-          {/* <View style={styles.statsWidget}>
+            {/* Quick Stats Widget */}
+            {/* <View style={styles.statsWidget}>
             <BlurView intensity={50} tint="light" style={styles.statsBlur}>
               <View style={styles.statsContent}>
                 <View style={styles.statItem}>
@@ -433,8 +468,8 @@ export default function OilScreen() {
             </BlurView>
           </View> */}
 
-          {/* Footer */}
-          {/* <View style={styles.footer}>
+            {/* Footer */}
+            {/* <View style={styles.footer}>
             <View style={styles.footerBadge}>
               <MaterialCommunityIcons name="shield-check" size={14} color="#4aab4e" />
               <Text style={styles.footerBadgeText}>AI Powered</Text>
@@ -443,16 +478,21 @@ export default function OilScreen() {
               Empowering Cinnamon Farmers
             </Text>
           </View> */}
-        </ScrollView>
-      </View>
+          </ScrollView>
+        </View>
+      </SafeAreaView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFBFC',
+  },
   background: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: "#F2F2F7",
   },
   scrollContainer: {
     paddingTop: 60,
@@ -460,64 +500,64 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
     paddingTop: 4,
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   logoContainer: {
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(48, 209, 88, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 0.5,
-    borderColor: 'rgba(48, 209, 88, 0.2)',
+    borderColor: "rgba(48, 209, 88, 0.2)",
   },
   header: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#000000',
+    fontWeight: "700",
+    color: "#000000",
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   statusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#4aab4e',
+    backgroundColor: "#4aab4e",
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#4aab4e',
+    fontWeight: "600",
+    color: "#4aab4e",
     letterSpacing: -0.08,
   },
   profileButton: {
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   greetingContainer: {
-    width: '100%',
+    width: "100%",
     height: 140,
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 16,
@@ -525,58 +565,58 @@ const styles = StyleSheet.create({
   },
   greetingBlur: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: "rgba(255, 255, 255, 0.85)",
     borderWidth: 0.5,
-    borderColor: 'rgba(0, 0, 0, 0.06)',
+    borderColor: "rgba(0, 0, 0, 0.06)",
   },
   greetingContent: {
     flex: 1,
     padding: 20,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   greetingTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   greetingLabel: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#8E8E93',
+    fontWeight: "700",
+    color: "#8E8E93",
     letterSpacing: 0.6,
     marginBottom: 4,
   },
   greetingTitle: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#000000',
+    fontWeight: "700",
+    color: "#000000",
     letterSpacing: 0.2,
   },
   emojiCircle: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(48, 209, 88, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   emoji: {
     fontSize: 28,
   },
   greetingText: {
     fontSize: 15,
-    color: '#3C3C43',
+    color: "#3C3C43",
     lineHeight: 20,
     letterSpacing: -0.24,
-    fontWeight: '400',
+    fontWeight: "400",
     opacity: 0.8,
   },
   primaryActionCard: {
-    width: '100%',
+    width: "100%",
     borderRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 28,
-    shadowColor: '#4aab4e',
+    shadowColor: "#4aab4e",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 20,
@@ -584,17 +624,17 @@ const styles = StyleSheet.create({
   },
   primaryActionBlur: {
     flex: 1,
-    backgroundColor: 'rgba(48, 209, 88, 0.08)',
+    backgroundColor: "rgba(48, 209, 88, 0.08)",
     borderWidth: 2,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: "rgba(48, 209, 88, 0.3)",
   },
   primaryActionContent: {
     padding: 24,
   },
   primaryActionTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 20,
   },
   primaryActionLeft: {
@@ -603,32 +643,32 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   startBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 159, 10, 0.15)',
-    alignSelf: 'flex-start',
+    backgroundColor: "rgba(255, 159, 10, 0.15)",
+    alignSelf: "flex-start",
     marginBottom: 4,
   },
   startBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#FF9F0A',
+    fontWeight: "700",
+    color: "#FF9F0A",
     letterSpacing: 0.6,
   },
   primaryActionTitle: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#000000',
+    fontWeight: "700",
+    color: "#000000",
     letterSpacing: 0.2,
     marginBottom: 4,
   },
   primaryActionSubtitle: {
     fontSize: 14,
-    color: '#3C3C43',
+    color: "#3C3C43",
     lineHeight: 20,
     letterSpacing: -0.24,
     opacity: 0.8,
@@ -637,79 +677,79 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(48, 209, 88, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: "rgba(48, 209, 88, 0.3)",
   },
   primaryActionBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(60, 60, 67, 0.12)',
+    borderTopColor: "rgba(60, 60, 67, 0.12)",
   },
   primaryActionSteps: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     paddingRight: 8,
   },
   stepItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   stepNumber: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: 'rgba(48, 209, 88, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(48, 209, 88, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   stepNumberText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#4aab4e',
+    fontWeight: "700",
+    color: "#4aab4e",
   },
   stepText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#3C3C43',
+    fontWeight: "600",
+    color: "#3C3C43",
     letterSpacing: -0.08,
   },
   primaryActionArrow: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(48, 209, 88, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(48, 209, 88, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#000000',
+    fontWeight: "700",
+    color: "#000000",
     letterSpacing: 0.35,
   },
   sectionCount: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#8E8E93',
+    fontWeight: "600",
+    color: "#8E8E93",
     letterSpacing: -0.08,
   },
   gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
     marginBottom: 20,
   },
@@ -718,14 +758,14 @@ const styles = StyleSheet.create({
     height: 160,
   },
   gridCardLarge: {
-    width: '100%',
+    width: "100%",
     height: 160,
   },
   gridCardTouchable: {
     flex: 1,
     borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
+    overflow: "hidden",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -733,60 +773,60 @@ const styles = StyleSheet.create({
   },
   gridCardBlur: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderWidth: 0.5,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
+    borderColor: "rgba(0, 0, 0, 0.05)",
   },
   gridCardInner: {
     flex: 1,
     padding: 16,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   gridIconCircle: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "flex-start",
   },
   gridCardTextContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     marginVertical: 8,
   },
   gridCardTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
+    fontWeight: "700",
+    color: "#000000",
     marginBottom: 4,
     letterSpacing: -0.32,
   },
   gridCardSubtitle: {
     fontSize: 13,
-    color: '#3C3C43',
+    color: "#3C3C43",
     opacity: 0.6,
     letterSpacing: -0.08,
-    fontWeight: '400',
+    fontWeight: "400",
   },
   gridArrowContainer: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   gridArrowCircle: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.04)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   statsWidget: {
-    width: '100%',
+    width: "100%",
     height: 80,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 24,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
@@ -794,83 +834,83 @@ const styles = StyleSheet.create({
   },
   statsBlur: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderWidth: 0.5,
-    borderColor: 'rgba(0, 0, 0, 0.04)',
+    borderColor: "rgba(0, 0, 0, 0.04)",
   },
   statsContent: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
     paddingHorizontal: 12,
   },
   statItem: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statValue: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#000000',
+    fontWeight: "700",
+    color: "#000000",
     letterSpacing: 0.35,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#8E8E93',
+    fontWeight: "600",
+    color: "#8E8E93",
     letterSpacing: -0.06,
   },
   statDivider: {
     width: 0.5,
     height: 40,
-    backgroundColor: 'rgba(60, 60, 67, 0.18)',
+    backgroundColor: "rgba(60, 60, 67, 0.18)",
   },
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
     gap: 12,
   },
   footerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    backgroundColor: "rgba(48, 209, 88, 0.12)",
   },
   footerBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#4aab4e',
+    fontWeight: "700",
+    color: "#4aab4e",
     letterSpacing: 0.2,
   },
   footerText: {
     fontSize: 13,
-    color: '#8E8E93',
-    fontWeight: '500',
+    color: "#8E8E93",
+    fontWeight: "500",
     letterSpacing: -0.08,
   },
   newBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: 'rgba(94, 92, 230, 0.15)',
+    backgroundColor: "rgba(94, 92, 230, 0.15)",
   },
   newBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#5E5CE6',
+    fontWeight: "700",
+    color: "#5E5CE6",
     letterSpacing: 0.2,
   },
   researchInfoCard: {
-    width: '100%',
+    width: "100%",
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 20,
-    shadowColor: '#5E5CE6',
+    shadowColor: "#5E5CE6",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
@@ -878,13 +918,13 @@ const styles = StyleSheet.create({
   },
   researchInfoBlur: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderWidth: 0.5,
-    borderColor: 'rgba(94, 92, 230, 0.2)',
+    borderColor: "rgba(94, 92, 230, 0.2)",
   },
   researchInfoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
     padding: 20,
   },
@@ -892,9 +932,9 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(94, 92, 230, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(94, 92, 230, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   researchInfoTextContainer: {
     flex: 1,
@@ -902,34 +942,34 @@ const styles = StyleSheet.create({
   },
   researchInfoTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#000000',
+    fontWeight: "700",
+    color: "#000000",
     letterSpacing: -0.24,
   },
   researchInfoSubtitle: {
     fontSize: 13,
-    color: '#3C3C43',
+    color: "#3C3C43",
     opacity: 0.6,
     letterSpacing: -0.08,
   },
   researchBadgesRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     marginTop: 4,
   },
   researchMicroBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    backgroundColor: "rgba(0, 0, 0, 0.04)",
   },
   researchMicroBadgeText: {
     fontSize: 10,
-    fontWeight: '600',
-    color: '#3C3C43',
+    fontWeight: "600",
+    color: "#3C3C43",
     letterSpacing: -0.06,
   },
 });

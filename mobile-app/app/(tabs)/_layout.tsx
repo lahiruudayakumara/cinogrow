@@ -24,7 +24,7 @@ export default function TabLayout() {
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect
-            height: 35 + insets.bottom,
+            height: 45 + insets.bottom,
             paddingHorizontal: 20,
           },
           default: {

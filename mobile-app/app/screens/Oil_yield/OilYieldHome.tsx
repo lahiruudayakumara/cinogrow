@@ -93,8 +93,9 @@ function Greeting() {
   );
 }
 
-function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
+function PrimaryActionCard() {
   const { t } = useTranslation();
+  const router = useRouter();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
 
@@ -137,8 +138,8 @@ function PrimaryActionCard({ navigation }: { navigation: NavigationProp }) {
       <TouchableOpacity
         style={styles.primaryActionCard}
         activeOpacity={1}
-        onPress={() => navigation.navigate("AddMaterialBatch")}
-        onPressIn={handlePressIn}
+        onPress={() => router.push("/screens/Oil_yield/AddMaterialBatch")}
+         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
         <BlurView intensity={80} tint="light" style={styles.primaryActionBlur}>
@@ -334,7 +335,7 @@ export default function OilScreen() {
             <Greeting />
 
             {/* Primary Action Card - Add Material Batch */}
-            <PrimaryActionCard navigation={navigation} />
+            <PrimaryActionCard />
 
             {/* Grid Layout Title */}
             <View style={styles.sectionHeader}>

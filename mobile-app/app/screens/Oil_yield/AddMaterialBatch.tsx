@@ -147,12 +147,12 @@ export default function AddMaterialBatchScreen() {
     >
       <View style={styles.dropdownContent}>
         <View style={styles.dropdownIconCircle}>
-          <MaterialCommunityIcons name={icon as any} size={18} color={selected ? '#FF3B30' : '#8E8E93'} />
+          <MaterialCommunityIcons name={icon as any} size={18} color={selected ? '#4aab4e' : '#8E8E93'} />
         </View>
         <Text style={[styles.dropdownLabel, selected && styles.dropdownLabelSelected]}>{label}</Text>
       </View>
-      <View style={[styles.radioCircle, selected && { borderColor: '#FF3B30' }]}>
-        {selected && <View style={[styles.radioInner, { backgroundColor: '#FF3B30' }]} />}
+      <View style={[styles.radioCircle, selected && { borderColor: '#4aab4e' }]}>
+        {selected && <View style={[styles.radioInner, { backgroundColor: '#4aab4e' }]} />}
       </View>
     </TouchableOpacity>
   );
@@ -162,7 +162,7 @@ export default function AddMaterialBatchScreen() {
       <BlurView intensity={70} tint="light" style={styles.batchBlur}>
         <View style={styles.batchHeader}>
           <View style={styles.batchIconContainer}>
-            <MaterialCommunityIcons name="package-variant" size={24} color="#FF3B30" />
+            <MaterialCommunityIcons name="package-variant" size={24} color="#4aab4e" />
           </View>
           <View style={styles.batchHeaderText}>
             <Text style={styles.batchId}>{batch.batch_name || `Batch ${batch.id}`}</Text>
@@ -230,7 +230,7 @@ export default function AddMaterialBatchScreen() {
         <View style={styles.headerContainer}>
           <View style={styles.headerIconContainer}>
             <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="package-variant-closed" size={28} color="#FF3B30" />
+              <MaterialCommunityIcons name="package-variant-closed" size={28} color="#4aab4e" />
             </View>
           </View>
           <Text style={styles.header}>Material Batch</Text>
@@ -249,7 +249,7 @@ export default function AddMaterialBatchScreen() {
             <BlurView intensity={70} tint="light" style={styles.cardBlur}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardIconCircle}>
-                  <MaterialCommunityIcons name="package-variant" size={20} color="#FF3B30" />
+                  <MaterialCommunityIcons name="package-variant" size={20} color="#4aab4e" />
                 </View>
                 <View style={styles.cardHeaderText}>
                   <Text style={styles.label}>Batch Name</Text>
@@ -273,7 +273,7 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="leaf" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="leaf" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.label}>Cinnamon Type</Text>
@@ -300,7 +300,7 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="weight-kilogram" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="weight-kilogram" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.label}>Mass (kg)</Text>
@@ -328,7 +328,7 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="sprout" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="sprout" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.label}>Plant Part</Text>
@@ -355,7 +355,7 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="clock-outline" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="clock-outline" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.label}>Plant Age</Text>
@@ -383,7 +383,7 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="weather-sunny" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="weather-sunny" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.label}>Harvest Season</Text>
@@ -439,7 +439,7 @@ export default function AddMaterialBatchScreen() {
 
         {loadingBatches ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF3B30" />
+            <ActivityIndicator size="large" color="#4aab4e" />
             <Text style={styles.loadingText}>Loading batches...</Text>
           </View>
         ) : batches.length === 0 ? (
@@ -482,11 +482,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    backgroundColor: 'rgba(55, 255, 48, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 0.5,
-    borderColor: 'rgba(255, 59, 48, 0.2)',
+    borderColor: 'rgba(48, 255, 55, 0.2)',
   },
   header: {
     fontSize: 34,
@@ -519,12 +519,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 59, 48, 0.12)',
+    backgroundColor: 'rgba(48, 255, 72, 0.12)',
   },
   countBadgeText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FF3B30',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   inputCard: {
@@ -586,8 +586,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 0, 0, 0.06)',
   },
   dropdownOptionSelected: {
-    backgroundColor: 'rgba(255, 59, 48, 0.08)',
-    borderColor: 'rgba(255, 59, 48, 0.3)',
+    backgroundColor: 'rgba(48, 255, 62, 0.08)',
+    borderColor: 'rgba(51, 255, 48, 0.3)',
   },
   dropdownContent: {
     flex: 1,
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    backgroundColor: 'rgba(66, 197, 66, 0.04)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.24,
   },
   dropdownLabelSelected: {
-    color: '#FF3B30',
+    color: '#4aab4e',
   },
   radioCircle: {
     width: 22,
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     marginBottom: 32,
-    shadowColor: '#FF3B30',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    backgroundColor: 'rgba(48, 255, 72, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },

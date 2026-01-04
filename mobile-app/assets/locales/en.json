@@ -1015,7 +1015,7 @@
         },
         "mass": {
           "label": "Mass (kg)",
-          "subtitle": "Enter weight",
+          "subtitle": "Enter dried weight",
           "placeholder": "25.5",
           "suffix": "kg"
         },

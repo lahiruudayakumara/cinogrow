@@ -88,7 +88,7 @@ export default function OilPricePredictor() {
   }, []);
 
   const formatCurrency = (value: number) => {
-    return `$${value.toFixed(2)}`;
+    return `Rs.${value.toFixed(2)}`;
   };
 
   // Aggregate daily points into weekly averages (8 weeks)
@@ -144,16 +144,16 @@ export default function OilPricePredictor() {
     if (timeRange === 'daily' && dates.length) {
       labels = dates.map((ds) => {
         const d = new Date(ds);
-        // Stack parts vertically to avoid overlap
-        return `${weekdayShort(d)}\n${pad2(d.getDate())}\n${monthShort(d)}`;
+        // Stack parts vertically to avoid overlap; include year
+        return `${weekdayShort(d)}\n${pad2(d.getDate())} ${monthShort(d)}\n${d.getFullYear()}`;
       });
     } else if (timeRange === 'weekly' && dates.length) {
       labels = [];
       for (let i = 0; i < dates.length; i += 7) {
         const start = dates[i];
         const sd = new Date(start);
-        // Week number + month on separate lines
-        labels.push(`W${weekOfMonth(start)}\n${monthShort(sd)}`);
+        // Week number + month + year on separate lines
+        labels.push(`W${weekOfMonth(start)}\n${monthShort(sd)}\n${sd.getFullYear()}`);
       }
       // Ensure labels length matches aggregated prices length
       if (labels.length > prices.length) labels = labels.slice(0, prices.length);
@@ -167,7 +167,7 @@ export default function OilPricePredictor() {
       if (dates.length) {
         labels = dates.map((ds) => {
           const d = new Date(ds);
-          return d.toLocaleString('en-US', { month: 'long' });
+          return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
         });
       } else {
         labels = prices.map((_, index: number) => `M${index + 1}`);

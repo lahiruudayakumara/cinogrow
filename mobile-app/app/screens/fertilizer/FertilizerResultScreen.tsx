@@ -195,13 +195,6 @@ const FertilizerResultScreen: React.FC = () => {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => router.back()}
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="#111827" />
-                    </TouchableOpacity>
                     <Text style={styles.headerTitle}>
                         {isHistoryView ? t('fertilizer.result.header.title_history') : t('fertilizer.result.header.title_detection')}
                     </Text>

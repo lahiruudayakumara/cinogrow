@@ -5,15 +5,17 @@ import { ChevronRight } from "lucide-react-native";
 interface RecommendationButtonProps {
   title: string;
   onPress: () => void;
+  disabled?: boolean;
 }
 
 export default function RecommendationButton({
   title,
   onPress,
+  disabled,
 }: RecommendationButtonProps) {
   return (
     <View style={{ marginVertical: 18 }}>
-      <TouchableOpacity style={styles.button} onPress={onPress}>
+      <TouchableOpacity style={{ ...styles.button, opacity: disabled ? 0.5 : 1 }} onPress={onPress} disabled={disabled}>
         <Text style={styles.text}>{title}</Text>
         <ChevronRight color="#fff" size={20} />
       </TouchableOpacity>

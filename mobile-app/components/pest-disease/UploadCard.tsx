@@ -71,38 +71,46 @@ export default function UploadCard() {
     }
   };
 
-  const submitForDetection = async () => {
-    if (!selectedImage) return;
-    try {
-      setLoading(true);
-      const res = await detectPestDisease(selectedImage);
-      if (res.status === "infected") {
-        Alert.alert(
-          t("pest_disease.result_title", { defaultValue: "Detection Result" }),
-          `${t("pest_disease.stage", { defaultValue: "Stage" })}: ${res.stage}`
-        );
-        // Navigate to a result page if available
-        try {
-          // @ts-ignore optional screen
-          router.push({
-            pathname: "/screens/pest-disease/ProcessResult",
-            params: { data: JSON.stringify(res), image: selectedImage },
-          });
-        } catch {}
-      } else if (res.status === "invalid") {
-        Alert.alert(t("common.error", { defaultValue: "Error" }), res.message);
-      } else {
-        Alert.alert(t("common.error", { defaultValue: "Error" }), res.message);
-      }
-    } catch (e: any) {
+const submitForDetection = async () => {
+  if (!selectedImage) return;
+
+  try {
+    setLoading(true);
+
+    // Call backend in normal mode
+    const res = await detectPestDisease(selectedImage, "normal");
+
+    if (res.status === "infected") {
+      // Alert.alert(
+      //   t("pest_disease.result_title", { defaultValue: "Detection Result" }),
+      //   `${t("pest_disease.name", { defaultValue: "Name" })}: ${res.name}\n` +
+      //   `${t("pest_disease.confidence", { defaultValue: "Confidence" })}: ${res.confidence}%\n` +
+      //   `${t("pest_disease.severity", { defaultValue: "Severity" })}: ${res.severity}\n` +
+      //   `${res.recommendation ? t("pest_disease.recommendation", { defaultValue: "Recommendation" }) + ": " + res.recommendation : ""}`
+      // );
+
+      // Navigate to result page
+      try {
+        router.push({
+          pathname: "/screens/pest-disease/ProcessResult",
+          params: { data: JSON.stringify(res), image: selectedImage },
+        });
+      } catch {}
+    } else if (res.status === "invalid" || res.status === "error") {
       Alert.alert(
         t("common.error", { defaultValue: "Error" }),
-        e?.message || "Unknown error"
+        res.message
       );
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (e: any) {
+    Alert.alert(
+      t("common.error", { defaultValue: "Error" }),
+      e?.message || "Unknown error"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <View style={styles.uploadCard}>

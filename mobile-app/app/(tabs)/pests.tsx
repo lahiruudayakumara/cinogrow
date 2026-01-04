@@ -40,16 +40,16 @@ export default function PestDiseaseScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <UploadCard />
           <RecommendationButton
+            disabled={true}
             title={t("pest_disease.get_recommendations")}
             onPress={() => {}}
           />
-          {/* <RecentCard
-            date="2025-01-10"
+          <RecentCard
+            date="2026-01-01"
             name="Powdery Mildew"
             severity="high"
             recommendation="Apply fungicide containing sulfur or potassium bicarbonate..."
           />
-          <RecentCard date="2025-01-10" name="Aphids" severity="medium" /> */}
         </ScrollView>
       </View>
     </SafeAreaView>

@@ -763,7 +763,7 @@
         "title": "Add Material Batch",
         "subtitle": "Record your cinnamon harvest to begin oil production analysis"
       },
-      "tools_title": "Oil Production Tools",
+      "tools_title": "Cinnamon Oil Dashboard",
       "cards": {
         "yield_predictor_title": "Oil Yield Predictor",
         "yield_predictor_subtitle": "Estimate yield",
@@ -822,7 +822,7 @@
     "distillation": {
       "header": {
         "title": "Steam Distillation",
-        "subtitle": "Monitor cinnamon oil extraction process (5-7 hours)"
+        "subtitle": "Monitor cinnamon oil extraction process"
       },
       "batch": {
         "title": "Material Batch",
@@ -1015,7 +1015,7 @@
         },
         "mass": {
           "label": "Mass (kg)",
-          "subtitle": "Enter weight",
+          "subtitle": "Enter dried weight",
           "placeholder": "25.5",
           "suffix": "kg"
         },

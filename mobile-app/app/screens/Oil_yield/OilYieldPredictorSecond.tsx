@@ -317,9 +317,7 @@ export default function OilYieldPredictorSecond() {
         {/* Batch Selection Section */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('oil_yield.predictor.batch.title')}</Text>
-          <View style={styles.requiredBadge}>
-            {/* <Text style={styles.requiredText}>Required</Text> */}
-          </View>
+          
         </View>
         
         {/* Material Batch Card */}
@@ -1049,6 +1047,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.08,
   },
   recommendationCard: {
+        marginTop: 36,
+
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 16,

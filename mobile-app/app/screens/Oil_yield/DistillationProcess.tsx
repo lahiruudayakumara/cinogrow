@@ -525,13 +525,13 @@ export default function DistillationProcess() {
                 text={isRunning ? t('oil_yield.distillation.buttons.pause') : t('oil_yield.distillation.buttons.start')}
                 disabled={remainingTime === 0}
               />
-              <ControlButton
+              {/* <ControlButton
                 onPress={handleReset}
                 isPrimary={false}
                 icon="restart"
                 text={t('oil_yield.distillation.buttons.reset')}
                 disabled={remainingTime === Math.round(optimalTime * 60)}
-              />
+              /> */}
             </View>
 
             {/* Recommendations Card */}

@@ -43,7 +43,7 @@ class Tree(SQLModel, table=True):
     # Tree characteristics
     tree_age_years: Optional[float] = Field(default=None)
     stem_count: int = Field(default=1)  # Number of stems on this tree
-    stem_diameter_mm: Optional[float] = Field(default=None)  # Stem diameter for ML predictions
+    stem_circumference_inches: Optional[float] = Field(default=None, description="Stem circumference in inches (1 inch = 25.4mm)")
     is_active: bool = Field(default=True)  # Whether tree is alive and productive
     
     # ML Predictions
@@ -75,11 +75,12 @@ class TreeMeasurement(SQLModel, table=True):
     measurement_date: datetime = Field(default_factory=datetime.utcnow)
     measured_by: Optional[str] = Field(default=None, max_length=100)  # Who took the measurement
     
-    # Stem measurements (key features for ML model)
-    stem_diameter_mm: float = Field(description="Average stem diameter in millimeters")
+    # Stem measurements (key features for ML model - measurements in inches)
+    # Note: 1 inch = 25.4mm, circumference = π × diameter
+    stem_circumference_inches: float = Field(description="Average stem circumference in inches")
     num_existing_stems: int = Field(default=1, description="Number of harvestable stems")
     stem_length_cm: Optional[float] = Field(default=None, description="Average stem length in cm")
-    stem_thickness_variability: Optional[float] = Field(default=None, description="Std dev of stem diameters")
+    stem_thickness_variability_inches: Optional[float] = Field(default=None, description="Std dev of stem circumferences in inches")
     
     # Tree health indicators
     canopy_coverage: Optional[float] = Field(default=None, ge=0, le=100, description="Canopy coverage percentage")
@@ -142,7 +143,7 @@ class TreeCreate(BaseModel):
     planting_date: Optional[datetime] = None
     variety: str = "Sri Gemunu"
     tree_age_years: Optional[float] = None
-    stem_diameter_mm: Optional[float] = None
+    stem_circumference_inches: Optional[float] = None
     fertilizer_used: bool = False
     fertilizer_type: Optional[FertilizerType] = None
     fertilizer_application_date: Optional[datetime] = None
@@ -156,7 +157,7 @@ class TreeUpdate(BaseModel):
     location_y: Optional[float] = None
     variety: Optional[str] = None
     tree_age_years: Optional[float] = None
-    stem_diameter_mm: Optional[float] = None
+    stem_circumference_inches: Optional[float] = None
     hybrid_yield_estimate: Optional[float] = None
     fertilizer_used: Optional[bool] = None
     fertilizer_type: Optional[FertilizerType] = None
@@ -178,7 +179,7 @@ class TreeRead(BaseModel):
     variety: str
     tree_age_years: Optional[float]
     stem_count: int
-    stem_diameter_mm: Optional[float]
+    stem_circumference_inches: Optional[float]
     hybrid_yield_estimate: Optional[float]
     is_active: bool
     fertilizer_used: bool
@@ -194,10 +195,10 @@ class TreeMeasurementCreate(BaseModel):
     tree_id: int
     measurement_date: Optional[datetime] = None
     measured_by: Optional[str] = None
-    stem_diameter_mm: float
+    stem_circumference_inches: float
     num_existing_stems: int = 1
     stem_length_cm: Optional[float] = None
-    stem_thickness_variability: Optional[float] = None
+    stem_thickness_variability_inches: Optional[float] = None
     canopy_coverage: Optional[float] = None
     leaf_health_score: Optional[int] = None
     pest_damage: Optional[float] = None
@@ -218,10 +219,10 @@ class TreeMeasurementRead(BaseModel):
     tree_id: int
     measurement_date: datetime
     measured_by: Optional[str]
-    stem_diameter_mm: float
+    stem_circumference_inches: float
     num_existing_stems: int
     stem_length_cm: Optional[float]
-    stem_thickness_variability: Optional[float]
+    stem_thickness_variability_inches: Optional[float]
     canopy_coverage: Optional[float]
     leaf_health_score: Optional[int]
     pest_damage: Optional[float]
@@ -272,7 +273,7 @@ class TreeHarvestRecordRead(BaseModel):
 class TreeSampleMeasurement(BaseModel):
     """Individual tree measurement for sampling-based prediction"""
     tree_code: Optional[str] = None
-    stem_diameter_mm: float
+    stem_circumference_inches: float
     fertilizer_used: bool = False
     fertilizer_type: Optional[FertilizerType] = None
     disease_status: DiseaseStatus = DiseaseStatus.NONE

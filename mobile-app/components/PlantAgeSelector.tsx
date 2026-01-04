@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 
 interface PlantAgeSelectorProps {
     visible: boolean;
@@ -22,18 +23,19 @@ const PlantAgeSelector: React.FC<PlantAgeSelectorProps> = ({
     onClose,
     onConfirm,
 }) => {
+    const { t } = useTranslation();
     const [selectedAge, setSelectedAge] = useState<number | null>(null);
     const [customAge, setCustomAge] = useState<string>('');
     const [showCustomInput, setShowCustomInput] = useState(false);
 
     // Age ranges with descriptions
     const ageOptions = [
-        { years: 1, label: '0-1 Year', description: 'Newly planted, establishment phase', icon: 'leaf-outline' },
-        { years: 2, label: '1-2 Years', description: 'Young growth, developing', icon: 'flower-outline' },
-        { years: 3, label: '2-3 Years', description: 'Early productive stage', icon: 'git-branch-outline' },
-        { years: 4, label: '3-5 Years', description: 'Mature, peak production', icon: 'fitness-outline' },
-        { years: 7, label: '5-10 Years', description: 'Established, consistent yield', icon: 'ribbon-outline' },
-        { years: 12, label: '10+ Years', description: 'Old growth, maintenance', icon: 'trophy-outline' },
+        { years: 1, labelKey: 'year_0_1', icon: 'leaf-outline' },
+        { years: 2, labelKey: 'year_1_2', icon: 'flower-outline' },
+        { years: 3, labelKey: 'year_2_3', icon: 'git-branch-outline' },
+        { years: 4, labelKey: 'year_3_5', icon: 'fitness-outline' },
+        { years: 7, labelKey: 'year_5_10', icon: 'ribbon-outline' },
+        { years: 12, labelKey: 'year_10_plus', icon: 'trophy-outline' },
     ];
 
     const handleAgeSelect = (years: number) => {
@@ -83,7 +85,7 @@ const PlantAgeSelector: React.FC<PlantAgeSelectorProps> = ({
                     <View style={styles.header}>
                         <View style={styles.headerTitleContainer}>
                             <Ionicons name="calendar-outline" size={24} color="#4CAF50" />
-                            <Text style={styles.headerTitle}>Plant Age</Text>
+                            <Text style={styles.headerTitle}>{t('fertilizer.plant_age_selector.title')}</Text>
                         </View>
                         <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
                             <Ionicons name="close" size={24} color="#6B7280" />
@@ -93,7 +95,7 @@ const PlantAgeSelector: React.FC<PlantAgeSelectorProps> = ({
                     {/* Description */}
                     <View style={styles.descriptionContainer}>
                         <Text style={styles.description}>
-                            Select the age of your cinnamon plant to get age-appropriate fertilizer recommendations
+                            {t('fertilizer.plant_age_selector.description')}
                         </Text>
                     </View>
 
@@ -128,10 +130,10 @@ const PlantAgeSelector: React.FC<PlantAgeSelectorProps> = ({
                                             styles.optionLabel,
                                             selectedAge === option.years && styles.optionLabelSelected
                                         ]}>
-                                            {option.label}
+                                            {t(`fertilizer.plant_age_selector.age_options.${option.labelKey}.label`)}
                                         </Text>
                                         <Text style={styles.optionDescription}>
-                                            {option.description}
+                                            {t(`fertilizer.plant_age_selector.age_options.${option.labelKey}.description`)}
                                         </Text>
                                     </View>
                                 </View>
@@ -166,10 +168,10 @@ const PlantAgeSelector: React.FC<PlantAgeSelectorProps> = ({
                                         styles.optionLabel,
                                         showCustomInput && styles.optionLabelSelected
                                     ]}>
-                                        Custom Age
+                                        {t('fertilizer.plant_age_selector.custom_age.label')}
                                     </Text>
                                     <Text style={styles.optionDescription}>
-                                        Enter specific plant age
+                                        {t('fertilizer.plant_age_selector.custom_age.description')}
                                     </Text>
                                 </View>
                             </View>
@@ -180,10 +182,10 @@ const PlantAgeSelector: React.FC<PlantAgeSelectorProps> = ({
 
                         {showCustomInput && (
                             <View style={styles.customInputContainer}>
-                                <Text style={styles.inputLabel}>Enter plant age (years)</Text>
+                                <Text style={styles.inputLabel}>{t('fertilizer.plant_age_selector.custom_age.input_label')}</Text>
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="e.g., 5"
+                                    placeholder={t('fertilizer.plant_age_selector.custom_age.placeholder')}
                                     keyboardType="numeric"
                                     value={customAge}
                                     onChangeText={setCustomAge}
@@ -199,7 +201,7 @@ const PlantAgeSelector: React.FC<PlantAgeSelectorProps> = ({
                             style={styles.cancelButton}
                             onPress={handleCancel}
                         >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                            <Text style={styles.cancelButtonText}>{t('fertilizer.plant_age_selector.buttons.cancel')}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -218,7 +220,7 @@ const PlantAgeSelector: React.FC<PlantAgeSelectorProps> = ({
                                     styles.confirmButtonText,
                                     isConfirmDisabled && styles.confirmButtonTextDisabled
                                 ]}>
-                                    Get Recommendations
+                                    {t('fertilizer.plant_age_selector.buttons.confirm')}
                                 </Text>
                                 <Ionicons
                                     name="arrow-forward"

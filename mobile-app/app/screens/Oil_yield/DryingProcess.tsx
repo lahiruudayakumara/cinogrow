@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import apiConfig from '../../config/api';
+import apiConfig from '../../../config/api';
 
 // Use localhost for web platform, otherwise use the configured API URL
 const API_BASE_URL = Platform.OS === 'web'
@@ -149,7 +149,7 @@ export default function DryingProcess() {
     >
       <View style={styles.radioContent}>
         <View style={styles.radioIconCircle}>
-          <MaterialCommunityIcons name={icon as any} size={20} color={selected ? '#FF9F0A' : '#8E8E93'} />
+          <MaterialCommunityIcons name={icon as any} size={20} color={selected ? '#4aab4e' : '#8E8E93'} />
         </View>
         <View style={styles.radioTextContainer}>
           <Text style={[styles.radioLabel, selected && styles.radioLabelSelected]}>{label}</Text>
@@ -158,8 +158,8 @@ export default function DryingProcess() {
           </Text>
         </View>
       </View>
-      <View style={[styles.radioCircle, selected && { borderColor: '#FF9F0A' }]}>
-        {selected && <View style={[styles.radioInner, { backgroundColor: '#FF9F0A' }]} />}
+      <View style={[styles.radioCircle, selected && { borderColor: '#4aab4e' }]}>
+        {selected && <View style={[styles.radioInner, { backgroundColor: '#4aab4e' }]} />}
       </View>
     </TouchableOpacity>
   );
@@ -199,7 +199,7 @@ export default function DryingProcess() {
           activeOpacity={1}
         >
           <BlurView intensity={isPrimary ? 100 : 70} tint={isPrimary ? "dark" : "light"} style={styles.controlButtonBlur}>
-            <MaterialCommunityIcons name={icon as any} size={20} color={isPrimary ? '#FFFFFF' : '#FF9F0A'} />
+            <MaterialCommunityIcons name={icon as any} size={20} color={isPrimary ? '#FFFFFF' : '#4aab4e'} />
             <Text style={[styles.controlButtonText, isPrimary ? styles.primaryButtonText : styles.secondaryButtonText]}>
               {text}
             </Text>
@@ -222,7 +222,7 @@ export default function DryingProcess() {
         <View style={styles.headerContainer}>
           <View style={styles.headerIconContainer}>
             <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="weather-sunny" size={28} color="#FF9F0A" />
+              <MaterialCommunityIcons name="weather-sunny" size={28} color="#4aab4e" />
             </View>
           </View>
           <Text style={styles.header}>Drying Process</Text>
@@ -232,20 +232,20 @@ export default function DryingProcess() {
         </View>
 
         {/* Quick Info Banner */}
-        <View style={styles.infoBanner}>
+        {/* <View style={styles.infoBanner}>
           <BlurView intensity={50} tint="light" style={styles.infoBannerBlur}>
             <View style={styles.infoBannerContent}>
-              <MaterialCommunityIcons name="information" size={20} color="#FF9F0A" />
+              <MaterialCommunityIcons name="information" size={20} color="#4aab4e" />
               <Text style={styles.infoBannerText}>Select a batch to begin monitoring</Text>
             </View>
           </BlurView>
-        </View>
+        </View> */}
 
         {/* Batch Selection Section */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Material Batch</Text>
           <View style={styles.requiredBadge}>
-            <Text style={styles.requiredText}>Required</Text>
+            {/* <Text style={styles.requiredText}>Required</Text> */}
           </View>
         </View>
 
@@ -254,7 +254,7 @@ export default function DryingProcess() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="package-variant-closed" size={24} color="#FF9F0A" />
+                <MaterialCommunityIcons name="package-variant-closed" size={24} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.label}>Select Batch</Text>
@@ -294,7 +294,7 @@ export default function DryingProcess() {
                 <MaterialCommunityIcons 
                   name={isRunning ? "clock-fast" : "clock-outline"} 
                   size={14} 
-                  color={isRunning ? "#FF9F0A" : "#30D158"} 
+                  color={isRunning ? "#4aab4e" : "#30D158"} 
                 />
                 <Text style={[styles.successText, isRunning && styles.activeText]}>
                   {isRunning ? 'Running' : 'Ready'}
@@ -310,7 +310,7 @@ export default function DryingProcess() {
                     <MaterialCommunityIcons 
                       name={isRunning ? "timer" : "timer-outline"} 
                       size={32} 
-                      color="#FF9F0A" 
+                      color="#4aab4e" 
                     />
                   </View>
                   <View style={styles.timerBadge}>
@@ -354,7 +354,7 @@ export default function DryingProcess() {
                       <View style={styles.progressBarBg}>
                         <View style={[styles.progressBarFill, { 
                           width: `${getProgress()}%`, 
-                          backgroundColor: getProgress() >= 100 ? '#30D158' : '#FF9F0A' 
+                          backgroundColor: getProgress() >= 100 ? '#30D158' : '#4aab4e' 
                         }]} />
                       </View>
                     </View>
@@ -408,7 +408,7 @@ export default function DryingProcess() {
                     </View>
                     <View style={styles.estimateFooter}>
                       <View style={styles.estimateInfoItem}>
-                        <MaterialCommunityIcons name="weather-sunny" size={16} color="#FF9F0A" />
+                        <MaterialCommunityIcons name="weather-sunny" size={16} color="#4aab4e" />
                         <Text style={styles.estimateInfoText}>Sun drying</Text>
                       </View>
                       <View style={styles.estimateInfoItem}>
@@ -496,11 +496,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255, 159, 10, 0.15)',
+    backgroundColor: 'rgba(47, 255, 10, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 0.5,
-    borderColor: 'rgba(255, 159, 10, 0.2)',
+    borderColor: 'rgba(74, 171, 78, 0.2)',
   },
   header: {
     fontSize: 34,
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 28,
-    shadowColor: '#FF9F0A',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   },
   infoBannerBlur: {
     flex: 1,
-    backgroundColor: 'rgba(255, 159, 10, 0.08)',
+    backgroundColor: 'rgba(74, 171, 78, 0.08)',
     borderWidth: 0.5,
     borderColor: 'rgba(255, 159, 10, 0.15)',
   },
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   infoBannerText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FF9F0A',
+    color: '#4aab4e',
     letterSpacing: -0.08,
   },
   sectionHeader: {
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   activeText: {
-    color: '#FF9F0A',
+    color: '#4aab4e',
   },
   inputCard: {
     borderRadius: 16,
@@ -651,8 +651,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 0, 0, 0.08)',
   },
   radioOptionSelected: {
-    borderColor: 'rgba(255, 159, 10, 0.3)',
-    backgroundColor: 'rgba(255, 159, 10, 0.05)',
+    borderColor: 'rgba(74, 171, 78, 0.3)',
+    backgroundColor: 'rgba(74, 171, 78, 0.05)',
   },
   radioContent: {
     flexDirection: 'row',
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#FF9F0A',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
   timerBlur: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 0.5,
-    borderColor: 'rgba(255, 159, 10, 0.2)',
+    borderColor: 'rgba(74, 171, 78, 0.2)',
     padding: 20,
   },
   timerHeader: {
@@ -726,7 +726,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(255, 159, 10, 0.15)',
+    backgroundColor: 'rgba(74, 171, 78, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -734,12 +734,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 159, 10, 0.12)',
+    backgroundColor: 'rgba(74, 171, 78, 0.12)',
   },
   timerBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#FF9F0A',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   timerLabel: {
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   timerValue: {
     fontSize: 48,
     fontWeight: '700',
-    color: '#FF9F0A',
+    color: '#4aab4e',
     letterSpacing: -0.5,
     marginBottom: 12,
   },
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   primaryButton: {
-    shadowColor: '#FF9F0A',
+    shadowColor: '#4aab4e',
   },
   secondaryButton: {
     shadowColor: '#000',
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   secondaryButtonText: {
-    color: '#FF9F0A',
+    color: '#4aab4e',
   },
   controlButtonText: {
     fontSize: 17,

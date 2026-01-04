@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -223,6 +224,15 @@ const MyYieldScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} />
         }
       >
+        {/* Header with Back Button */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          </TouchableOpacity>
+        </View>
         {/* Actual Yield Records Title & Subtitle */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
           <Ionicons name="document-text" size={24} color="#4CAF50" />
@@ -399,10 +409,18 @@ const MyYieldScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: Platform.OS === 'android' ? 0 : -70,
     backgroundColor: '#F3F4F6',
   },
   scrollContent: {
     padding: 16,
+  },
+  header: {
+    marginBottom: 16,
+  },
+  backButton: {
+    padding: 4,
+    marginBottom: 12,
   },
   centerContent: {
     flex: 1,

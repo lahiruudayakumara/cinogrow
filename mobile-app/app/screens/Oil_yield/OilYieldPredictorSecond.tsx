@@ -14,7 +14,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import apiConfig from '../../config/api';
+import apiConfig from '../../../config/api';
 
 // Use localhost for web platform, otherwise use the configured API URL
 const API_BASE_URL = Platform.OS === 'web' 
@@ -22,6 +22,7 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function OilYieldPredictorSecond() {
+  const { t } = useTranslation();
   type MaterialBatch = {
     id: number;
     batch_name?: string | null;
@@ -52,7 +53,7 @@ export default function OilYieldPredictorSecond() {
         setBatches(data);
       } catch (e: any) {
         console.error('❌ Failed to fetch batches', e);
-        Alert.alert('Load Error', e.message || 'Could not load material batches');
+        Alert.alert(t('oil_yield.predictor.alerts.load_error'), e.message || t('yield_weather.common.unknown_error'));
       }
     };
     fetchBatches();
@@ -65,7 +66,7 @@ export default function OilYieldPredictorSecond() {
     // Validation
     if (!selectedBatch) {
       console.log('❌ Validation failed - no batch selected');
-      Alert.alert('Missing Information', 'Please select a material batch.');
+      Alert.alert(t('oil_yield.predictor.alerts.missing_info'), t('oil_yield.predictor.alerts.select_batch_prompt'));
       return;
     }
 
@@ -130,7 +131,7 @@ export default function OilYieldPredictorSecond() {
       console.error('❌ Error message:', error.message);
       console.error('❌ Error stack:', error.stack);
       Alert.alert(
-        'Prediction Failed',
+        t('oil_yield.predictor.alerts.prediction_failed'),
         `Unable to connect to the prediction service.\n\nError: ${error.message}\n\nAPI URL: ${API_BASE_URL}/oil_yield/predict\n\nPlease check your connection and try again.`
       );
     } finally {
@@ -236,12 +237,12 @@ export default function OilYieldPredictorSecond() {
             {loading ? (
               <>
                 <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text style={styles.predictText}>Predicting...</Text>
+                <Text style={styles.predictText}>{t('oil_yield.predictor.buttons.predicting')}</Text>
               </>
             ) : (
               <>
                 <MaterialCommunityIcons name="chart-line" size={20} color="#FFFFFF" />
-                <Text style={styles.predictText}>Predict Yield</Text>
+                <Text style={styles.predictText}>{t('oil_yield.predictor.buttons.predict')}</Text>
                 <MaterialCommunityIcons name="arrow-right" size={20} color="#FFFFFF" />
               </>
             )}
@@ -294,31 +295,29 @@ export default function OilYieldPredictorSecond() {
         <View style={styles.headerContainer}>
           <View style={styles.headerIconContainer}>
             <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="flask-outline" size={28} color="#30D158" />
+              <MaterialCommunityIcons name="flask-outline" size={28} color="#4aab4e" />
             </View>
           </View>
-          <Text style={styles.header}>Oil Yield Predictor</Text>
+          <Text style={styles.header}>{t('oil_yield.predictor.header.title')}</Text>
           <Text style={styles.headerSubtitle}>
-            Get accurate predictions for your cinnamon oil yield
+            {t('oil_yield.predictor.header.subtitle')}
           </Text>
         </View>
 
         {/* Quick Info Banner */}
-        <View style={styles.infoBanner}>
+        {/* <View style={styles.infoBanner}>
           <BlurView intensity={50} tint="light" style={styles.infoBannerBlur}>
             <View style={styles.infoBannerContent}>
               <MaterialCommunityIcons name="information" size={20} color="#0A84FF" />
               <Text style={styles.infoBannerText}>Select a batch to predict</Text>
             </View>
           </BlurView>
-        </View>
+        </View> */}
 
         {/* Batch Selection Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Material Batch</Text>
-          <View style={styles.requiredBadge}>
-            <Text style={styles.requiredText}>Required</Text>
-          </View>
+          <Text style={styles.sectionTitle}>{t('oil_yield.predictor.batch.title')}</Text>
+          
         </View>
         
         {/* Material Batch Card */}
@@ -329,13 +328,13 @@ export default function OilYieldPredictorSecond() {
                 <MaterialCommunityIcons name="package-variant-closed" size={24} color="#34C759" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Select Batch</Text>
-                <Text style={styles.labelSubtext}>Choose material batch to predict</Text>
+                <Text style={styles.label}>{t('oil_yield.predictor.batch.select_batch')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.predictor.batch.select_batch_subtext')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               {batches.length === 0 ? (
-                <Text style={styles.labelSubtext}>No batches found</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.predictor.batch.no_batches')}</Text>
               ) : (
                 batches.map((b) => {
                   const label = b.batch_name
@@ -364,10 +363,10 @@ export default function OilYieldPredictorSecond() {
         {predictedYield && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Results</Text>
+              <Text style={styles.sectionTitle}>{t('oil_yield.predictor.results.title')}</Text>
               <View style={styles.successBadge}>
-                <MaterialCommunityIcons name="check-circle" size={14} color="#30D158" />
-                <Text style={styles.successText}>Complete</Text>
+                <MaterialCommunityIcons name="check-circle" size={14} color="#4aab4e" />
+                <Text style={styles.successText}>{t('oil_yield.predictor.results.status_complete')}</Text>
               </View>
             </View>
 
@@ -376,21 +375,21 @@ export default function OilYieldPredictorSecond() {
               <BlurView intensity={70} tint="light" style={styles.resultBlur}>
                 <View style={styles.resultHeader}>
                   <View style={styles.resultIconContainer}>
-                    <MaterialCommunityIcons name="flask" size={32} color="#30D158" />
+                    <MaterialCommunityIcons name="flask" size={32} color="#4aab4e" />
                   </View>
                   <View style={styles.resultBadge}>
-                    <Text style={styles.resultBadgeText}>Predicted</Text>
+                    <Text style={styles.resultBadgeText}>{t('oil_yield.predictor.results.badge_predicted')}</Text>
                   </View>
                 </View>
-                <Text style={styles.resultTitle}>Oil Yield</Text>
+                <Text style={styles.resultTitle}>{t('oil_yield.predictor.results.yield_title')}</Text>
                 <View style={styles.resultValueRow}>
                   <Text style={styles.resultValue}>{predictedYield}</Text>
-                  <Text style={styles.resultValueUnit}>mL</Text>
+                  <Text style={styles.resultValueUnit}>{t('oil_yield.predictor.results.unit_ml')}</Text>
                 </View>
                 <View style={styles.resultDivider} />
                 <View style={styles.resultMeta}>
                   <MaterialCommunityIcons name="clock-outline" size={14} color="#8E8E93" />
-                  <Text style={styles.resultMetaText}>Just now</Text>
+                  <Text style={styles.resultMetaText}>{t('oil_yield.predictor.results.meta_just_now')}</Text>
                   <View style={styles.resultMetaDot} />
                   <MaterialCommunityIcons name="leaf" size={14} color="#8E8E93" />
                   <Text style={styles.resultMetaText}>{selectedBatch?.cinnamon_type || '-'}</Text>
@@ -407,29 +406,29 @@ export default function OilYieldPredictorSecond() {
                       <MaterialCommunityIcons name="information" size={20} color="#0A84FF" />
                     </View>
                     <View style={styles.cardHeaderText}>
-                      <Text style={styles.label}>Input Summary</Text>
-                      <Text style={styles.labelSubtext}>Parameters used</Text>
+                      <Text style={styles.label}>{t('oil_yield.predictor.results.input_summary.title')}</Text>
+                      <Text style={styles.labelSubtext}>{t('oil_yield.predictor.results.input_summary.subtitle')}</Text>
                     </View>
                   </View>
                   <View style={styles.summaryContent}>
                     <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Dried Mass:</Text>
+                      <Text style={styles.summaryLabel}>{t('oil_yield.predictor.results.input_summary.dried_mass')}</Text>
                       <Text style={styles.summaryValue}>{inputSummary.dried_mass_kg} kg</Text>
                     </View>
                     <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Species:</Text>
+                      <Text style={styles.summaryLabel}>{t('oil_yield.predictor.results.input_summary.species')}</Text>
                       <Text style={styles.summaryValue}>{inputSummary.species_variety}</Text>
                     </View>
                     <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Plant Part:</Text>
+                      <Text style={styles.summaryLabel}>{t('oil_yield.predictor.results.input_summary.plant_part')}</Text>
                       <Text style={styles.summaryValue}>{inputSummary.plant_part}</Text>
                     </View>
                     <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Age:</Text>
-                      <Text style={styles.summaryValue}>{inputSummary.age_years} years</Text>
+                      <Text style={styles.summaryLabel}>{t('oil_yield.predictor.results.input_summary.age')}</Text>
+                      <Text style={styles.summaryValue}>{inputSummary.age_years} {t('oil_yield.predictor.results.input_summary.years_suffix')}</Text>
                     </View>
                     <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Season:</Text>
+                      <Text style={styles.summaryLabel}>{t('oil_yield.predictor.results.input_summary.season')}</Text>
                       <Text style={styles.summaryValue}>{inputSummary.harvesting_season}</Text>
                     </View>
                   </View>
@@ -494,7 +493,7 @@ export default function OilYieldPredictorSecond() {
                   <View style={styles.recommendationIconCircle}>
                     <MaterialCommunityIcons name="lightbulb-on" size={20} color="#FF9F0A" />
                   </View>
-                  <Text style={styles.recommendationTitle}>Recommendations</Text>
+                  <Text style={styles.recommendationTitle}>{t('oil_yield.predictor.results.recommendations.title')}</Text>
                 </View>
                 
                 {recommendation && (() => {
@@ -503,13 +502,13 @@ export default function OilYieldPredictorSecond() {
                     <>
                       {/* Primary Recommendation */}
                       <View style={styles.recommendationPrimary}>
-                        <MaterialCommunityIcons name="check-circle" size={18} color="#30D158" />
+                        <MaterialCommunityIcons name="check-circle" size={18} color="#4aab4e" />
                         <Text style={styles.recommendationPrimaryText}>{rec.primary}</Text>
                       </View>
 
                       {/* Tips Section */}
                       <View style={styles.recommendationSection}>
-                        <Text style={styles.recommendationSectionTitle}>Best Practices</Text>
+                        <Text style={styles.recommendationSectionTitle}>{t('oil_yield.predictor.results.recommendations.best_practices')}</Text>
                         {rec.tips.map((tip: string, index: number) => (
                           <View key={index} style={styles.recommendationTip}>
                             <View style={styles.tipBullet}>
@@ -649,7 +648,7 @@ const styles = StyleSheet.create({
   successText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#30D158',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   inputCard: {
@@ -775,7 +774,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginVertical: 24,
-    shadowColor: '#30D158',
+    shadowColor: '#4aab4e',
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 16,
@@ -787,7 +786,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: '#30D158',
+    backgroundColor: '#4aab4e',
   },
   predictText: {
     color: '#FFFFFF',
@@ -799,7 +798,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#30D158',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -834,7 +833,7 @@ const styles = StyleSheet.create({
   resultBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#30D158',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   resultTitle: {
@@ -852,7 +851,7 @@ const styles = StyleSheet.create({
   resultValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#30D158',
+    color: '#4aab4e',
     letterSpacing: 0.36,
   },
   resultValueUnit: {
@@ -1048,6 +1047,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.08,
   },
   recommendationCard: {
+        marginTop: 36,
+
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 16,

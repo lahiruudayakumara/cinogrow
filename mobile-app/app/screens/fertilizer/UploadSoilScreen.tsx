@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { imageAnalysisService } from '../../../services/imageAnalysisService';
 import { metadataStorageService } from '../../../services/metadataStorageService';
 import { SoilAnalysisMetadata } from '../../../services/imageAnalysisService';
@@ -22,6 +23,7 @@ import { UploadSoilParams, serializePhotoPreviewParams } from '../../fertilizer/
 
 const UploadSoilScreen: React.FC = () => {
     const router = useRouter();
+    const { t } = useTranslation();
     const params = useLocalSearchParams<UploadSoilParams>();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fromLeaf = params?.fromLeaf === 'true';
@@ -31,7 +33,7 @@ const UploadSoilScreen: React.FC = () => {
     const requestCameraPermission = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Permission Required', 'Camera permission is required to take photos.');
+            Alert.alert(t('fertilizer.upload_soil.alerts.permission_camera_title'), t('fertilizer.upload_soil.alerts.permission_camera_message'));
             return false;
         }
         return true;
@@ -40,7 +42,7 @@ const UploadSoilScreen: React.FC = () => {
     const requestMediaLibraryPermission = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Permission Required', 'Photo library permission is required to select images.');
+            Alert.alert(t('fertilizer.upload_soil.alerts.permission_library_title'), t('fertilizer.upload_soil.alerts.permission_library_message'));
             return false;
         }
         return true;
@@ -48,19 +50,19 @@ const UploadSoilScreen: React.FC = () => {
 
     const handleChooseFile = async () => {
         Alert.alert(
-            'Select Image',
-            'Choose how you want to select your image',
+            t('fertilizer.upload_soil.alerts.select_image'),
+            t('fertilizer.upload_soil.alerts.select_image_message'),
             [
                 {
-                    text: 'Camera',
+                    text: t('fertilizer.upload_soil.alerts.camera'),
                     onPress: openCamera,
                 },
                 {
-                    text: 'Photo Library',
+                    text: t('fertilizer.upload_soil.alerts.photo_library'),
                     onPress: openImageLibrary,
                 },
                 {
-                    text: 'Cancel',
+                    text: t('fertilizer.upload_soil.alerts.cancel'),
                     style: 'cancel',
                 },
             ]
@@ -74,8 +76,7 @@ const UploadSoilScreen: React.FC = () => {
 
             const result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [1, 1],
+                allowsEditing: false,
                 quality: 0.8,
             });
 
@@ -115,7 +116,7 @@ const UploadSoilScreen: React.FC = () => {
             }
         } catch (error) {
             console.error('Error taking photo:', error);
-            Alert.alert('Error', 'Failed to take photo');
+            Alert.alert(t('fertilizer.upload_soil.alerts.error'), t('fertilizer.upload_soil.alerts.failed_take_photo'));
         }
     };
 
@@ -126,8 +127,7 @@ const UploadSoilScreen: React.FC = () => {
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [1, 1],
+                allowsEditing: false,
                 quality: 0.8,
             });
 
@@ -167,13 +167,13 @@ const UploadSoilScreen: React.FC = () => {
             }
         } catch (error) {
             console.error('Error picking image:', error);
-            Alert.alert('Error', 'Failed to pick image');
+            Alert.alert(t('fertilizer.upload_soil.alerts.error'), t('fertilizer.upload_soil.alerts.failed_pick_image'));
         }
     };
 
     const handleUploadSoilSample = () => {
         if (!selectedImage) {
-            Alert.alert('No Image Selected', 'Please select a soil image first.');
+            Alert.alert(t('fertilizer.upload_soil.alerts.no_image_title'), t('fertilizer.upload_soil.alerts.no_image_message'));
             return;
         }
 
@@ -237,10 +237,10 @@ const UploadSoilScreen: React.FC = () => {
                         <View style={styles.progressIconContainer}>
                             <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
                         </View>
-                        <Text style={styles.progressTitle}>Leaf Sample Complete</Text>
+                        <Text style={styles.progressTitle}>{t('fertilizer.upload_soil.progress.title')}</Text>
                     </View>
                     <Text style={styles.progressSubtitle}>
-                        Great! Now upload your soil sample to complete the analysis.
+                        {t('fertilizer.upload_soil.progress.subtitle')}
                     </Text>
                     <View style={styles.progressBar}>
                         <LinearGradient
@@ -248,7 +248,7 @@ const UploadSoilScreen: React.FC = () => {
                             style={[styles.progressFill, { width: '50%' }]}
                         />
                     </View>
-                    <Text style={styles.progressText}>Step 2 of 2</Text>
+                    <Text style={styles.progressText}>{t('fertilizer.upload_soil.progress.step')}</Text>
                 </LinearGradient>
             </View>
         );
@@ -268,9 +268,9 @@ const UploadSoilScreen: React.FC = () => {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Upload Soil Sample</Text>
+                    <Text style={styles.headerTitle}>{t('fertilizer.upload_soil.header.title')}</Text>
                     <Text style={styles.headerSubtitle}>
-                        Optional Step 2: Add soil photo to enhance your fertilizer recommendations
+                        {t('fertilizer.upload_soil.header.subtitle')}
                     </Text>
                 </View>
 
@@ -283,34 +283,34 @@ const UploadSoilScreen: React.FC = () => {
                         <View style={styles.guidelinesIconContainer}>
                             <Ionicons name="earth" size={24} color="#8B7355" />
                         </View>
-                        <Text style={styles.guidelinesTitle}>Soil Photography Guidelines</Text>
+                        <Text style={styles.guidelinesTitle}>{t('fertilizer.upload_soil.guidelines.title')}</Text>
                     </View>
 
                     <View style={styles.guidelinesList}>
-                        {renderGuidelineItem('sunny', 'Take photo in natural daylight')}
-                        {renderGuidelineItem('earth-outline', 'Show topsoil surface clearly')}
-                        {renderGuidelineItem('leaf-outline', 'Clear away debris and vegetation')}
-                        {renderGuidelineItem('water-outline', 'Ensure soil is moist, not waterlogged')}
+                        {renderGuidelineItem('sunny', t('fertilizer.upload_soil.guidelines.natural_daylight'))}
+                        {renderGuidelineItem('earth-outline', t('fertilizer.upload_soil.guidelines.show_topsoil'))}
+                        {renderGuidelineItem('leaf-outline', t('fertilizer.upload_soil.guidelines.clear_debris'))}
+                        {renderGuidelineItem('water-outline', t('fertilizer.upload_soil.guidelines.moist_soil'))}
                     </View>
                 </View>
 
                 {/* Upload Section */}
                 <View style={styles.uploadSection}>
-                    <Text style={styles.sectionTitle}>Select Image Source</Text>
+                    <Text style={styles.sectionTitle}>{t('fertilizer.upload_soil.upload.title')}</Text>
 
                     <View style={styles.actionButtonsContainer}>
                         {renderActionButton(
                             'camera',
-                            'Take Photo',
-                            'Use your camera to capture soil',
+                            t('fertilizer.upload_soil.upload.take_photo'),
+                            t('fertilizer.upload_soil.upload.take_photo_subtitle'),
                             openCamera,
                             ['#8B7355', '#7A5F47']
                         )}
 
                         {renderActionButton(
                             'images',
-                            'Photo Library',
-                            'Choose from your gallery',
+                            t('fertilizer.upload_soil.upload.photo_library'),
+                            t('fertilizer.upload_soil.upload.photo_library_subtitle'),
                             openImageLibrary,
                             ['#2196F3', '#1976D2']
                         )}
@@ -320,7 +320,7 @@ const UploadSoilScreen: React.FC = () => {
                 {/* Image Preview */}
                 {selectedImage && (
                     <View style={styles.previewSection}>
-                        <Text style={styles.sectionTitle}>Image Preview</Text>
+                        <Text style={styles.sectionTitle}>{t('fertilizer.upload_soil.preview.title')}</Text>
                         <View style={styles.imagePreviewCard}>
                             <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
                             <View style={styles.imageActions}>
@@ -329,7 +329,7 @@ const UploadSoilScreen: React.FC = () => {
                                     onPress={handleChooseFile}
                                 >
                                     <Ionicons name="refresh" size={16} color="#8B7355" />
-                                    <Text style={styles.changeImageText}>Change Image</Text>
+                                    <Text style={styles.changeImageText}>{t('fertilizer.upload_soil.preview.change_image')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -496,6 +496,7 @@ const styles = StyleSheet.create({
         padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
+        minHeight: 88,
     },
     actionIconContainer: {
         width: 48,
@@ -505,6 +506,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
+        flexShrink: 0,
     },
     actionTextContainer: {
         flex: 1,
@@ -514,10 +516,12 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#FFFFFF',
         marginBottom: 4,
+        flexWrap: 'wrap',
     },
     actionSubtitle: {
         fontSize: 14,
         color: 'rgba(255,255,255,0.8)',
+        flexWrap: 'wrap',
     },
     previewSection: {
         marginBottom: 32,

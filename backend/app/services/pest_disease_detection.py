@@ -1,49 +1,100 @@
-import tempfile
-import cv2
+import os
+from tempfile import NamedTemporaryFile
+from typing import Optional
+from PIL import Image
 
-from app.core import RoboflowWorkflowClient
-from app.algorithms.image_quality import is_image_good
-from app.algorithms.cinnamon_check import is_cinnamon
-from app.algorithms.area import calculate_area
-from app.algorithms.stage import calculate_stage
-from app.knowledge.knowledge_base import KB
+from inference_sdk import InferenceHTTPClient
 
-class DetectionService:
-    def __init__(self):
-        self.client = RoboflowWorkflowClient()
+from app.algorithms import extract_prediction, analyze_leaf_with_algorithms
+from app.knowledge import DISEASE_PEST_KNOWLEDGE
+from app.utils import build_normal_output, build_advanced_output
+from app.core.config import (
+    PEST_DISEASE_ROBOFLOW_API_KEY,
+    PEST_DISEASE_ROBOFLOW_API_URL,
+    PEST_DISEASE_ROBOFLOW_WORKSPACE,
+    PEST_DISEASE_ROBOFLOW_WORKFLOW_ID,
+)
 
-    def process(self, image):
-        if not is_image_good(image):
-            return {"status": "invalid", "message": "Image quality not sufficient"}
+# --------------------------------------------------
+# Roboflow Client
+# --------------------------------------------------
+client = InferenceHTTPClient(
+    api_url=PEST_DISEASE_ROBOFLOW_API_URL,
+    api_key=PEST_DISEASE_ROBOFLOW_API_KEY,
+)
 
-        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
-            cv2.imwrite(tmp.name, image)
-            result = self.client.predict(tmp.name)
+# --------------------------------------------------
+# Core Service Logic
+# --------------------------------------------------
+async def detect_pest_disease(file, mode: str):
+    temp_path = None
 
-        predictions = result.get("predictions", [])
-        if not predictions:
-            return {"status": "healthy"}
+    try:
+        # Save uploaded image
+        with NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+            tmp.write(await file.read())
+            temp_path = tmp.name
 
-        labels = [p["class"] for p in predictions]
-        if not is_cinnamon(labels):
-            return {"status": "invalid", "message": "Not a cinnamon plant"}
+        pred: Optional[dict] = None
 
-        image_area = image.shape[0] * image.shape[1]
-        area = calculate_area(predictions, image_area)
-        avg_conf = sum(p["confidence"] for p in predictions) / len(predictions)
-        stage = calculate_stage(area, avg_conf)
+        # ---------------------------
+        # 1️⃣ Roboflow Workflow
+        # ---------------------------
+        try:
+            result = client.run_workflow(
+                workspace_name=PEST_DISEASE_ROBOFLOW_WORKSPACE,
+                workflow_id=PEST_DISEASE_ROBOFLOW_WORKFLOW_ID,
+                images={"image": temp_path},
+                use_cache=True,
+            )
+            pred = extract_prediction(result, DISEASE_PEST_KNOWLEDGE)
+        except Exception:
+            pred = None
 
-        results = []
-        for label in set(labels):
-            results.append({
-                "name": label,
-                "type": KB[label]["type"],
-                "stage": stage,
-                "confidence": round(avg_conf, 2)
-            })
+        # ---------------------------
+        # 2️⃣ Algorithm fallback
+        # ---------------------------
+        if not pred:
+            try:
+                with Image.open(temp_path) as img:
+                    alg_preds = analyze_leaf_with_algorithms(img)
 
-        return {
-            "status": "infected",
-            "stage": stage,
-            "results": results
-        }
+                known = [
+                    p for p in alg_preds
+                    if p.get("class") in DISEASE_PEST_KNOWLEDGE
+                ]
+
+                if known:
+                    region_order = {
+                        "leaf": 0,
+                        "stem": 1,
+                        "bark": 2,
+                        "branch": 3,
+                    }
+                    known.sort(
+                        key=lambda p: (
+                            region_order.get(p.get("region", "leaf"), 99),
+                            -(p.get("confidence") or 0),
+                        )
+                    )
+                    pred = {
+                        "class": known[0]["class"],
+                        "confidence": float(known[0].get("confidence", 0.0)),
+                    }
+            except Exception:
+                pred = None
+
+        if not pred:
+            return {"status": "invalid", "message": "No disease detected"}
+
+        # ---------------------------
+        # Output Mode
+        # ---------------------------
+        if mode == "advanced":
+            return build_advanced_output(pred)
+
+        return build_normal_output(pred)
+
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)

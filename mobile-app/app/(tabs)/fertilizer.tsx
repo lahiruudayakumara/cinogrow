@@ -1,6 +1,6 @@
 import React from 'react';
-import { Redirect } from 'expo-router';
+import FertilizerHomeScreen from '../screens/fertilizer/FertilizerHomeScreen';
 
 export default function FertilizerTab() {
-  return <Redirect href="/fertilizer" />;
+  return <FertilizerHomeScreen />;
 }

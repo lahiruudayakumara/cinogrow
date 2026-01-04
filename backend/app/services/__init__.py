@@ -8,8 +8,7 @@ from .planting_service import PlantingRecordsService
 from .yield_service import YieldRecordsService
 from .hybrid_yield_service import HybridYieldService
 from .user_service import authenticate_user, create_user
-from .pest_disease_detection import DetectionService
-from .pest_disease_detection import DetectionService as PestDiseaseDetectionService
+from .pest_disease_detection import detect_pest_disease
 
 __all__ = [
     "BaseService",
@@ -21,7 +20,6 @@ __all__ = [
     "YieldRecordsService",
     "HybridYieldService",
     "authenticate_user",
-    "create_user"
-    "DetectionService",
-	  "PestDiseaseDetectionService",
+    "create_user",
+    "detect_pest_disease",
 ]

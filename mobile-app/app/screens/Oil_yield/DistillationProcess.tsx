@@ -15,7 +15,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import apiConfig from '../../config/api';
+import apiConfig from '../../../config/api';
 
 // Use localhost for web platform, otherwise use the configured API URL
 const API_BASE_URL = Platform.OS === 'web' 
@@ -23,6 +23,7 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function DistillationProcess() {
+  const { t } = useTranslation();
   type MaterialBatch = {
     id: number;
     batch_name?: string | null;
@@ -57,7 +58,7 @@ export default function DistillationProcess() {
         setBatches(data);
       } catch (e: any) {
         console.error('❌ Failed to fetch batches', e);
-        Alert.alert('Load Error', e.message || 'Could not load material batches');
+        Alert.alert(t('oil_yield.distillation.alerts.load_error'), e.message || t('yield_weather.common.unknown_error'));
       }
     };
     fetchBatches();
@@ -70,14 +71,14 @@ export default function DistillationProcess() {
 
     if (!selectedBatch || !distillCapacity) {
       console.log('❌ Validation failed - missing fields');
-      Alert.alert('Missing Information', 'Please select a batch and enter capacity.');
+      Alert.alert(t('oil_yield.distillation.alerts.missing_info'), t('oil_yield.distillation.alerts.missing_fields'));
       return;
     }
 
     const capacity = parseFloat(distillCapacity);
     if (isNaN(capacity) || capacity <= 0) {
       console.log('❌ Invalid capacity value');
-      Alert.alert('Invalid Input', 'Please enter a valid capacity value.');
+      Alert.alert(t('oil_yield.distillation.alerts.invalid_input'), t('oil_yield.distillation.alerts.invalid_capacity'));
       return;
     }
 
@@ -134,7 +135,7 @@ export default function DistillationProcess() {
       console.error('❌ Error message:', error.message);
       console.error('❌ Error stack:', error.stack);
       Alert.alert(
-        'Prediction Failed',
+        t('oil_yield.distillation.alerts.prediction_failed'),
         `Unable to connect to the prediction service.\n\nError: ${error.message}\n\nAPI URL: ${API_BASE_URL}/oil_yield/predict_distillation_time\n\nPlease check your connection and try again.`
       );
     } finally {
@@ -235,12 +236,12 @@ export default function DistillationProcess() {
     >
       <View style={styles.radioContent}>
         <View style={styles.radioIconCircle}>
-          <MaterialCommunityIcons name={icon as any} size={20} color={selected ? '#0A84FF' : '#8E8E93'} />
+          <MaterialCommunityIcons name={icon as any} size={20} color={selected ? '#4aab4e' : '#8E8E93'} />
         </View>
         <Text style={[styles.radioLabel, selected && styles.radioLabelSelected]}>{label}</Text>
       </View>
-      <View style={[styles.radioCircle, selected && { borderColor: '#0A84FF' }]}>
-        {selected && <View style={[styles.radioInner, { backgroundColor: '#0A84FF' }]} />}
+      <View style={[styles.radioCircle, selected && { borderColor: '#4aab4e' }]}>
+        {selected && <View style={[styles.radioInner, { backgroundColor: '#4aab4e' }]} />}
       </View>
     </TouchableOpacity>
   );
@@ -291,7 +292,7 @@ export default function DistillationProcess() {
             <MaterialCommunityIcons 
               name={icon as any} 
               size={20} 
-              color={disabled ? '#C7C7CC' : (isPrimary ? '#FFFFFF' : '#0A84FF')} 
+              color={disabled ? '#C7C7CC' : (isPrimary ? '#FFFFFF' : '#4aab4e')} 
             />
             <Text style={[
               styles.controlButtonText,
@@ -319,31 +320,29 @@ export default function DistillationProcess() {
         <View style={styles.headerContainer}>
           <View style={styles.headerIconContainer}>
             <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="flask" size={28} color="#0A84FF" />
+              <MaterialCommunityIcons name="flask" size={28} color="#4aab4e" />
             </View>
           </View>
-          <Text style={styles.header}>Steam Distillation</Text>
+          <Text style={styles.header}>{t('oil_yield.distillation.header.title')}</Text>
           <Text style={styles.headerSubtitle}>
-            Monitor cinnamon oil extraction process (5-7 hours)
+            {t('oil_yield.distillation.header.subtitle')}
           </Text>
         </View>
 
         {/* Quick Info Banner */}
-        <View style={styles.infoBanner}>
+        {/* <View style={styles.infoBanner}>
           <BlurView intensity={50} tint="light" style={styles.infoBannerBlur}>
             <View style={styles.infoBannerContent}>
-              <MaterialCommunityIcons name="information" size={20} color="#0A84FF" />
+              <MaterialCommunityIcons name="information" size={20} color="#4aab4e" />
               <Text style={styles.infoBannerText}>Select a batch and capacity</Text>
             </View>
           </BlurView>
-        </View>
+        </View> */}
 
         {/* Batch Selection */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Material Batch</Text>
-          <View style={styles.requiredBadge}>
-            <Text style={styles.requiredText}>Required</Text>
-          </View>
+          <Text style={styles.sectionTitle}>{t('oil_yield.distillation.batch.title')}</Text>
+          
         </View>
         {/* Material Batch Card */}
         <View style={styles.inputCard}>
@@ -353,13 +352,13 @@ export default function DistillationProcess() {
                 <MaterialCommunityIcons name="package-variant-closed" size={24} color="#34C759" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Select Batch</Text>
-                <Text style={styles.labelSubtext}>Choose material batch for distillation</Text>
+                <Text style={styles.label}>{t('oil_yield.distillation.batch.select_batch')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.distillation.batch.select_batch_subtext')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               {batches.length === 0 ? (
-                <Text style={styles.labelSubtext}>No batches found</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.distillation.batch.no_batches')}</Text>
               ) : (
                 batches.map((b) => {
                   const label = b.batch_name
@@ -389,21 +388,21 @@ export default function DistillationProcess() {
                 <MaterialCommunityIcons name="cup-water" size={24} color="#5E5CE6" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Distillation Capacity</Text>
-                <Text style={styles.labelSubtext}>In liters</Text>
+                <Text style={styles.label}>{t('oil_yield.distillation.capacity.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.distillation.capacity.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Enter capacity (e.g., 50)"
+                placeholder={t('oil_yield.distillation.capacity.placeholder')}
                 placeholderTextColor="#C7C7CC"
                 keyboardType="numeric"
                 value={distillCapacity}
                 onChangeText={setDistillCapacity}
               />
               <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>L</Text>
+                <Text style={styles.inputSuffixText}>{t('oil_yield.distillation.capacity.suffix_l')}</Text>
               </View>
             </View>
           </BlurView>
@@ -412,15 +411,15 @@ export default function DistillationProcess() {
         {/* Calculate Button */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#0A84FF" />
-            <Text style={styles.loadingText}>Calculating optimal time...</Text>
+            <ActivityIndicator size="large" color="#4aab4e" />
+            <Text style={styles.loadingText}>{t('oil_yield.distillation.buttons.calculating')}</Text>
           </View>
         ) : (
           <ControlButton
             onPress={calculateOptimalTime}
             isPrimary={true}
             icon="calculator"
-            text="Calculate Optimal Time"
+            text={t('oil_yield.distillation.buttons.calculate')}
             disabled={!selectedBatch || !distillCapacity}
           />
         )}
@@ -429,15 +428,15 @@ export default function DistillationProcess() {
         {showResults && optimalTime && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Results</Text>
+              <Text style={styles.sectionTitle}>{t('oil_yield.distillation.results.title')}</Text>
               <View style={[styles.successBadge, isRunning && styles.activeBadge]}>
                 <MaterialCommunityIcons 
                   name={isRunning ? "clock-fast" : "check-circle"} 
                   size={14} 
-                  color={isRunning ? '#0A84FF' : '#30D158'} 
+                  color={isRunning ? '#4aab4e' : '#30D158'} 
                 />
                 <Text style={[styles.successText, isRunning && styles.activeText]}>
-                  {isRunning ? 'Running' : 'Complete'}
+                  {isRunning ? t('oil_yield.distillation.results.status_running') : t('oil_yield.distillation.results.status_complete')}
                 </Text>
               </View>
             </View>
@@ -447,16 +446,16 @@ export default function DistillationProcess() {
               <BlurView intensity={70} tint="light" style={styles.resultBlur}>
                 <View style={styles.resultHeader}>
                   <View style={styles.resultIconContainer}>
-                    <MaterialCommunityIcons name="clock-check" size={32} color="#0A84FF" />
+                    <MaterialCommunityIcons name="clock-check" size={32} color="#4aab4e" />
                   </View>
                   <View style={styles.resultBadge}>
                     <Text style={styles.resultBadgeText}>Calculated</Text>
                   </View>
                 </View>
-                <Text style={styles.resultTitle}>Optimal Distillation Time</Text>
+                <Text style={styles.resultTitle}>{t('oil_yield.distillation.results.optimal_time_title')}</Text>
                 <View style={styles.resultValueRow}>
                   <Text style={styles.resultValue}>{optimalTime}</Text>
-                  <Text style={styles.resultValueUnit}>hours</Text>
+                  <Text style={styles.resultValueUnit}>{t('oil_yield.distillation.results.unit_hours')}</Text>
                 </View>
                 <View style={styles.resultDivider} />
                 <View style={styles.resultMeta}>
@@ -480,18 +479,18 @@ export default function DistillationProcess() {
                     <MaterialCommunityIcons 
                       name={isRunning ? "timer" : "timer-outline"} 
                       size={32} 
-                      color="#0A84FF" 
+                      color="#4aab4e" 
                     />
                   </View>
                   <View style={styles.timerBadge}>
                     <Text style={styles.timerBadgeText}>
-                      {remainingTime === 0 ? 'Completed' : (isRunning ? 'In Progress' : 'Paused')}
+                      {remainingTime === 0 ? t('oil_yield.distillation.results.timer.completed') : (isRunning ? t('oil_yield.distillation.results.timer.in_progress') : t('oil_yield.distillation.results.timer.paused'))}
                     </Text>
                   </View>
                 </View>
                 
                 <Text style={styles.timerLabel}>
-                  {remainingTime === 0 ? 'Process Complete' : 'Time Remaining'}
+                  {remainingTime === 0 ? t('oil_yield.distillation.results.timer.process_complete') : t('oil_yield.distillation.results.timer.time_remaining')}
                 </Text>
                 <Text style={styles.timerValue}>{formatTime(remainingTime)}</Text>
                 
@@ -500,7 +499,7 @@ export default function DistillationProcess() {
                   <View style={styles.timerMetaItem}>
                     <MaterialCommunityIcons name="progress-clock" size={14} color="#8E8E93" />
                     <Text style={styles.timerMetaText}>
-                      {getProgress().toFixed(1)}% complete
+                      {getProgress().toFixed(1)}{t('oil_yield.distillation.results.timer.progress_complete')}
                     </Text>
                   </View>
                 </View>
@@ -510,7 +509,7 @@ export default function DistillationProcess() {
                   <View style={styles.progressBarBg}>
                     <View style={[styles.progressBarFill, { 
                       width: `${getProgress()}%`, 
-                      backgroundColor: remainingTime === 0 ? '#30D158' : '#0A84FF' 
+                      backgroundColor: remainingTime === 0 ? '#30D158' : '#4aab4e' 
                     }]} />
                   </View>
                 </View>
@@ -523,68 +522,23 @@ export default function DistillationProcess() {
                 onPress={handleStartPause}
                 isPrimary={false}
                 icon={isRunning ? "pause" : "play"}
-                text={isRunning ? "Pause" : "Start"}
+                text={isRunning ? t('oil_yield.distillation.buttons.pause') : t('oil_yield.distillation.buttons.start')}
                 disabled={remainingTime === 0}
               />
-              <ControlButton
+              {/* <ControlButton
                 onPress={handleReset}
                 isPrimary={false}
                 icon="restart"
-                text="Reset"
+                text={t('oil_yield.distillation.buttons.reset')}
                 disabled={remainingTime === Math.round(optimalTime * 60)}
-              />
+              /> */}
             </View>
 
             {/* Recommendations Card */}
-            <View style={styles.recommendationCard}>
-              <BlurView intensity={70} tint="light" style={styles.recommendationBlur}>
-                <View style={styles.recommendationHeader}>
-                  <View style={styles.recommendationIconCircle}>
-                    <MaterialCommunityIcons name="lightbulb-on" size={20} color="#FF9F0A" />
-                  </View>
-                  <Text style={styles.recommendationTitle}>Process Guidelines</Text>
-                </View>
-                
-                {(() => {
-                  const rec = getRecommendations();
-                  return (
-                    <>
-                      {/* Primary Recommendation */}
-                      <View style={styles.recommendationPrimary}>
-                        <MaterialCommunityIcons name="check-circle" size={18} color="#30D158" />
-                        <Text style={styles.recommendationPrimaryText}>{rec.primary}</Text>
-                      </View>
-
-                      {/* Tips Section */}
-                      <View style={styles.recommendationSection}>
-                        <Text style={styles.recommendationSectionTitle}>Key Points</Text>
-                        {rec.tips.map((tip: string, index: number) => (
-                          <View key={index} style={styles.recommendationTip}>
-                            <View style={styles.tipBullet}>
-                              <View style={styles.tipBulletDot} />
-                            </View>
-                            <Text style={styles.tipText}>{tip}</Text>
-                          </View>
-                        ))}
-                      </View>
-
-                      {/* Quality Badge */}
-                      <View style={styles.qualityBadgeContainer}>
-                        <View style={styles.qualityBadge}>
-                          <MaterialCommunityIcons name="certificate" size={16} color="#5E5CE6" />
-                          <Text style={styles.qualityBadgeText}>{rec.quality}</Text>
-                        </View>
-                      </View>
-                    </>
-                  );
-                })()}
-              </BlurView>
-            </View>
+            
 
             {/* Equipment & Standards Information */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Equipment & Standards</Text>
-            </View>
+           
 
             {/* Equipment Card
             <View style={styles.infoCard}>
@@ -622,87 +576,10 @@ export default function DistillationProcess() {
             </View> */}
 
             {/* Standards Card */}
-            <View style={styles.infoCard}>
-              <BlurView intensity={70} tint="light" style={styles.infoBlur}>
-                <View style={styles.infoHeader}>
-                  <View style={styles.infoIconCircle}>
-                    <MaterialCommunityIcons name="certificate" size={20} color="#30D158" />
-                  </View>
-                  <Text style={styles.infoTitle}>Quality Standards</Text>
-                </View>
-                <View style={styles.infoContent}>
-                  {selectedBatch?.plant_part === 'Leaves & Twigs' ? (
-                    <>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="file-document" size={16} color="#0A84FF" />
-                        <Text style={styles.infoItemText}>SLS 184:2012 & ISO 3524:2003</Text>
-                      </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="water" size={16} color="#0A84FF" />
-                        <Text style={styles.infoItemText}>Relative density: 1.0340-1.0500 at 28°C</Text>
-                      </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="flask" size={16} color="#0A84FF" />
-                        <Text style={styles.infoItemText}>Eugenol: 75-85% (main component)</Text>
-                      </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="palette" size={16} color="#0A84FF" />
-                        <Text style={styles.infoItemText}>Color: Light to dark amber</Text>
-                      </View>
-                    </>
-                  ) : (
-                    <>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="file-document" size={16} color="#0A84FF" />
-                        <Text style={styles.infoItemText}>SLS 185:2012 (Sri Lankan standard)</Text>
-                      </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="water" size={16} color="#0A84FF" />
-                        <Text style={styles.infoItemText}>Relative density: 1.0100-1.0300 at 28°C</Text>
-                      </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="flask" size={16} color="#0A84FF" />
-                        <Text style={styles.infoItemText}>Cinnamaldehyde: 30-75% (main component)</Text>
-                      </View>
-                      <View style={styles.infoItem}>
-                        <MaterialCommunityIcons name="palette" size={16} color="#0A84FF" />
-                        <Text style={styles.infoItemText}>Color: Pale yellow</Text>
-                      </View>
-                    </>
-                  )}
-                </View>
-              </BlurView>
-            </View>
+           
 
             {/* Packaging & Storage Card */}
-            <View style={styles.infoCard}>
-              <BlurView intensity={70} tint="light" style={styles.infoBlur}>
-                <View style={styles.infoHeader}>
-                  <View style={styles.infoIconCircle}>
-                    <MaterialCommunityIcons name="package-variant" size={20} color="#FF9F0A" />
-                  </View>
-                  <Text style={styles.infoTitle}>Packaging & By-products</Text>
-                </View>
-                <View style={styles.infoContent}>
-                  <View style={styles.infoItem}>
-                    <MaterialCommunityIcons name="bottle-tonic" size={16} color="#FF9F0A" />
-                    <Text style={styles.infoItemText}>Use amber-colored glass bottles (best)</Text>
-                  </View>
-                  <View style={styles.infoItem}>
-                    <MaterialCommunityIcons name="barrel" size={16} color="#FF9F0A" />
-                    <Text style={styles.infoItemText}>High-density polyethylene (HDPE) drums OK</Text>
-                  </View>
-                  <View style={styles.infoItem}>
-                    <MaterialCommunityIcons name="close-circle" size={16} color="#FF3B30" />
-                    <Text style={styles.infoItemText}>Avoid low-quality plastic or rubber-lined containers</Text>
-                  </View>
-                  <View style={styles.infoItem}>
-                    <MaterialCommunityIcons name="fire" size={16} color="#30D158" />
-                    <Text style={styles.infoItemText}>Spent leaves can be reused as fuel</Text>
-                  </View>
-                </View>
-              </BlurView>
-            </View>
+           
           </>
         )}
 
@@ -733,11 +610,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(10, 132, 255, 0.15)',
+    backgroundColor: 'rgba(74, 171, 78, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 0.5,
-    borderColor: 'rgba(10, 132, 255, 0.2)',
+    borderColor: 'rgba(74, 171, 78, 0.2)',
   },
   header: {
     fontSize: 34,
@@ -748,7 +625,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 15,
-    color: '#3C3C43',
+    color: '#3c433fff',
     opacity: 0.6,
     lineHeight: 20,
     letterSpacing: -0.24,
@@ -758,7 +635,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 28,
-    shadowColor: '#0A84FF',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -766,9 +643,9 @@ const styles = StyleSheet.create({
   },
   infoBannerBlur: {
     flex: 1,
-    backgroundColor: 'rgba(10, 132, 255, 0.08)',
+    backgroundColor: 'rgba(74, 171, 78, 0.08)',
     borderWidth: 0.5,
-    borderColor: 'rgba(10, 132, 255, 0.15)',
+    borderColor: 'rgba(74, 171, 78, 0.15)',
   },
   infoBannerContent: {
     flex: 1,
@@ -780,7 +657,7 @@ const styles = StyleSheet.create({
   infoBannerText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#0A84FF',
+    color: '#4aab4e',
     letterSpacing: -0.08,
   },
   sectionHeader: {
@@ -818,7 +695,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(48, 209, 88, 0.12)',
   },
   activeBadge: {
-    backgroundColor: 'rgba(10, 132, 255, 0.12)',
+    backgroundColor: 'rgba(10, 255, 55, 0.12)',
   },
   successText: {
     fontSize: 11,
@@ -827,7 +704,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   activeText: {
-    color: '#0A84FF',
+    color: '#4aab4e',
   },
   inputCard: {
     borderRadius: 16,
@@ -888,7 +765,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 0, 0, 0.08)',
   },
   radioOptionSelected: {
-    borderColor: 'rgba(10, 132, 255, 0.3)',
+    borderColor: 'rgba(10, 255, 30, 0.3)',
     backgroundColor: 'rgba(10, 132, 255, 0.05)',
   },
   radioContent: {
@@ -972,7 +849,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   primaryButton: {
-    shadowColor: '#0A84FF',
+    shadowColor: '#4aab4e',
   },
   secondaryButton: {
     shadowColor: '#000',
@@ -993,7 +870,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   secondaryButtonText: {
-    color: '#0A84FF',
+    color: '#4aab4e',
   },
   disabledButtonText: {
     color: '#C7C7CC',
@@ -1007,7 +884,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#0A84FF',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -1016,7 +893,7 @@ const styles = StyleSheet.create({
   resultBlur: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 0.5,
-    borderColor: 'rgba(10, 132, 255, 0.2)',
+    borderColor: 'rgba(10, 255, 67, 0.2)',
     padding: 20,
   },
   resultHeader: {
@@ -1029,7 +906,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(10, 132, 255, 0.15)',
+    backgroundColor: 'rgba(10, 255, 14, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1037,12 +914,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: 'rgba(10, 132, 255, 0.12)',
+    backgroundColor: 'rgba(10, 255, 43, 0.12)',
   },
   resultBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0A84FF',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   resultTitle: {
@@ -1060,7 +937,7 @@ const styles = StyleSheet.create({
   resultValue: {
     fontSize: 48,
     fontWeight: '700',
-    color: '#0A84FF',
+    color: '#4aab4e',
     letterSpacing: -0.5,
   },
   resultValueUnit: {
@@ -1071,7 +948,7 @@ const styles = StyleSheet.create({
   },
   resultDivider: {
     height: 0.5,
-    backgroundColor: 'rgba(60, 60, 67, 0.18)',
+    backgroundColor: 'rgba(60, 67, 62, 0.18)',
     marginVertical: 12,
   },
   resultMeta: {
@@ -1096,7 +973,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#0A84FF',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -1105,7 +982,7 @@ const styles = StyleSheet.create({
   timerBlur: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 0.5,
-    borderColor: 'rgba(10, 132, 255, 0.2)',
+    borderColor: 'rgba(10, 255, 79, 0.2)',
     padding: 20,
   },
   timerHeader: {
@@ -1118,7 +995,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(10, 132, 255, 0.15)',
+    backgroundColor: 'rgba(10, 255, 34, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1126,12 +1003,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: 'rgba(10, 132, 255, 0.12)',
+    backgroundColor: 'rgba(10, 255, 30, 0.12)',
   },
   timerBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0A84FF',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   timerLabel: {
@@ -1144,13 +1021,13 @@ const styles = StyleSheet.create({
   timerValue: {
     fontSize: 48,
     fontWeight: '700',
-    color: '#0A84FF',
+    color: '#4aab4e',
     letterSpacing: -0.5,
     marginBottom: 12,
   },
   timerDivider: {
     height: 0.5,
-    backgroundColor: 'rgba(60, 60, 67, 0.18)',
+    backgroundColor: 'rgba(60, 67, 62, 0.18)',
     marginVertical: 12,
   },
   timerMeta: {
@@ -1210,7 +1087,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(60, 60, 67, 0.18)',
+    borderBottomColor: 'rgba(60, 67, 61, 0.18)',
   },
   recommendationIconCircle: {
     width: 32,
@@ -1270,7 +1147,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#0A84FF',
+    backgroundColor: '#4aab4e',
   },
   tipText: {
     flex: 1,
@@ -1282,13 +1159,13 @@ const styles = StyleSheet.create({
   qualityBadgeContainer: {
     paddingTop: 12,
     borderTopWidth: 0.5,
-    borderTopColor: 'rgba(60, 60, 67, 0.18)',
+    borderTopColor: 'rgba(61, 67, 60, 0.18)',
   },
   qualityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(94, 92, 230, 0.08)',
+    backgroundColor: 'rgba(92, 230, 124, 0.08)',
     padding: 12,
     borderRadius: 10,
   },
@@ -1323,13 +1200,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(60, 60, 67, 0.18)',
+    borderBottomColor: 'rgba(60, 67, 62, 0.18)',
   },
   infoIconCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(94, 92, 230, 0.15)',
+    backgroundColor: 'rgba(92, 230, 108, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1356,7 +1233,7 @@ const styles = StyleSheet.create({
   },
   infoDivider: {
     height: 0.5,
-    backgroundColor: 'rgba(60, 60, 67, 0.18)',
+    backgroundColor: 'rgba(60, 67, 62, 0.18)',
     marginVertical: 12,
   },
   infoFooter: {
@@ -1377,19 +1254,19 @@ const styles = StyleSheet.create({
   loadingContainer: {
     height: 56,
     borderRadius: 16,
-    backgroundColor: 'rgba(10, 132, 255, 0.08)',
+    backgroundColor: 'rgba(10, 255, 63, 0.08)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
     marginBottom: 16,
     borderWidth: 0.5,
-    borderColor: 'rgba(10, 132, 255, 0.15)',
+    borderColor: 'rgba(10, 255, 67, 0.15)',
   },
   loadingText: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#0A84FF',
+    color: '#4aab4e',
     letterSpacing: -0.41,
   },
 });

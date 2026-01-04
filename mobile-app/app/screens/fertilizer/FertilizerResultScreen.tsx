@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 import axios from 'axios';
 import { deserializeResultParams } from '../../fertilizer/types';
@@ -71,6 +72,7 @@ interface FertilizerRecommendation {
 
 const FertilizerResultScreen: React.FC = () => {
     const router = useRouter();
+    const { t } = useTranslation();
     const rawParams = useLocalSearchParams();
 
     // Memoize deserialized params to prevent infinite loops
@@ -103,26 +105,40 @@ const FertilizerResultScreen: React.FC = () => {
                     const predictions = predictionsData.predictions || [];
 
                     predictions.forEach((pred: any) => {
-                        allDetections.push({
-                            deficiency: pred.class || 'Unknown',
-                            confidence: pred.confidence || 0,
-                            severity: pred.confidence > 0.7 ? 'High' : pred.confidence > 0.4 ? 'Moderate' : 'Low',
-                            class: pred.class || 'Unknown'
-                        });
+                        // Filter out healthy leaves - only include actual deficiencies
+                        const className = (pred.class || 'Unknown').toLowerCase();
+                        const isHealthy = className.includes('healthy') || className === 'healthy';
+
+                        if (!isHealthy) {
+                            allDetections.push({
+                                deficiency: pred.class || 'Unknown',
+                                confidence: pred.confidence || 0,
+                                severity: pred.confidence > 0.7 ? 'High' : pred.confidence > 0.4 ? 'Moderate' : 'Low',
+                                class: pred.class || 'Unknown'
+                            });
+                        } else {
+                            console.log('✅ Healthy leaf detected - skipping fertilizer recommendation');
+                        }
                     });
                 }
             });
 
-            console.log('📊 Processed detections:', allDetections);
+            console.log('📊 Processed deficiency detections (healthy filtered):', allDetections);
             setDetections(allDetections);
 
-            // Use recommendations from roboflowAnalysis if available
-            if (roboflowAnalysis.recommendations) {
-                console.log('✅ Using recommendations from analysis response');
-                setRecommendations(roboflowAnalysis.recommendations);
-            } else if (plantAge && allDetections.length > 0) {
-                // Fallback: fetch recommendations if not included in response
-                fetchRecommendations(allDetections[0]);
+            // Only fetch recommendations if there are actual deficiencies
+            if (allDetections.length > 0) {
+                // Use recommendations from roboflowAnalysis if available
+                if (roboflowAnalysis.recommendations) {
+                    console.log('✅ Using recommendations from analysis response');
+                    setRecommendations(roboflowAnalysis.recommendations);
+                } else if (plantAge) {
+                    // Fallback: fetch recommendations if not included in response
+                    fetchRecommendations(allDetections[0]);
+                }
+            } else {
+                console.log('🌱 No deficiencies detected - leaf is healthy!');
+                setRecommendations(null);
             }
         }
     }, [roboflowAnalysis, plantAge]);
@@ -187,17 +203,17 @@ const FertilizerResultScreen: React.FC = () => {
                         <Ionicons name="arrow-back" size={24} color="#111827" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>
-                        {isHistoryView ? 'Analysis History' : 'Deficiency Detection'}
+                        {isHistoryView ? t('fertilizer.result.header.title_history') : t('fertilizer.result.header.title_detection')}
                     </Text>
                     <Text style={styles.headerSubtitle}>
-                        {isHistoryView ? 'Previous analysis details' : 'AI-powered leaf analysis results'}
+                        {isHistoryView ? t('fertilizer.result.header.subtitle_history') : t('fertilizer.result.header.subtitle_detection')}
                     </Text>
                 </View>
 
                 {/* Analyzed Image - Only show if image exists */}
                 {leafImage && (
                     <View style={styles.imageContainer}>
-                        <Text style={styles.sectionTitle}>Analyzed Image</Text>
+                        <Text style={styles.sectionTitle}>{t('fertilizer.result.analyzed_image')}</Text>
                         <View style={styles.imageCard}>
                             <Image source={{ uri: leafImage }} style={styles.leafImage} />
                         </View>
@@ -208,15 +224,15 @@ const FertilizerResultScreen: React.FC = () => {
                 <View style={styles.detectionsContainer}>
                     <View style={styles.detectionsHeader}>
                         <Ionicons name="scan" size={24} color="#4CAF50" />
-                        <Text style={styles.sectionTitle}>Detected Deficiencies</Text>
+                        <Text style={styles.sectionTitle}>{t('fertilizer.result.detections.title')}</Text>
                     </View>
 
                     {detections.length === 0 ? (
                         <View style={styles.noDetectionsCard}>
                             <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
-                            <Text style={styles.noDetectionsTitle}>No Deficiencies Detected</Text>
+                            <Text style={styles.noDetectionsTitle}>{t('fertilizer.result.detections.no_deficiencies_title')}</Text>
                             <Text style={styles.noDetectionsText}>
-                                Your plant appears healthy. Continue regular care and monitoring.
+                                {t('fertilizer.result.detections.no_deficiencies_text')}
                             </Text>
                         </View>
                     ) : (
@@ -232,7 +248,7 @@ const FertilizerResultScreen: React.FC = () => {
                                             <View style={[styles.severityBadge, {
                                                 backgroundColor: getSeverityColor(detection.severity)
                                             }]}>
-                                                <Text style={styles.severityText}>{detection.severity}</Text>
+                                                <Text style={styles.severityText}>{t(`fertilizer.result.detections.severity_${detection.severity.toLowerCase()}`)}</Text>
                                             </View>
                                             <View style={styles.confidenceBadge}>
                                                 <Ionicons name="analytics" size={12} color="#6B7280" />
@@ -246,11 +262,11 @@ const FertilizerResultScreen: React.FC = () => {
 
                                 <View style={styles.detectionDetails}>
                                     <View style={styles.detailItem}>
-                                        <Text style={styles.detailLabel}>Class:</Text>
+                                        <Text style={styles.detailLabel}>{t('fertilizer.result.detections.class')}:</Text>
                                         <Text style={styles.detailValue}>{detection.class}</Text>
                                     </View>
                                     <View style={styles.detailItem}>
-                                        <Text style={styles.detailLabel}>Confidence:</Text>
+                                        <Text style={styles.detailLabel}>{t('fertilizer.result.detections.confidence')}:</Text>
                                         <Text style={styles.detailValue}>
                                             {(detection.confidence * 100).toFixed(2)}%
                                         </Text>
@@ -276,16 +292,16 @@ const FertilizerResultScreen: React.FC = () => {
                     )}
                 </View>
 
-                {/* Fertilizer Recommendations Section */}
-                {plantAge && (
+                {/* Fertilizer Recommendations Section - Only show if deficiencies detected */}
+                {plantAge && detections.length > 0 && (
                     <View style={styles.recommendationsContainer}>
                         <View style={styles.recommendationsHeader}>
                             <Ionicons name="leaf-outline" size={24} color="#4CAF50" />
-                            <Text style={styles.sectionTitle}>Fertilizer Recommendations</Text>
+                            <Text style={styles.sectionTitle}>{t('fertilizer.result.recommendations.title')}</Text>
                             {plantAge && (
                                 <View style={styles.plantAgeBadge}>
                                     <Ionicons name="calendar-outline" size={14} color="#4CAF50" />
-                                    <Text style={styles.plantAgeText}>{plantAge} {plantAge === 1 ? 'year' : 'years'}</Text>
+                                    <Text style={styles.plantAgeText}>{plantAge} {plantAge === 1 ? t('fertilizer.result.recommendations.year') : t('fertilizer.result.recommendations.years')}</Text>
                                 </View>
                             )}
                         </View>
@@ -293,7 +309,7 @@ const FertilizerResultScreen: React.FC = () => {
                         {loadingRecommendations ? (
                             <View style={styles.loadingCard}>
                                 <ActivityIndicator size="large" color="#4CAF50" />
-                                <Text style={styles.loadingText}>Generating personalized recommendations...</Text>
+                                <Text style={styles.loadingText}>{t('fertilizer.result.recommendations.loading')}</Text>
                             </View>
                         ) : recommendations ? (
                             <>
@@ -301,7 +317,7 @@ const FertilizerResultScreen: React.FC = () => {
                                 <View style={styles.recommendationCard}>
                                     <View style={styles.cardHeader}>
                                         <Ionicons name="git-branch-outline" size={20} color="#4CAF50" />
-                                        <Text style={styles.cardTitle}>Growth Stage</Text>
+                                        <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.growth_stage.title')}</Text>
                                     </View>
                                     <Text style={styles.stageDescription}>{recommendations.growth_stage.description}</Text>
                                 </View>
@@ -310,29 +326,29 @@ const FertilizerResultScreen: React.FC = () => {
                                 <View style={styles.recommendationCard}>
                                     <View style={styles.cardHeader}>
                                         <Ionicons name="flask-outline" size={20} color="#4CAF50" />
-                                        <Text style={styles.cardTitle}>Recommended Fertilizer</Text>
+                                        <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.primary_fertilizer.title')}</Text>
                                     </View>
                                     <View style={styles.fertilizerDetails}>
                                         <Text style={styles.fertilizerName}>{recommendations.primary_fertilizer.name}</Text>
                                         <View style={styles.npkBadge}>
-                                            <Text style={styles.npkText}>NPK: {recommendations.primary_fertilizer.npk_ratio}</Text>
+                                            <Text style={styles.npkText}>{t('fertilizer.result.recommendations.primary_fertilizer.npk')}: {recommendations.primary_fertilizer.npk_ratio}</Text>
                                         </View>
                                         <View style={styles.detailRow}>
                                             <Ionicons name="scale-outline" size={16} color="#6B7280" />
                                             <Text style={styles.detailText}>
-                                                <Text style={styles.detailBold}>Dosage: </Text>
+                                                <Text style={styles.detailBold}>{t('fertilizer.result.recommendations.primary_fertilizer.dosage')}: </Text>
                                                 {recommendations.primary_fertilizer.dosage}
                                             </Text>
                                         </View>
                                         <View style={styles.detailRow}>
                                             <Ionicons name="time-outline" size={16} color="#6B7280" />
                                             <Text style={styles.detailText}>
-                                                <Text style={styles.detailBold}>Frequency: </Text>
+                                                <Text style={styles.detailBold}>{t('fertilizer.result.recommendations.primary_fertilizer.frequency')}: </Text>
                                                 {recommendations.primary_fertilizer.frequency}
                                             </Text>
                                         </View>
                                         <View style={styles.applicationMethodBox}>
-                                            <Text style={styles.applicationMethodTitle}>Application Method:</Text>
+                                            <Text style={styles.applicationMethodTitle}>{t('fertilizer.result.recommendations.primary_fertilizer.application_method')}:</Text>
                                             <Text style={styles.applicationMethodText}>
                                                 {recommendations.primary_fertilizer.application_method}
                                             </Text>
@@ -345,10 +361,10 @@ const FertilizerResultScreen: React.FC = () => {
                                     <View style={[styles.recommendationCard, styles.urgentCard]}>
                                         <View style={styles.urgentHeader}>
                                             <Ionicons name="alert-circle" size={20} color="#DC2626" />
-                                            <Text style={styles.urgentTitle}>Immediate Action Required</Text>
+                                            <Text style={styles.urgentTitle}>{t('fertilizer.result.recommendations.schedule.urgent_title')}</Text>
                                         </View>
                                         <Text style={styles.urgentText}>
-                                            Apply fertilizer {recommendations.application_schedule.first_application.toLowerCase()}
+                                            {t('fertilizer.result.recommendations.schedule.urgent_text')} {recommendations.application_schedule.first_application.toLowerCase()}
                                         </Text>
                                     </View>
                                 )}
@@ -356,23 +372,23 @@ const FertilizerResultScreen: React.FC = () => {
                                 <View style={styles.recommendationCard}>
                                     <View style={styles.cardHeader}>
                                         <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
-                                        <Text style={styles.cardTitle}>Application Schedule</Text>
+                                        <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.schedule.title')}</Text>
                                     </View>
                                     <View style={styles.scheduleDetails}>
                                         <View style={styles.scheduleItem}>
-                                            <Text style={styles.scheduleLabel}>First Application:</Text>
+                                            <Text style={styles.scheduleLabel}>{t('fertilizer.result.recommendations.schedule.first_application')}:</Text>
                                             <Text style={styles.scheduleValue}>
                                                 {recommendations.application_schedule.first_application}
                                             </Text>
                                         </View>
                                         <View style={styles.scheduleItem}>
-                                            <Text style={styles.scheduleLabel}>Best Time:</Text>
+                                            <Text style={styles.scheduleLabel}>{t('fertilizer.result.recommendations.schedule.best_time')}:</Text>
                                             <Text style={styles.scheduleValue}>
                                                 {recommendations.application_schedule.best_time}
                                             </Text>
                                         </View>
                                         <View style={styles.scheduleItem}>
-                                            <Text style={styles.scheduleLabel}>Weather:</Text>
+                                            <Text style={styles.scheduleLabel}>{t('fertilizer.result.recommendations.schedule.weather')}:</Text>
                                             <Text style={styles.scheduleValue}>
                                                 {recommendations.application_schedule.weather_conditions}
                                             </Text>
@@ -384,7 +400,7 @@ const FertilizerResultScreen: React.FC = () => {
                                 <View style={styles.recommendationCard}>
                                     <View style={styles.cardHeader}>
                                         <Ionicons name="leaf" size={20} color="#16A34A" />
-                                        <Text style={styles.cardTitle}>Organic Alternative</Text>
+                                        <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.organic.title')}</Text>
                                     </View>
                                     <Text style={styles.organicDescription}>
                                         {recommendations.organic_alternative.description}
@@ -398,22 +414,22 @@ const FertilizerResultScreen: React.FC = () => {
                                 <View style={styles.recommendationCard}>
                                     <View style={styles.cardHeader}>
                                         <Ionicons name="trending-up-outline" size={20} color="#4CAF50" />
-                                        <Text style={styles.cardTitle}>Expected Results</Text>
+                                        <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.expected_results.title')}</Text>
                                     </View>
                                     <View style={styles.resultItem}>
-                                        <Text style={styles.resultLabel}>Improvement Timeline:</Text>
+                                        <Text style={styles.resultLabel}>{t('fertilizer.result.recommendations.expected_results.improvement_timeline')}:</Text>
                                         <Text style={styles.resultValue}>
                                             {recommendations.expected_results.improvement_timeline}
                                         </Text>
                                     </View>
                                     <View style={styles.resultItem}>
-                                        <Text style={styles.resultLabel}>Full Recovery:</Text>
+                                        <Text style={styles.resultLabel}>{t('fertilizer.result.recommendations.expected_results.full_recovery')}:</Text>
                                         <Text style={styles.resultValue}>
                                             {recommendations.expected_results.full_recovery}
                                         </Text>
                                     </View>
                                     <View style={styles.monitoringPoints}>
-                                        <Text style={styles.monitoringTitle}>Monitor these points:</Text>
+                                        <Text style={styles.monitoringTitle}>{t('fertilizer.result.recommendations.expected_results.monitor_points')}:</Text>
                                         {recommendations.expected_results.monitoring_points.map((point, idx) => (
                                             <View key={idx} style={styles.monitoringPoint}>
                                                 <Ionicons name="checkmark-circle-outline" size={16} color="#4CAF50" />
@@ -427,7 +443,7 @@ const FertilizerResultScreen: React.FC = () => {
                                 <View style={[styles.recommendationCard, styles.warningCard]}>
                                     <View style={styles.cardHeader}>
                                         <Ionicons name="warning-outline" size={20} color="#D97706" />
-                                        <Text style={styles.cardTitle}>Important Warnings</Text>
+                                        <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.warnings.title')}</Text>
                                     </View>
                                     {recommendations.warnings.map((warning, idx) => (
                                         <View key={idx} style={styles.warningItem}>
@@ -441,7 +457,7 @@ const FertilizerResultScreen: React.FC = () => {
                                 <View style={styles.recommendationCard}>
                                     <View style={styles.cardHeader}>
                                         <Ionicons name="water-outline" size={20} color="#4CAF50" />
-                                        <Text style={styles.cardTitle}>Additional Care</Text>
+                                        <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.additional_care.title')}</Text>
                                     </View>
                                     <View style={styles.careItem}>
                                         <Ionicons name="water" size={16} color="#3B82F6" />
@@ -469,7 +485,7 @@ const FertilizerResultScreen: React.FC = () => {
                         activeOpacity={0.8}
                     >
                         <Ionicons name="home" size={20} color="#FFFFFF" />
-                        <Text style={styles.primaryButtonText}>Back to Home</Text>
+                        <Text style={styles.primaryButtonText}>{t('fertilizer.result.actions.back_home')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -478,7 +494,7 @@ const FertilizerResultScreen: React.FC = () => {
                         activeOpacity={0.8}
                     >
                         <Ionicons name="camera" size={20} color="#4CAF50" />
-                        <Text style={styles.secondaryButtonText}>Analyze Another</Text>
+                        <Text style={styles.secondaryButtonText}>{t('fertilizer.result.actions.analyze_another')}</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -701,6 +717,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#FFFFFF',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+        textAlign: 'center',
     },
     secondaryButton: {
         flex: 1,
@@ -709,6 +728,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: '#FFFFFF',
         paddingVertical: 16,
+        paddingHorizontal: 12,
         borderRadius: 12,
         gap: 8,
         borderWidth: 2,
@@ -723,6 +743,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#4CAF50',
+        flexShrink: 1,
+        flexWrap: 'wrap',
+        textAlign: 'center',
     },
     // Recommendations styles
     recommendationsContainer: {

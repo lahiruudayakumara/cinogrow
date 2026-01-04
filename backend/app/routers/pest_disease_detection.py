@@ -1,28 +1,29 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Query
 from fastapi.responses import JSONResponse
-from requests.exceptions import HTTPError
-from app.services import DetectionService
-from app.utils import load_image
+import traceback
+
+from app.services import detect_pest_disease
 
 router = APIRouter(tags=["Detection"])
-service = DetectionService()
 
+# --------------------------------------------------
+# API Endpoint
+# --------------------------------------------------
 @router.post("/detect")
-async def detect(file: UploadFile = File(...)):
+async def detect(
+    file: UploadFile = File(...),
+    mode: str = Query("normal", enum=["normal", "advanced"]),
+):
     try:
-        image_bytes = await file.read()
-        image = load_image(image_bytes)
-    except ValueError as e:
-        return JSONResponse(status_code=400, content={"status": "error", "message": str(e)})
+        return await detect_pest_disease(file, mode)
 
-    try:
-        result = service.process(image)
-        return result
-    except HTTPError as e:
-        status = e.response.status_code if e.response is not None else 502
-        message = "Upstream detection service error"
-        if status == 401:
-            message = "Upstream detection service unauthorized. Check API key configuration."
-        return JSONResponse(status_code=502, content={"status": "error", "message": message})
-    except Exception:
-        return JSONResponse(status_code=500, content={"status": "error", "message": "Internal server error"})
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=502,
+            content={
+                "status": "error",
+                "message": "Detection service failed",
+                "details": str(e),
+            },
+        )

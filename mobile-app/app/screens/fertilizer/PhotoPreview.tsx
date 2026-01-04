@@ -16,12 +16,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { fertilizerAPI, RoboflowAnalysisResponse } from '../../../services/fertilizerAPI';
 import PlantAgeSelector from '../../../components/PlantAgeSelector';
 import { deserializePhotoPreviewParams, serializeResultParams } from '../../fertilizer/types';
 
 const PhotoPreview: React.FC = () => {
     const router = useRouter();
+    const { t } = useTranslation();
     const rawParams = useLocalSearchParams();
     const { imageUri, imageType, leafImage, soilImage, leafMetadata } = deserializePhotoPreviewParams(rawParams as any);
     const insets = useSafeAreaInsets();
@@ -35,14 +37,14 @@ const PhotoPreview: React.FC = () => {
     const detectedIssues = [
         {
             icon: imageType === 'leaf' ? 'leaf' : 'earth',
-            issue: imageType === 'leaf' ? 'Analyzing leaf condition...' : 'Soil pH imbalance identified',
-            severity: 'Analyzing',
+            issue: imageType === 'leaf' ? t('fertilizer.photo_preview.analysis.leaf_condition') : t('fertilizer.photo_preview.analysis.soil_ph_issue'),
+            severity: t('fertilizer.photo_preview.analysis.status_analyzing'),
             color: '#D97706'
         },
         {
             icon: imageType === 'leaf' ? 'water' : 'nutrition',
-            issue: imageType === 'leaf' ? 'Checking for deficiencies...' : 'Low organic matter content',
-            severity: 'Analyzing',
+            issue: imageType === 'leaf' ? t('fertilizer.photo_preview.analysis.checking_deficiencies') : t('fertilizer.photo_preview.analysis.low_organic'),
+            severity: t('fertilizer.photo_preview.analysis.status_analyzing'),
             color: '#16A34A'
         }
     ];
@@ -72,7 +74,7 @@ const PhotoPreview: React.FC = () => {
     const performLeafAnalysis = async (plantAge: number) => {
         try {
             setIsAnalyzing(true);
-            setAnalysisProgress('🔍 Detecting deficiencies with Roboflow AI...');
+            setAnalysisProgress(t('fertilizer.photo_preview.analysis.progress_detecting'));
 
             console.log('🚀 Starting leaf analysis with Roboflow via backend...');
             console.log(`🖼️ Image URI: ${imageUri}`);
@@ -110,15 +112,15 @@ const PhotoPreview: React.FC = () => {
             });
 
             Alert.alert(
-                'Analysis Failed',
-                `Failed to analyze leaf image: ${errorMessage}. Would you like to continue with basic analysis?`,
+                t('fertilizer.photo_preview.alerts.analysis_failed'),
+                t('fertilizer.photo_preview.alerts.failed_message', { error: errorMessage }),
                 [
                     {
-                        text: 'Try Again',
+                        text: t('fertilizer.photo_preview.alerts.try_again'),
                         onPress: () => performLeafAnalysis(plantAge)
                     },
                     {
-                        text: 'Basic Analysis',
+                        text: t('fertilizer.photo_preview.alerts.basic_analysis'),
                         onPress: () => {
                             console.log('👤 User chose basic analysis fallback');
                             // Continue with basic analysis if ML fails
@@ -194,15 +196,15 @@ const PhotoPreview: React.FC = () => {
 
         if (imageType === 'leaf') {
             progress = 100; // Leaf analysis is complete for recommendations
-            progressText = 'Ready for recommendations';
+            progressText = t('fertilizer.photo_preview.progress.ready_recommendations');
         } else if (imageType === 'soil') {
             progress = 100; // Enhanced analysis ready
-            progressText = 'Enhanced analysis ready';
+            progressText = t('fertilizer.photo_preview.progress.enhanced_ready');
         }
 
         return (
             <View style={styles.progressContainer}>
-                <Text style={styles.progressTitle}>Analysis Progress</Text>
+                <Text style={styles.progressTitle}>{t('fertilizer.photo_preview.progress.title')}</Text>
                 <View style={styles.progressBar}>
                     <LinearGradient
                         colors={['#4CAF50', '#45A049']}
@@ -230,10 +232,10 @@ const PhotoPreview: React.FC = () => {
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>
-                        {imageType === 'leaf' ? 'Leaf Sample Preview' : 'Soil Sample Preview'}
+                        {imageType === 'leaf' ? t('fertilizer.photo_preview.header.title_leaf') : t('fertilizer.photo_preview.header.title_soil')}
                     </Text>
                     <Text style={styles.headerSubtitle}>
-                        Review your {imageType} sample before proceeding
+                        {t('fertilizer.photo_preview.header.subtitle', { type: imageType })}
                     </Text>
                 </View>
 
@@ -256,7 +258,7 @@ const PhotoPreview: React.FC = () => {
                             />
                         </View>
                         <Text style={styles.photoTitle}>
-                            {imageType === 'leaf' ? 'Leaf Sample' : 'Soil Sample'}
+                            {imageType === 'leaf' ? t('fertilizer.photo_preview.sample.leaf') : t('fertilizer.photo_preview.sample.soil')}
                         </Text>
                     </View>
 
@@ -269,7 +271,7 @@ const PhotoPreview: React.FC = () => {
                         <View style={styles.imageOverlay}>
                             <View style={styles.imageQualityBadge}>
                                 <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                                <Text style={styles.imageQualityText}>Good Quality</Text>
+                                <Text style={styles.imageQualityText}>{t('fertilizer.photo_preview.sample.quality_good')}</Text>
                             </View>
                         </View>
                     </View>
@@ -279,15 +281,15 @@ const PhotoPreview: React.FC = () => {
                 <View style={styles.analysisSection}>
                     <View style={styles.analysisTitleContainer}>
                         <Ionicons name="analytics" size={20} color="#4CAF50" />
-                        <Text style={styles.analysisTitle}>AI Quick Analysis</Text>
+                        <Text style={styles.analysisTitle}>{t('fertilizer.photo_preview.analysis.title')}</Text>
                         {isAnalyzing ? (
                             <View style={styles.aiProcessingBadge}>
                                 <ActivityIndicator size="small" color="#D97706" />
-                                <Text style={styles.aiProcessingText}>Analyzing</Text>
+                                <Text style={styles.aiProcessingText}>{t('fertilizer.photo_preview.analysis.status_analyzing')}</Text>
                             </View>
                         ) : (
                             <View style={styles.aiProcessingBadge}>
-                                <Text style={styles.aiProcessingText}>Ready</Text>
+                                <Text style={styles.aiProcessingText}>{t('fertilizer.photo_preview.analysis.status_ready')}</Text>
                             </View>
                         )}
                     </View>
@@ -307,9 +309,9 @@ const PhotoPreview: React.FC = () => {
                         <Text style={styles.noteText}>
                             {imageType === 'leaf'
                                 ? isAnalyzing
-                                    ? 'Real-time ML analysis in progress. This will provide accurate fertilizer recommendations based on your leaf sample.'
-                                    : 'Tap "Get ML Recommendations" for AI-powered fertilizer advice based on real leaf analysis. Enhanced with soil data for better results.'
-                                : 'Enhanced analysis with both leaf and soil samples for comprehensive recommendations.'}
+                                    ? t('fertilizer.photo_preview.notes.leaf_analyzing')
+                                    : t('fertilizer.photo_preview.notes.leaf_ready')
+                                : t('fertilizer.photo_preview.notes.soil_enhanced')}
                         </Text>
                     </View>
                 </View>
@@ -323,7 +325,7 @@ const PhotoPreview: React.FC = () => {
                     >
                         <View style={styles.retakeButtonContent}>
                             <Ionicons name="refresh" size={20} color="#6B7280" />
-                            <Text style={styles.retakeButtonText}>Retake Photo</Text>
+                            <Text style={styles.retakeButtonText}>{t('fertilizer.photo_preview.buttons.retake')}</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -343,13 +345,13 @@ const PhotoPreview: React.FC = () => {
                                         <>
                                             <ActivityIndicator size="small" color="#FFFFFF" />
                                             <Text style={styles.continueButtonText}>
-                                                Analyzing...
+                                                {t('fertilizer.photo_preview.buttons.analyzing')}
                                             </Text>
                                         </>
                                     ) : (
                                         <>
                                             <Text style={styles.continueButtonText}>
-                                                Get ML Recommendations
+                                                {t('fertilizer.photo_preview.buttons.get_ml_recommendations')}
                                             </Text>
                                             <Ionicons name="checkmark" size={20} color="#FFFFFF" />
                                         </>
@@ -364,7 +366,7 @@ const PhotoPreview: React.FC = () => {
                             >
                                 <View style={styles.addSoilButtonContent}>
                                     <Ionicons name="add-circle-outline" size={20} color="#8B7355" />
-                                    <Text style={styles.addSoilButtonText}>Add Soil Analysis for Better Results</Text>
+                                    <Text style={styles.addSoilButtonText}>{t('fertilizer.photo_preview.buttons.add_soil')}</Text>
                                 </View>
                             </TouchableOpacity>
                         </View>
@@ -379,7 +381,7 @@ const PhotoPreview: React.FC = () => {
                                 style={styles.continueButtonGradient}
                             >
                                 <Text style={styles.continueButtonText}>
-                                    Get Enhanced Results
+                                    {t('fertilizer.photo_preview.buttons.get_enhanced')}
                                 </Text>
                                 <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
                             </LinearGradient>
@@ -650,6 +652,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#6B7280',
         fontWeight: '600',
+        flexShrink: 1,
+        flexWrap: 'wrap',
     },
     continueButton: {
         borderRadius: 16,
@@ -670,11 +674,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
+        flexWrap: 'wrap',
+        minHeight: 56,
     },
     continueButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '700',
+        flexShrink: 1,
+        textAlign: 'center',
     },
     leafAnalysisButtons: {
         gap: 12,
@@ -704,6 +712,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
         flex: 1,
+        flexWrap: 'wrap',
     },
 });
 

@@ -9,6 +9,7 @@ import SubscriptionCard from "@/components/profile/SubscriptionCard";
 import SettingsGrid from "@/components/profile/SettingsGrid";
 import { SubscriptionModal } from "@/components/profile/SubscriptionModal";
 import { LanguageModal } from "@/components/profile/LanguageModal";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const languages = [
   { code: "en", label: "English" },
@@ -52,53 +53,59 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: "#F8F9FD" }}
-      showsVerticalScrollIndicator={false}
-    >
-      <ProfileHeader
-        name="John Doe"
-        email="johndoe@example.com"
-        memberSince="Member since Jan 2024"
-      />
-      <SubscriptionCard
-        currentPlan={currentPlan}
-        plans={subscriptionPlans}
-        onOpenSubscription={() => setSubscriptionModalVisible(true)}
-      />
-      <SettingsGrid
-        onLanguagePress={() => setLanguageModalVisible(true)}
-        onEditProfile={() => {}}
-      />
-      <LanguageModal
-        visible={languageModalVisible}
-        languages={languages}
-        selectedLanguage={selectedLanguage}
-        onClose={() => setLanguageModalVisible(false)}
-        onSelect={changeLanguage}
-      />
-      <SubscriptionModal
-        visible={subscriptionModalVisible}
-        plans={subscriptionPlans}
-        currentPlan={currentPlan}
-        onClose={() => setSubscriptionModalVisible(false)}
-        onSelectPlan={(id) => setCurrentPlan(id)}
-      />
-
-      {/* Navigate to Home Screen */}
-      <Pressable
-        style={styles.navButton}
-        onPress={() => router.push("/screens/home/homeScreen")}
-        accessibilityRole="button"
-        accessibilityLabel="Go to Home"
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: "#F8F9FD" }}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.navButtonText}>Go to Home</Text>
-      </Pressable>
-    </ScrollView>
+        <ProfileHeader
+          name="John Doe"
+          email="johndoe@example.com"
+          memberSince="Member since Jan 2024"
+        />
+        <SubscriptionCard
+          currentPlan={currentPlan}
+          plans={subscriptionPlans}
+          onOpenSubscription={() => setSubscriptionModalVisible(true)}
+        />
+        <SettingsGrid
+          onLanguagePress={() => setLanguageModalVisible(true)}
+          onEditProfile={() => {}}
+        />
+        <LanguageModal
+          visible={languageModalVisible}
+          languages={languages}
+          selectedLanguage={selectedLanguage}
+          onClose={() => setLanguageModalVisible(false)}
+          onSelect={changeLanguage}
+        />
+        <SubscriptionModal
+          visible={subscriptionModalVisible}
+          plans={subscriptionPlans}
+          currentPlan={currentPlan}
+          onClose={() => setSubscriptionModalVisible(false)}
+          onSelectPlan={(id) => setCurrentPlan(id)}
+        />
+
+        {/* Navigate to Home Screen */}
+        <Pressable
+          style={styles.navButton}
+          onPress={() => router.push("/screens/home/homeScreen")}
+          accessibilityRole="button"
+          accessibilityLabel="Go to Home"
+        >
+          <Text style={styles.navButtonText}>Go to Home</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FAFBFC",
+  },
   navButton: {
     marginHorizontal: 16,
     marginTop: 16,

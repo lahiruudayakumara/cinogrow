@@ -15,17 +15,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { serializePhotoPreviewParams } from '../../fertilizer/types';
 
 const UploadLeafScreen: React.FC = () => {
     const router = useRouter();
+    const { t } = useTranslation();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const insets = useSafeAreaInsets();
 
     const requestCameraPermission = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Permission Required', 'Camera permission is required to take photos.');
+            Alert.alert(t('fertilizer.upload_leaf.alerts.permission_camera_title'), t('fertilizer.upload_leaf.alerts.permission_camera_message'));
             return false;
         }
         return true;
@@ -34,7 +36,7 @@ const UploadLeafScreen: React.FC = () => {
     const requestMediaLibraryPermission = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Permission Required', 'Photo library permission is required to select images.');
+            Alert.alert(t('fertilizer.upload_leaf.alerts.permission_library_title'), t('fertilizer.upload_leaf.alerts.permission_library_message'));
             return false;
         }
         return true;
@@ -42,19 +44,19 @@ const UploadLeafScreen: React.FC = () => {
 
     const handleChooseFile = async () => {
         Alert.alert(
-            'Select Image',
-            'Choose how you want to select your image',
+            t('fertilizer.upload_leaf.alerts.select_image'),
+            t('fertilizer.upload_leaf.alerts.select_image_message'),
             [
                 {
-                    text: 'Camera',
+                    text: t('fertilizer.upload_leaf.alerts.camera'),
                     onPress: openCamera,
                 },
                 {
-                    text: 'Photo Library',
+                    text: t('fertilizer.upload_leaf.alerts.photo_library'),
                     onPress: openImageLibrary,
                 },
                 {
-                    text: 'Cancel',
+                    text: t('fertilizer.upload_leaf.alerts.cancel'),
                     style: 'cancel',
                 },
             ]
@@ -68,8 +70,7 @@ const UploadLeafScreen: React.FC = () => {
 
             const result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [1, 1],
+                allowsEditing: false,
                 quality: 0.8,
             });
 
@@ -90,7 +91,7 @@ const UploadLeafScreen: React.FC = () => {
             }
         } catch (error) {
             console.error('Error taking photo:', error);
-            Alert.alert('Error', 'Failed to take photo');
+            Alert.alert(t('fertilizer.upload_leaf.alerts.error'), t('fertilizer.upload_leaf.alerts.failed_take_photo'));
         }
     };
 
@@ -101,8 +102,7 @@ const UploadLeafScreen: React.FC = () => {
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [1, 1],
+                allowsEditing: false,
                 quality: 0.8,
             });
 
@@ -123,13 +123,13 @@ const UploadLeafScreen: React.FC = () => {
             }
         } catch (error) {
             console.error('Error picking image:', error);
-            Alert.alert('Error', 'Failed to pick image');
+            Alert.alert(t('fertilizer.upload_leaf.alerts.error'), t('fertilizer.upload_leaf.alerts.failed_pick_image'));
         }
     };
 
     const handleUploadLeafSample = () => {
         if (!selectedImage) {
-            Alert.alert('No Image Selected', 'Please select a leaf image first.');
+            Alert.alert(t('fertilizer.upload_leaf.alerts.no_image_title'), t('fertilizer.upload_leaf.alerts.no_image_message'));
             return;
         }
 
@@ -193,9 +193,17 @@ const UploadLeafScreen: React.FC = () => {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Upload Leaf Sample</Text>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => router.back()}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#111827" />
+                    </TouchableOpacity>
+
+                    <Text style={styles.headerTitle}>{t('fertilizer.upload_leaf.header.title')}</Text>
                     <Text style={styles.headerSubtitle}>
-                        Step 1: Take a clear photo of your cinnamon leaf for instant fertilizer recommendations
+                        {t('fertilizer.upload_leaf.header.subtitle')}
                     </Text>
                 </View>
 
@@ -205,34 +213,34 @@ const UploadLeafScreen: React.FC = () => {
                         <View style={styles.guidelinesIconContainer}>
                             <Ionicons name="information-circle" size={24} color="#4CAF50" />
                         </View>
-                        <Text style={styles.guidelinesTitle}>Photography Guidelines</Text>
+                        <Text style={styles.guidelinesTitle}>{t('fertilizer.upload_leaf.guidelines.title')}</Text>
                     </View>
 
                     <View style={styles.guidelinesList}>
-                        {renderGuidelineItem('sunny', 'Use natural daylight when possible')}
-                        {renderGuidelineItem('leaf-outline', 'Include the entire leaf in frame')}
-                        {renderGuidelineItem('eye-outline', 'Ensure the leaf is flat and well-lit')}
-                        {renderGuidelineItem('ban-outline', 'Avoid shadows and reflections')}
+                        {renderGuidelineItem('sunny', t('fertilizer.upload_leaf.guidelines.natural_light'))}
+                        {renderGuidelineItem('leaf-outline', t('fertilizer.upload_leaf.guidelines.entire_leaf'))}
+                        {renderGuidelineItem('eye-outline', t('fertilizer.upload_leaf.guidelines.flat_lit'))}
+                        {renderGuidelineItem('ban-outline', t('fertilizer.upload_leaf.guidelines.avoid_shadows'))}
                     </View>
                 </View>
 
                 {/* Upload Section */}
                 <View style={styles.uploadSection}>
-                    <Text style={styles.sectionTitle}>Select Image Source</Text>
+                    <Text style={styles.sectionTitle}>{t('fertilizer.upload_leaf.upload.title')}</Text>
 
                     <View style={styles.actionButtonsContainer}>
                         {renderActionButton(
                             'camera',
-                            'Take Photo',
-                            'Use your camera to capture a leaf',
+                            t('fertilizer.upload_leaf.upload.take_photo'),
+                            t('fertilizer.upload_leaf.upload.take_photo_subtitle'),
                             openCamera,
                             ['#4CAF50', '#45A049']
                         )}
 
                         {renderActionButton(
                             'images',
-                            'Photo Library',
-                            'Choose from your gallery',
+                            t('fertilizer.upload_leaf.upload.photo_library'),
+                            t('fertilizer.upload_leaf.upload.photo_library_subtitle'),
                             openImageLibrary,
                             ['#2196F3', '#1976D2']
                         )}
@@ -242,7 +250,7 @@ const UploadLeafScreen: React.FC = () => {
                 {/* Image Preview */}
                 {selectedImage && (
                     <View style={styles.previewSection}>
-                        <Text style={styles.sectionTitle}>Image Preview</Text>
+                        <Text style={styles.sectionTitle}>{t('fertilizer.upload_leaf.preview.title')}</Text>
                         <View style={styles.imagePreviewCard}>
                             <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
                             <View style={styles.imageActions}>
@@ -251,7 +259,7 @@ const UploadLeafScreen: React.FC = () => {
                                     onPress={handleChooseFile}
                                 >
                                     <Ionicons name="refresh" size={16} color="#4CAF50" />
-                                    <Text style={styles.changeImageText}>Change Image</Text>
+                                    <Text style={styles.changeImageText}>{t('fertilizer.upload_leaf.preview.change_image')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -274,6 +282,20 @@ const styles = StyleSheet.create({
     header: {
         marginTop: 20,
         marginBottom: 32,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     headerTitle: {
         fontSize: 28,
@@ -358,6 +380,7 @@ const styles = StyleSheet.create({
         padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
+        minHeight: 88,
     },
     actionIconContainer: {
         width: 48,
@@ -367,6 +390,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
+        flexShrink: 0,
     },
     actionTextContainer: {
         flex: 1,
@@ -376,10 +400,12 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#FFFFFF',
         marginBottom: 4,
+        flexWrap: 'wrap',
     },
     actionSubtitle: {
         fontSize: 14,
         color: 'rgba(255,255,255,0.8)',
+        flexWrap: 'wrap',
     },
     previewSection: {
         marginBottom: 32,

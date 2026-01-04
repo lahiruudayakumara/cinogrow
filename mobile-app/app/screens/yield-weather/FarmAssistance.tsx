@@ -9,6 +9,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -844,7 +845,15 @@ const FarmAssistance = () => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Farm Assistance</Text>
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#1F2937" />
+            </TouchableOpacity>
+            <Text style={styles.title}>Farm Assistance</Text>
+          </View>
           <Text style={styles.subtitle}>
             Personalized recommendations for your cinnamon farm based on real-time weather and crop stage.
           </Text>
@@ -1127,6 +1136,7 @@ const FarmAssistance = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: Platform.OS === 'android' ? 0 : -70,
     backgroundColor: '#FAFBFC',
   },
   scrollView: {
@@ -1148,11 +1158,19 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 24,
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,

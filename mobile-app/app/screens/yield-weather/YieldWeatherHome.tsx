@@ -572,14 +572,14 @@ const styles = StyleSheet.create({
   },
   // Banner Styles
   bannerContainer: {
-    height: 180,
+    height: 120,
     marginHorizontal: -20, // Extend to screen edges
     marginTop: -20,
-    marginBottom: 20,
+    marginBottom: 8,
     position: 'relative',
     overflow: 'hidden',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
   bannerImage: {
     width: '100%',
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 20,
-    paddingBottom: 24,
+    paddingBottom: 12,
   },
   bannerContent: {
     flexDirection: 'row',
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   greeting: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '800',
     color: '#111827',
     marginBottom: 6,

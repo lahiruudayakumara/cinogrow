@@ -58,21 +58,39 @@ def predict_yield(data: OilYieldInput):
     Returns predicted oil yield in liters.
     """
     model = get_model()
-    
+
     # Encode categorical features
     species_encoded = 0 if data.species_variety == "Sri Gemunu" else 1
     plant_part_encoded = 0 if data.plant_part == "Featherings & Chips" else 1
     season_encoded = 0 if data.harvesting_season == "May–August" else 1
-    
-    # Prepare feature array
-    X = np.array([[
-        data.dried_mass_kg,
-        species_encoded,
-        plant_part_encoded,
-        data.age_years,
-        season_encoded
-    ]])
-    
+
+    # Build features based on model expectation to avoid shape mismatch
+    try:
+        n_features = getattr(model, "n_features_in_", None)
+    except Exception:
+        n_features = None
+
+    if n_features == 4:
+        # Older model without season feature: [mass, species, part, age]
+        X = np.array([[
+            data.dried_mass_kg,
+            species_encoded,
+            plant_part_encoded,
+            data.age_years,
+        ]])
+        logger.info("Using 4-feature input vector for oil yield model (season excluded)")
+    else:
+        # Default/newer model with season feature: [mass, species, part, age, season]
+        X = np.array([[
+            data.dried_mass_kg,
+            species_encoded,
+            plant_part_encoded,
+            data.age_years,
+            season_encoded
+        ]])
+        if n_features is not None and n_features != 5:
+            logger.warning(f"Model expects {n_features} features; attempting with 5-feature vector.")
+
     # Make prediction
     prediction = model.predict(X)[0]
     
@@ -146,8 +164,9 @@ def get_price_forecast(data: PriceForecastInput):
                 detail="Only Leaf oil forecasting is currently supported"
             )
         
-        # Generate forecast
-        result = forecast_prices(data.time_range)
+        # Generate forecast with optional steps override
+        steps_override = getattr(data, 'steps', None)
+        result = forecast_prices(data.time_range, steps_override)
         
         return result
         

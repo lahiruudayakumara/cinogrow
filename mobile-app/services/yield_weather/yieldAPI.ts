@@ -148,7 +148,7 @@ class YieldAPI {
     plotId: number,
     sampleTrees: Array<{
       tree_code?: string;
-      stem_diameter_mm: number;
+      stem_circumference_inches: number;
       fertilizer_used: boolean;
       fertilizer_type?: 'organic' | 'npk' | 'urea' | 'compost' | null;
       disease_status: 'none' | 'mild' | 'severe';
@@ -191,7 +191,7 @@ class YieldAPI {
       plot_id: plotId,
       sample_trees: sampleTrees.map(tree => ({
         tree_code: tree.tree_code,
-        stem_diameter_mm: tree.stem_diameter_mm,
+        stem_circumference_inches: tree.stem_circumference_inches,
         fertilizer_used: tree.fertilizer_used,
         fertilizer_type: tree.fertilizer_type,
         disease_status: tree.disease_status,

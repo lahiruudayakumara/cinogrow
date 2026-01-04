@@ -763,7 +763,7 @@
         "title": "Add Material Batch",
         "subtitle": "Record your cinnamon harvest to begin oil production analysis"
       },
-      "tools_title": "Oil Production Tools",
+      "tools_title": "Cinnamon Oil Dashboard",
       "cards": {
         "yield_predictor_title": "Oil Yield Predictor",
         "yield_predictor_subtitle": "Estimate yield",

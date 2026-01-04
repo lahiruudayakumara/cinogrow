@@ -822,7 +822,7 @@
     "distillation": {
       "header": {
         "title": "Steam Distillation",
-        "subtitle": "Monitor cinnamon oil extraction process (5-7 hours)"
+        "subtitle": "Monitor cinnamon oil extraction process"
       },
       "batch": {
         "title": "Material Batch",

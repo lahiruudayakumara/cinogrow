@@ -1,8 +1,10 @@
 import React from "react";
 import { View, Text, Image, ScrollView, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import Header from "@/components/pest-disease/Header";
 import { Lightbulb, TriangleAlert } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 type AdvancedResultType = {
   status: "infected" | "invalid" | "error";
@@ -23,6 +25,7 @@ export default function AdvancedResult() {
     image?: string;
     data?: string;
   }>();
+  const { t } = useTranslation();
 
   let result: AdvancedResultType | null = null;
   try {
@@ -32,8 +35,13 @@ export default function AdvancedResult() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Header title="Advanced Recommendations" backButton />
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 24 }}
+      >
+  <Header title={t("pestDisease.advancedButton", "Advanced Pest & Disease Recommendations")} backButton />
 
       {image && (
         <Image
@@ -58,8 +66,8 @@ export default function AdvancedResult() {
               }}
             >
               <View>
-                <Text style={styles.text}>Name: {result.name}</Text>
-                <Text style={styles.text}>Category: {result.category}</Text>
+                <Text style={styles.text}>{t("common.name", "Name")}: {result.name}</Text>
+                <Text style={styles.text}>{t("pestDisease.category", "Category")}: {result.category}</Text>
               </View>
               <View
                 style={{
@@ -85,7 +93,7 @@ export default function AdvancedResult() {
                 <Text
                   style={{ fontSize: 9, color: "#1A1A1A", marginBottom: 8 }}
                 >
-                  Severity: {result.severity}
+                  {t("common.severity", "Severity")}: {result.severity}
                 </Text>
               </View>
             </View>
@@ -97,7 +105,7 @@ export default function AdvancedResult() {
                 borderRadius: 8,
               }}
             >
-              <Text style={styles.text}>Confidence: {result.confidence}%</Text>
+              <Text style={styles.text}>{t("common.confidence", "Confidence")}: {result.confidence}%</Text>
 
               {/* Background bar */}
               <View
@@ -139,7 +147,7 @@ export default function AdvancedResult() {
               }}
             >
               <Text style={styles.text}>
-                Affected Area: {result.affected_area}
+                {t("pestDisease.affectedArea", "Affected Area")}: {result.affected_area}
               </Text>
             </View>
 
@@ -152,7 +160,7 @@ export default function AdvancedResult() {
               }}
             >
               <Text style={styles.text}>
-                Symptoms: {result.symptoms?.join(", ")}
+                {t("pestDisease.symptoms", "Symptoms")}: {result.symptoms?.join(", ")}
               </Text>
             </View>
 
@@ -164,7 +172,7 @@ export default function AdvancedResult() {
                 borderRadius: 8,
               }}
             >
-              <Text style={styles.text}>Cause: {result.cause}</Text>
+              <Text style={styles.text}>{t("pestDisease.cause", "Cause")}: {result.cause}</Text>
             </View>
 
             <View
@@ -175,7 +183,7 @@ export default function AdvancedResult() {
                 borderRadius: 8,
               }}
             >
-              <Text style={styles.text}>Life Cycle: {result.life_cycle}</Text>
+              <Text style={styles.text}>{t("pestDisease.lifeCycle", "Life Cycle")}: {result.life_cycle}</Text>
             </View>
             <View style={{ marginTop: 16 }}>
               {result.recommendations && (
@@ -192,7 +200,7 @@ export default function AdvancedResult() {
                 >
                   <Lightbulb color="#ff8800ff" />
                   <Text style={styles.resultText}>
-                    Recommendation: {result.recommendations}
+                    {t("common.recommendation", "Recommendation")}: {result.recommendations}
                   </Text>
                 </View>
               )}
@@ -200,18 +208,19 @@ export default function AdvancedResult() {
           </View>
         ) : (
           <Text style={styles.text}>
-            {result.message || "No advanced data available"}
+            {result.message || t("pestDisease.noAdvancedData", "No advanced data available")}
           </Text>
         )
       ) : (
-        <Text style={styles.text}>No data provided</Text>
+  <Text style={styles.text}>{t("pestDisease.noData", "No data provided")}</Text>
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 24 },
+  container: { flex: 1, backgroundColor: "#fff" },
   image: { width: "100%", height: 350, borderRadius: 12, marginVertical: 16 },
   text: { fontSize: 16, color: "#1A1A1A", marginBottom: 8 },
   resultText: {
@@ -219,5 +228,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#1A1A1A",
     marginBottom: 8,
+    paddingEnd: 24,
   },
 });

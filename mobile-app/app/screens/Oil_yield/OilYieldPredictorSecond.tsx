@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
@@ -23,6 +24,7 @@ const API_BASE_URL = Platform.OS === 'web'
 
 export default function OilYieldPredictorSecond() {
   const { t } = useTranslation();
+  const navigation = useNavigation<any>();
   type MaterialBatch = {
     id: number;
     batch_name?: string | null;
@@ -293,11 +295,14 @@ export default function OilYieldPredictorSecond() {
       >
         {/* Header with Icon */}
         <View style={styles.headerContainer}>
-          <View style={styles.headerIconContainer}>
-            <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="flask-outline" size={28} color="#4aab4e" />
-            </View>
-          </View>
+          <TouchableOpacity
+            style={styles.backButtonInline}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={20} color="#4aab4e" />
+          </TouchableOpacity>
+          
           <Text style={styles.header}>{t('oil_yield.predictor.header.title')}</Text>
           <Text style={styles.headerSubtitle}>
             {t('oil_yield.predictor.header.subtitle')}
@@ -566,6 +571,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 0.5,
     borderColor: 'rgba(48, 209, 88, 0.2)',
+  },
+  backButtonInline: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   header: {
     fontSize: 34,

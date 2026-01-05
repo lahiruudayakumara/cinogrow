@@ -14,7 +14,9 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { LineChart } from 'react-native-chart-kit';
+import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -26,6 +28,8 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function OilPricePredictor() {
+  const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [forecastData, setForecastData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -74,7 +78,7 @@ export default function OilPricePredictor() {
     } catch (error: any) {
       console.error('❌ Forecast error:', error);
       Alert.alert(
-        'Forecast Failed',
+        t('oil_yield.price.loading.failed'),
         `Unable to fetch price forecast.\n\nError: ${error.message}\n\nPlease check your connection and try again.`
       );
     } finally {
@@ -88,7 +92,7 @@ export default function OilPricePredictor() {
   }, []);
 
   const formatCurrency = (value: number) => {
-    return `$${value.toFixed(2)}`;
+    return `Rs.${value.toFixed(2)}`;
   };
 
   // Aggregate daily points into weekly averages (8 weeks)
@@ -144,16 +148,16 @@ export default function OilPricePredictor() {
     if (timeRange === 'daily' && dates.length) {
       labels = dates.map((ds) => {
         const d = new Date(ds);
-        // Stack parts vertically to avoid overlap
-        return `${weekdayShort(d)}\n${pad2(d.getDate())}\n${monthShort(d)}`;
+        // Stack parts vertically to avoid overlap; include year
+        return `${weekdayShort(d)}\n${pad2(d.getDate())} ${monthShort(d)}\n${d.getFullYear()}`;
       });
     } else if (timeRange === 'weekly' && dates.length) {
       labels = [];
       for (let i = 0; i < dates.length; i += 7) {
         const start = dates[i];
         const sd = new Date(start);
-        // Week number + month on separate lines
-        labels.push(`W${weekOfMonth(start)}\n${monthShort(sd)}`);
+        // Week number + month + year on separate lines
+        labels.push(`W${weekOfMonth(start)}\n${monthShort(sd)}\n${sd.getFullYear()}`);
       }
       // Ensure labels length matches aggregated prices length
       if (labels.length > prices.length) labels = labels.slice(0, prices.length);
@@ -167,7 +171,7 @@ export default function OilPricePredictor() {
       if (dates.length) {
         labels = dates.map((ds) => {
           const d = new Date(ds);
-          return d.toLocaleString('en-US', { month: 'long' });
+          return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
         });
       } else {
         labels = prices.map((_, index: number) => `M${index + 1}`);
@@ -292,22 +296,25 @@ export default function OilPricePredictor() {
       >
         {/* Header with Icon */}
         <View style={styles.headerContainer}>
-          <View style={styles.headerIconContainer}>
-            <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="chart-line" size={28} color="#4aab4e" />
-            </View>
-          </View>
-          <Text style={styles.header}>Leaf Oil Price Forecast</Text>
-          <Text style={styles.headerSubtitle}>
-             ML forecast for cinnamon leaf oil prices
-          </Text>
+          <TouchableOpacity
+            style={styles.backButtonInline}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={20} color="#4aab4e" />
+          </TouchableOpacity>
+          
+           <Text style={styles.header}>{t('oil_yield.price.header.title')}</Text>
+           <Text style={styles.headerSubtitle}>
+             {t('oil_yield.price.header.subtitle')}
+           </Text>
         </View>
 
         {/* View Toggle Buttons */}
         {!loading && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>View</Text>
+              <Text style={styles.sectionTitle}>{t('oil_yield.price.view.title')}</Text>
             </View>
             <View style={styles.viewToggleContainer}>
               <TouchableOpacity
@@ -321,7 +328,7 @@ export default function OilPricePredictor() {
                   color={timeRange === 'daily' ? '#FFFFFF' : '#8E8E93'} 
                 />
                 <Text style={[styles.viewToggleText, timeRange === 'daily' && styles.viewToggleTextActive]}>
-                  Daily
+                  {t('oil_yield.price.view.daily')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -335,7 +342,7 @@ export default function OilPricePredictor() {
                   color={timeRange === 'weekly' ? '#FFFFFF' : '#8E8E93'} 
                 />
                 <Text style={[styles.viewToggleText, timeRange === 'weekly' && styles.viewToggleTextActive]}>
-                  Weekly
+                  {t('oil_yield.price.view.weekly')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -349,7 +356,7 @@ export default function OilPricePredictor() {
                   color={timeRange === 'monthly' ? '#FFFFFF' : '#8E8E93'} 
                 />
                 <Text style={[styles.viewToggleText, timeRange === 'monthly' && styles.viewToggleTextActive]}>
-                  Monthly
+                  {t('oil_yield.price.view.monthly')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -515,6 +522,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 0.5,
     borderColor: 'rgba(255, 59, 48, 0.2)',
+  },
+  backButtonInline: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   header: {
     fontSize: 34,

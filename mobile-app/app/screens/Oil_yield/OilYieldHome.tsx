@@ -505,11 +505,11 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: CARD_WIDTH,
-    height: 160,
+    height: 200,
   },
   gridCardLarge: {
     width: "100%",
-    height: 160,
+    height: 200,
   },
   gridCardTouchable: {
     flex: 1,

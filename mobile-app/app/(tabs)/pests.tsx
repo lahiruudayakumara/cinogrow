@@ -6,6 +6,7 @@ import {
   StyleSheet,
   StatusBar,
   Alert,
+  Text,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Header from "@/components/pest-disease/Header";
@@ -13,6 +14,7 @@ import UploadCard from "@/components/pest-disease/UploadCard";
 import RecentCard from "@/components/pest-disease/RecentCard";
 import RecommendationButton from "@/components/pest-disease/RecommendationButton";
 import { t } from "i18next";
+import { router } from "expo-router";
 
 export default function PestDiseaseScreen() {
   useEffect(() => {
@@ -40,15 +42,19 @@ export default function PestDiseaseScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <UploadCard />
           <RecommendationButton
-            disabled={true}
+            disabled={false}
             title={t("pest_disease.get_recommendations")}
-            onPress={() => {}}
+            onPress={() => router.push("/screens/pest-disease/RecentDetection")}
           />
+          <Text style={styles.recentDetectionText}>{t("pestDisease.recentDetection", "Recent Detection")}</Text>
           <RecentCard
             date="2026-01-01"
-            name="Powdery Mildew"
-            severity="high"
-            recommendation="Apply fungicide containing sulfur or potassium bicarbonate..."
+            name={t("pestDisease.whiteRootDisease", "White Root Disease")}
+            severity={t("pestDisease.high", "High")}
+            recommendation={t(
+              "pestDisease.whiteRootRecommendation",
+              "Avoid planting in previously infected land..."
+            )}
           />
         </ScrollView>
       </View>
@@ -60,5 +66,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8FFFB",
+  },
+  recentDetectionText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginTop: 4,
+    marginBottom: 14,
   },
 });

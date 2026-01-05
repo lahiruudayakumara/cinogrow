@@ -39,6 +39,32 @@
     "remove": "Remove",
     "get_recommendations": "Get Complete Disease and Pest Recommendations"
   },
+  "pestDisease": {
+    "resultTitle": "Pest & Disease Result",
+    "noValidResult": "No valid detection result",
+    "noData": "No detection data available",
+    "advancedButton": "Advanced Pest & Disease Recommendations",
+    "noAdvancedData": "No advanced data available",
+    "affectedArea": "Affected Area",
+    "symptoms": "Symptoms",
+    "cause": "Cause",
+    "lifeCycle": "Life Cycle",
+    "category": "Category",
+    "recentDetection": "Recent Detection",
+    "whiteRootDisease": "White Root Disease",
+    "whiteRootRecommendation": "Avoid planting in previously infected land...",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "common": {
+    "name": "Name",
+    "confidence": "Confidence",
+    "severity": "Severity",
+    "recommendation": "Recommendation",
+    "loading": "Loading...",
+    "noImage": "No image selected"
+  },
   "yield_weather": {
     "home": {
       "greeting": "Hello",
@@ -261,7 +287,6 @@
       "start_tree_input": "Start",
       "total_trees": "Total Trees in Plot",
       "enter_total_trees": "Total trees in plot",
-      "next_enter_tree_data": "Next: Enter Tree Data",
       "tree_of": "Tree {{current}} of {{total}}",
       "tree_code": "Tree Code",
       "stem_diameter": "Stem Diameter (mm)",
@@ -355,7 +380,8 @@
       "total_less_than_sample": "Total trees ({{total}}) cannot be less than sample trees ({{sample}}).",
       "failed_hybrid_prediction": "Failed to run hybrid prediction",
       "unknown_error": "Unknown error",
-      "retry": "Retry",      "next_steps_title": "Next Steps:",
+      "retry": "Retry",
+      "next_steps_title": "Next Steps:",
       "tree_measurement_info": "After entering the total trees, you'll collect detailed measurements from 3 random trees in your plot for accurate yield prediction.",
       "tree_code_placeholder": "e.g., TREE_1",
       "enter_diameter_placeholder": "Enter diameter in mm",
@@ -374,7 +400,8 @@
       "next_enter_tree_data": "Next: Enter Tree Data",
       "previous_button": "Previous",
       "run_prediction_button": "Run Prediction",
-      "save_next_button": "Save & Next",      "enter_yield_amount": "Enter yield amount",
+      "save_next_button": "Save & Next",
+      "enter_yield_amount": "Enter yield amount",
       "select_harvest_date": "Select harvest date",
       "save": "Save",
       "select_plot_for_record": "Choose a plot for this yield record",
@@ -490,7 +517,12 @@
       "cinnamon_variety": "Cinnamon Variety",
       "select_variety": "Select variety",
       "sri_gemunu": "Sri Gemunu",
-      "sri_wijaya": "Sri Wijaya"
+      "sri_wijaya": "Sri Wijaya",
+      "name": "Name",
+      "confidence": "Confidence",
+      "severity": "Severity",
+      "recommendation": "Recommendation",
+      "noImage": "No image provided"
     }
   }
 }

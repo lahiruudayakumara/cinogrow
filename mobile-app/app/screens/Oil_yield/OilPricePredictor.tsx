@@ -16,6 +16,7 @@ import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LineChart } from 'react-native-chart-kit';
+import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -28,6 +29,7 @@ const API_BASE_URL = Platform.OS === 'web'
 
 export default function OilPricePredictor() {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [forecastData, setForecastData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -76,7 +78,7 @@ export default function OilPricePredictor() {
     } catch (error: any) {
       console.error('❌ Forecast error:', error);
       Alert.alert(
-        'Forecast Failed',
+        t('oil_yield.price.loading.failed'),
         `Unable to fetch price forecast.\n\nError: ${error.message}\n\nPlease check your connection and try again.`
       );
     } finally {
@@ -302,17 +304,17 @@ export default function OilPricePredictor() {
             <MaterialCommunityIcons name="arrow-left" size={20} color="#4aab4e" />
           </TouchableOpacity>
           
-          <Text style={styles.header}>Leaf Oil Price Forecast</Text>
-          <Text style={styles.headerSubtitle}>
-             ML forecast for cinnamon leaf oil prices
-          </Text>
+           <Text style={styles.header}>{t('oil_yield.price.header.title')}</Text>
+           <Text style={styles.headerSubtitle}>
+             {t('oil_yield.price.header.subtitle')}
+           </Text>
         </View>
 
         {/* View Toggle Buttons */}
         {!loading && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>View</Text>
+              <Text style={styles.sectionTitle}>{t('oil_yield.price.view.title')}</Text>
             </View>
             <View style={styles.viewToggleContainer}>
               <TouchableOpacity
@@ -326,7 +328,7 @@ export default function OilPricePredictor() {
                   color={timeRange === 'daily' ? '#FFFFFF' : '#8E8E93'} 
                 />
                 <Text style={[styles.viewToggleText, timeRange === 'daily' && styles.viewToggleTextActive]}>
-                  Daily
+                  {t('oil_yield.price.view.daily')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -340,7 +342,7 @@ export default function OilPricePredictor() {
                   color={timeRange === 'weekly' ? '#FFFFFF' : '#8E8E93'} 
                 />
                 <Text style={[styles.viewToggleText, timeRange === 'weekly' && styles.viewToggleTextActive]}>
-                  Weekly
+                  {t('oil_yield.price.view.weekly')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -354,7 +356,7 @@ export default function OilPricePredictor() {
                   color={timeRange === 'monthly' ? '#FFFFFF' : '#8E8E93'} 
                 />
                 <Text style={[styles.viewToggleText, timeRange === 'monthly' && styles.viewToggleTextActive]}>
-                  Monthly
+                  {t('oil_yield.price.view.monthly')}
                 </Text>
               </TouchableOpacity>
             </View>

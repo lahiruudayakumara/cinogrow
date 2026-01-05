@@ -15,6 +15,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -36,6 +37,7 @@ interface MaterialBatch {
 
 export default function AddMaterialBatchScreen() {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const [batchName, setBatchName] = useState('');
   const [cinnamonType, setCinnamonType] = useState('');
   const [massKg, setMassKg] = useState('');
@@ -73,7 +75,7 @@ export default function AddMaterialBatchScreen() {
       setBatches(data);
     } catch (error: any) {
       console.error('Error fetching batches:', error);
-      Alert.alert('Error', 'Failed to load batches');
+      Alert.alert(t('oil_yield.add_batch.alerts.error'), t('oil_yield.add_batch.alerts.failed_load'));
     } finally {
       setLoadingBatches(false);
     }
@@ -92,7 +94,7 @@ export default function AddMaterialBatchScreen() {
       };
 
       if (!payload.cinnamon_type || !payload.plant_part || !payload.harvest_season || isNaN(payload.mass_kg) || isNaN(payload.plant_age_years)) {
-        Alert.alert('Validation', 'Please fill all fields correctly.');
+        Alert.alert(t('oil_yield.add_batch.alerts.validation'), t('oil_yield.add_batch.alerts.fill_fields'));
         setLoading(false);
         return;
       }
@@ -110,7 +112,7 @@ export default function AddMaterialBatchScreen() {
       }
 
       const result = await response.json();
-      Alert.alert('Success', `Batch created successfully (ID: ${result.id})`);
+      Alert.alert(t('oil_yield.add_batch.alerts.success'), `${t('oil_yield.add_batch.alerts.batch_created')} (ID: ${result.id})`);
       
       // Reset form
       setCinnamonType('');
@@ -238,15 +240,15 @@ export default function AddMaterialBatchScreen() {
             <MaterialCommunityIcons name="arrow-left" size={20} color="#4aab4e" />
           </TouchableOpacity>
           
-          <Text style={styles.header}>Material Batch</Text>
+          <Text style={styles.header}>{t('oil_yield.add_batch.header.title')}</Text>
           <Text style={styles.headerSubtitle}>
-            Create and manage cinnamon material batches
+            {t('oil_yield.add_batch.header.subtitle')}
           </Text>
         </View>
 
         {/* Form Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>New Batch</Text>
+          <Text style={styles.sectionTitle}>{t('oil_yield.add_batch.section_new.title')}</Text>
         </View>
 
           {/* Batch Name */}
@@ -257,8 +259,8 @@ export default function AddMaterialBatchScreen() {
                   <MaterialCommunityIcons name="package-variant" size={20} color="#4aab4e" />
                 </View>
                 <View style={styles.cardHeaderText}>
-                  <Text style={styles.label}>Batch Name</Text>
-                  <Text style={styles.labelSubtext}>Enter batch name</Text>
+                  <Text style={styles.label}>{t('oil_yield.add_batch.form.batch_name.label')}</Text>
+                  <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.batch_name.subtitle')}</Text>
                 </View>
               </View>
               <View style={styles.inputWrapper}>
@@ -266,7 +268,7 @@ export default function AddMaterialBatchScreen() {
                   style={styles.input}
                   value={batchName}
                   onChangeText={setBatchName}
-                  placeholder="Batch A - Leaves"
+                  placeholder={t('oil_yield.add_batch.form.batch_name.placeholder')}
                   placeholderTextColor="#C7C7CC"
                 />
               </View>
@@ -281,8 +283,8 @@ export default function AddMaterialBatchScreen() {
                 <MaterialCommunityIcons name="leaf" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Cinnamon Type</Text>
-                <Text style={styles.labelSubtext}>Select variety</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.cinnamon_type.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.cinnamon_type.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.dropdownGroup}>
@@ -308,8 +310,8 @@ export default function AddMaterialBatchScreen() {
                 <MaterialCommunityIcons name="weight-kilogram" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Mass (kg)</Text>
-                <Text style={styles.labelSubtext}>Enter weight</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.mass.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.mass.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.inputWrapper}>
@@ -322,7 +324,7 @@ export default function AddMaterialBatchScreen() {
                 placeholderTextColor="#C7C7CC"
               />
               <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>kg</Text>
+                <Text style={styles.inputSuffixText}>{t('oil_yield.add_batch.form.mass.suffix')}</Text>
               </View>
             </View>
           </BlurView>
@@ -336,8 +338,8 @@ export default function AddMaterialBatchScreen() {
                 <MaterialCommunityIcons name="sprout" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Plant Part</Text>
-                <Text style={styles.labelSubtext}>Select part</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.plant_part.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.plant_part.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.dropdownGroup}>
@@ -363,8 +365,8 @@ export default function AddMaterialBatchScreen() {
                 <MaterialCommunityIcons name="clock-outline" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Plant Age</Text>
-                <Text style={styles.labelSubtext}>Enter age</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.plant_age.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.plant_age.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.inputWrapper}>
@@ -373,11 +375,11 @@ export default function AddMaterialBatchScreen() {
                 value={plantAgeYears}
                 onChangeText={setPlantAgeYears}
                 keyboardType="decimal-pad"
-                placeholder="3.2"
+                placeholder={t('oil_yield.add_batch.form.plant_age.placeholder')}
                 placeholderTextColor="#C7C7CC"
               />
               <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>years</Text>
+                <Text style={styles.inputSuffixText}>{t('oil_yield.add_batch.form.plant_age.suffix')}</Text>
               </View>
             </View>
           </BlurView>
@@ -391,8 +393,8 @@ export default function AddMaterialBatchScreen() {
                 <MaterialCommunityIcons name="weather-sunny" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Harvest Season</Text>
-                <Text style={styles.labelSubtext}>Select season</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.harvest_season.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.harvest_season.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.dropdownGroup}>
@@ -421,12 +423,12 @@ export default function AddMaterialBatchScreen() {
             {loading ? (
               <>
                 <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text style={styles.submitButtonText}>Creating Batch...</Text>
+                <Text style={styles.submitButtonText}>{t('oil_yield.add_batch.buttons.creating')}</Text>
               </>
             ) : (
               <>
                 <MaterialCommunityIcons name="plus-circle" size={20} color="#FFFFFF" />
-                <Text style={styles.submitButtonText}>Create Batch</Text>
+                <Text style={styles.submitButtonText}>{t('oil_yield.add_batch.buttons.create')}</Text>
               </>
             )}
           </BlurView>
@@ -434,7 +436,7 @@ export default function AddMaterialBatchScreen() {
 
         {/* Batches List Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>All Batches</Text>
+          <Text style={styles.sectionTitle}>{t('oil_yield.add_batch.list.title')}</Text>
           {batches.length > 0 && (
             <View style={styles.countBadge}>
               <Text style={styles.countBadgeText}>{batches.length}</Text>
@@ -445,15 +447,15 @@ export default function AddMaterialBatchScreen() {
         {loadingBatches ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#4aab4e" />
-            <Text style={styles.loadingText}>Loading batches...</Text>
+            <Text style={styles.loadingText}>{t('oil_yield.add_batch.list.loading')}</Text>
           </View>
         ) : batches.length === 0 ? (
           <View style={styles.emptyCard}>
             <BlurView intensity={70} tint="light" style={styles.emptyBlur}>
               <MaterialCommunityIcons name="package-variant" size={48} color="#C7C7CC" />
-              <Text style={styles.emptyTitle}>No Batches Yet</Text>
+              <Text style={styles.emptyTitle}>{t('oil_yield.add_batch.list.empty_title')}</Text>
               <Text style={styles.emptySubtext}>
-                Create your first material batch using the form above
+                {t('oil_yield.add_batch.list.empty_subtitle')}
               </Text>
             </BlurView>
           </View>

@@ -409,7 +409,6 @@ const MyYieldScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: Platform.OS === 'android' ? 0 : -70,
     backgroundColor: '#F3F4F6',
   },
   scrollContent: {

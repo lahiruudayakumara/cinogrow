@@ -296,6 +296,32 @@
     "remove": "ඉවත් කරන්න",
     "get_recommendations": "සම්පූර්ණ රෝග හා කෘමි නිර්දේශ ලබාගන්න"
   },
+  "common": {
+    "name": "නම",
+    "confidence": "විශ්වාසය",
+    "severity": "තීවෘතාව",
+    "recommendation": "නිර්දේශ",
+    "loading": "පූරණය වෙමින්...",
+    "noImage": "රූපයක් තෝරා නොමැත"
+  },
+  "pestDisease": {
+    "resultTitle": "කෘමි හා රෝග ප්‍රතිඵල",
+    "noValidResult": "වලංගු හඳුනාගැනීමක් නොමැත",
+    "noData": "හඳුනාගැනීමේ දත්ත නොමැත",
+    "advancedButton": "උසස් කෘමි හා රෝග නිර්දේශ",
+    "noAdvancedData": "උසස් දත්ත නොමැත",
+    "affectedArea": "බලපාන ප්‍රදේශය",
+    "symptoms": "ලක්ෂණ",
+    "cause": "හේතුව",
+    "lifeCycle": "ජීවනයේ චක්‍රය",
+    "category": "වර්ගය",
+    "recentDetection": "පෙර හඳුනාගැනී​ම්",
+    "whiteRootDisease": "සුදු මුල් රෝගය",
+    "whiteRootRecommendation": "පෙර ආසාදිත භූමියේ වගා කිරීමෙන් වළකින්න...",
+    "high": "ඉහළ",
+    "medium": "මධ්‍යම",
+    "low": "අඩු"
+  },
   "yield_weather": {
     "home": {
       "greeting": "ආයුබෝවන්",

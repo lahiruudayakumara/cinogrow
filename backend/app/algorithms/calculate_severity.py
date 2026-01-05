@@ -1,11 +1,6 @@
-def calculate_severity(pred: dict, disease_info: dict) -> dict:
+def calculate_severity(pred: dict, disease_info: dict, lang: str = "en") -> dict:
     """
-    Algorithmic severity calculation based on multiple factors:
-    - Model confidence
-    - Disease category (Fungal, Bacterial, Pest, etc.)
-    - Growth stage affected
-    - Number of symptoms visible
-    Returns a dict with severity level and description.
+    Calculate severity and return localized level and description.
     """
     confidence = pred.get("confidence", 0)
     category = disease_info.get("category", "").lower()
@@ -15,7 +10,7 @@ def calculate_severity(pred: dict, disease_info: dict) -> dict:
     # Base score from confidence
     score = confidence * 100
 
-    # Add category weight
+    # Category weight
     if "fungal" in category:
         score += 5
     elif "bacterial" in category:
@@ -25,30 +20,67 @@ def calculate_severity(pred: dict, disease_info: dict) -> dict:
     elif "mite" in category:
         score += 2
 
-    # Stage factor: nursery stage more critical
+    # Stage factor
     if "Nursery" in stages:
         score += 5
     if "Mature" in stages:
         score += 2
 
-    # Symptoms factor: more symptoms = higher severity
-    score += min(len(symptoms), 5)  # cap to avoid exaggeration
+    # Symptoms factor
+    score += min(len(symptoms), 5)
 
-    # Map score to severity levels
+    # Determine severity level
     if score >= 90:
-        level = "Critical"
-        desc = "Immediate intervention required; severe risk"
+        level_key = "Critical"
     elif score >= 75:
-        level = "High"
-        desc = "High likelihood; take action soon"
+        level_key = "High"
     elif score >= 60:
-        level = "Moderate"
-        desc = "Moderate risk; monitor and treat as needed"
+        level_key = "Moderate"
     elif score >= 45:
-        level = "Low"
-        desc = "Low risk; preventive measures recommended"
+        level_key = "Low"
     else:
-        level = "Very Low"
-        desc = "Negligible risk; continue monitoring"
+        level_key = "Very Low"
 
-    return {"level": level, "description": desc, "score": round(score, 1)}
+    # Localized levels
+    level_translations = {
+        "Critical": {"en": "Critical", "si": "ගැඹුරු", "ta": "மிகவுமாக"},
+        "High": {"en": "High", "si": "ඉහළ", "ta": "உயர்"},
+        "Moderate": {"en": "Moderate", "si": "මධ්‍යම", "ta": "மிதமான"},
+        "Low": {"en": "Low", "si": "අඩු", "ta": "குறைந்த"},
+        "Very Low": {"en": "Very Low", "si": "ඉතා අඩු", "ta": "மிகக் குறைந்த"}
+    }
+
+    # Localized descriptions
+    descriptions = {
+        "Critical": {
+            "en": "Immediate intervention required; severe risk",
+            "si": "තහවුරු කළ ක්‍රියාමාර්ග අවශ්‍යයි; දැඩි අවදානමක්",
+            "ta": "மிகவுமாகச் செயல்பாடு தேவை; கடுமையான ஆபத்து"
+        },
+        "High": {
+            "en": "High likelihood; take action soon",
+            "si": "ඉහළ අවදානමක්; ඉක්මනින් ක්‍රියා කරන්න",
+            "ta": "உயர் வாய்ப்பு; விரைவில் நடவடிக்கை எடுக்கவும்"
+        },
+        "Moderate": {
+            "en": "Moderate risk; monitor and treat as needed",
+            "si": "මධ්‍යම අවදානමක්; අවශ්‍ය පරිදි නිරීක්ෂණය සහ ප්‍රතිකාර කරන්න",
+            "ta": "மிதமான ஆபத்து; தேவையான பட்சத்தில் கண்காணித்து சிகிச்சை செய்யவும்"
+        },
+        "Low": {
+            "en": "Low risk; preventive measures recommended",
+            "si": "අඩු අවදානමක්; ප්‍රතිරෝධාත්මක ක්‍රියාමාර්ග යෝජිතයි",
+            "ta": "குறைந்த ஆபத்து; தடுப்பு நடவடிக்கைகள் பரிந்துரைக்கப்படுகிறது"
+        },
+        "Very Low": {
+            "en": "Negligible risk; continue monitoring",
+            "si": "අවධානම අඩුයි; නිරීක්ෂණය කරගෙන යන්න",
+            "ta": "மிகக் குறைந்த ஆபத்து; கண்காணிப்பை தொடரவும்"
+        }
+    }
+
+    return {
+        "level": level_translations[level_key].get(lang, level_translations[level_key]["en"]),
+        "description": descriptions[level_key].get(lang, descriptions[level_key]["en"]),
+        "score": round(score, 1)
+    }

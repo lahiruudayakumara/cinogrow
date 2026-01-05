@@ -13,9 +13,14 @@ router = APIRouter(tags=["Detection"])
 async def detect(
     file: UploadFile = File(...),
     mode: str = Query("normal", enum=["normal", "advanced"]),
+    lang: str = Query("en", enum=["en", "si", "ta"]),
 ):
     try:
-        return await detect_pest_disease(file, mode)
+        return await detect_pest_disease(
+            file=file,
+            mode=mode,
+            lang=lang,
+        )
 
     except Exception as e:
         traceback.print_exc()
@@ -25,5 +30,6 @@ async def detect(
                 "status": "error",
                 "message": "Detection service failed",
                 "details": str(e),
+                "language": lang,
             },
         )

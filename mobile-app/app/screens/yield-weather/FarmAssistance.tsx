@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
@@ -22,6 +21,7 @@ import { weatherAPI, WeatherData } from '../../../services/yield_weather/weather
 import { farmAPI, Farm, Plot } from '../../../services/yield_weather/farmAPI';
 import locationService from '../../../services/locationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Farm Assistance API imports
 // If import fails, the types are defined inline as a fallback
@@ -1136,7 +1136,6 @@ const FarmAssistance = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: Platform.OS === 'android' ? 0 : -70,
     backgroundColor: '#FAFBFC',
   },
   scrollView: {

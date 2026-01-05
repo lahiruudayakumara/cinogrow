@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
@@ -23,6 +24,7 @@ const API_BASE_URL = Platform.OS === 'web'
 
 export default function PreliminaryOilQualityAssessment() {
   const { t } = useTranslation();
+  const navigation = useNavigation<any>();
   const [color, setColor] = useState('');
   const [clarity, setClarity] = useState('');
   const [aroma, setAroma] = useState('');
@@ -61,7 +63,38 @@ export default function PreliminaryOilQualityAssessment() {
     fetchBatches();
   }, []);
 
-  const calculateQuality = () => {
+  // Normalize batch fields to match backend accepted literals
+  const normalizeCinnamonType = (value?: string) => {
+    const v = (value || '').trim().toLowerCase();
+    if (v.includes('gamunu')) return 'Sri Gamunu';
+    if (v.includes('wijaya') || v.includes('vijaya')) return 'Sri Wijaya';
+    // default fallback
+    return 'Sri Gamunu';
+  };
+
+  const normalizePlantPart = (value?: string) => {
+    const v = (value || '').trim().toLowerCase();
+    if (v.includes('leaf') || v.includes('leaves') || v.includes('twig')) {
+      return 'Leaves & Twigs';
+    }
+    if (v.includes('feather') || v.includes('chip')) {
+      return 'Featherings & Chips';
+    }
+    return 'Leaves & Twigs';
+  };
+
+  const normalizeHarvestSeason = (value?: string) => {
+    const v = (value || '').trim().toLowerCase();
+    const allowed = ['january', 'april', 'july', 'october'];
+    if (allowed.includes(v)) return v.charAt(0).toUpperCase() + v.slice(1);
+    if (v.includes('may') || v.includes('jun') || v.includes('aug')) return 'July';
+    if (v.includes('oct')) return 'October';
+    if (v.includes('nov') || v.includes('dec')) return 'October';
+    if (v.includes('jan')) return 'January';
+    return 'January';
+  };
+
+  const calculateQuality = async () => {
     if (!selectedBatch || !color || !clarity || !aroma) {
       Alert.alert(
         'Missing Information',
@@ -70,73 +103,76 @@ export default function PreliminaryOilQualityAssessment() {
       return;
     }
 
-    const colorScoreMap: Record<string, number> = {
-      pale_yellow: 90,
-      golden: 80,
-      amber: 75,
-      dark: 50,
+    const payload = {
+      cinnamon_type: normalizeCinnamonType(selectedBatch.cinnamon_type),
+      plant_part: normalizePlantPart(selectedBatch.plant_part),
+      mass_kg: selectedBatch.mass_kg,
+      plant_age_years: selectedBatch.plant_age_years,
+      harvest_season: normalizeHarvestSeason(selectedBatch.harvest_season),
+      color,
+      clarity,
+      aroma,
     };
 
-    const clarityScoreMap: Record<string, number> = {
-      clear: 90,
-      slightly_cloudy: 70,
-      cloudy: 40,
-    };
+    try {
+      const resp = await fetch(`${API_BASE_URL}/oil_yield/quality`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    const aromaScoreMap: Record<string, number> = {
-      mild: 60,
-      aromatic: 90,
-      pungent: 75,
-    };
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(`Quality API failed (HTTP ${resp.status}): ${text}`);
+      }
 
-    const finalScore = Math.round(
-      (colorScoreMap[color] +
-        clarityScoreMap[clarity] +
-        aromaScoreMap[aroma]) / 3
-    );
+      const result = await resp.json();
+      const finalScore = Math.round(result?.predicted_quality_score ?? 0);
 
-    let qualityLabel = '';
-    let priceRange = '';
-    const recs: string[] = [];
+      let qualityLabel = '';
+      let priceRange = '';
+      const recs: string[] = [];
 
-    if (finalScore >= 85) {
-      qualityLabel = 'Excellent';
-      priceRange = '$120 – $200 / L';
-      recs.push('Suitable for premium markets and export preparation');
-      recs.push('Highly recommended for laboratory certification');
-      recs.push('Maintain controlled storage to preserve volatile compounds');
-      setLabAdvice('Proceed with full laboratory analysis for certification and export.');
-    } else if (finalScore >= 70) {
-      qualityLabel = 'Good';
-      priceRange = '$70 – $120 / L';
-      recs.push('Minor purification may improve market value');
-      recs.push('Recommended to refine distillation parameters');
-      setLabAdvice('Improve quality slightly before investing in laboratory testing.');
-    } else if (finalScore >= 50) {
-      qualityLabel = 'Fair';
-      priceRange = '$30 – $70 / L';
-      recs.push('Filtering or redistillation is advised');
-      recs.push('Review raw material handling and drying process');
-      setLabAdvice('Laboratory testing not cost-effective at this stage.');
-    } else {
-      qualityLabel = 'Poor';
-      priceRange = '$5 – $30 / L';
-      recs.push('Do not proceed with laboratory testing');
-      recs.push('Investigate contamination or processing failures');
-      setLabAdvice('Resolve quality issues before any certification attempts.');
+      if (finalScore >= 85) {
+        qualityLabel = 'Excellent';
+        priceRange = '$120 – $200 / L';
+        recs.push('Suitable for premium markets and export preparation');
+        recs.push('Highly recommended for laboratory certification');
+        recs.push('Maintain controlled storage to preserve volatile compounds');
+        setLabAdvice('Proceed with full laboratory analysis for certification and export.');
+      } else if (finalScore >= 70) {
+        qualityLabel = 'Good';
+        priceRange = '$70 – $120 / L';
+        recs.push('Minor purification may improve market value');
+        recs.push('Recommended to refine distillation parameters');
+        setLabAdvice('Improve quality slightly before investing in laboratory testing.');
+      } else if (finalScore >= 50) {
+        qualityLabel = 'Fair';
+        priceRange = '$30 – $70 / L';
+        recs.push('Filtering or redistillation is advised');
+        recs.push('Review raw material handling and drying process');
+        setLabAdvice('Laboratory testing not cost-effective at this stage.');
+      } else {
+        qualityLabel = 'Poor';
+        priceRange = '$5 – $30 / L';
+        recs.push('Do not proceed with laboratory testing');
+        recs.push('Investigate contamination or processing failures');
+        setLabAdvice('Resolve quality issues before any certification attempts.');
+      }
+
+      if (selectedBatch?.plant_part?.toLowerCase().includes('leave')) {
+        recs.push('Leaves & Twigs often show higher eugenol; expect stronger aroma.');
+      } else if (selectedBatch?.plant_part) {
+        recs.push('Featherings & Chips tend to have higher cinnamaldehyde; color may be richer.');
+      }
+
+      setScore(finalScore);
+      setLabel(qualityLabel);
+      setRecommendations(recs);
+      setPredictedPrice(priceRange);
+    } catch (e: any) {
+      Alert.alert('Quality Prediction Error', e?.message || 'Failed to predict quality.');
     }
-
-    // Add plant-part contextual note from selected batch
-    if (selectedBatch?.plant_part?.toLowerCase().includes('leave')) {
-      recs.push('Leaves & Twigs often show higher eugenol; expect stronger aroma.');
-    } else if (selectedBatch?.plant_part) {
-      recs.push('Featherings & Chips tend to have higher cinnamaldehyde; color may be richer.');
-    }
-
-    setScore(finalScore);
-    setLabel(qualityLabel);
-    setRecommendations(recs);
-    setPredictedPrice(priceRange);
   };
 
   const clearForm = () => {
@@ -276,11 +312,14 @@ export default function PreliminaryOilQualityAssessment() {
       >
         {/* Header with Icon */}
         <View style={styles.headerContainer}>
-          <View style={styles.headerIconContainer}>
-            <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="flask-outline" size={28} color="#4aab4e" />
-            </View>
-          </View>
+          <TouchableOpacity
+            style={styles.backButtonInline}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={20} color="#4aab4e" />
+          </TouchableOpacity>
+          
           <Text style={styles.header}>{t('oil_yield.quality.header.title')}</Text>
           <Text style={styles.headerSubtitle}>
             {t('oil_yield.quality.header.subtitle')}
@@ -611,6 +650,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 0.5,
     borderColor: 'rgba(92, 230, 122, 0.2)',
+  },
+  backButtonInline: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   header: {
     fontSize: 34,

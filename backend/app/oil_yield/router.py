@@ -4,11 +4,13 @@ from .schemas import (
     OilYieldInput, OilYieldOutput, 
     DistillationTimeInput, DistillationTimeOutput,
     PriceForecastInput, PriceForecastOutput,
-    MaterialBatchCreate, MaterialBatchRead
+    MaterialBatchCreate, MaterialBatchRead,
+    OilQualityInput, OilQualityOutput
 )
 from .model import load_model
 from .distillation_time_model import load_model as load_distillation_model
 from .price_forecast_model import forecast_prices
+from .oil_quality_model import load_model as load_quality_model
 import numpy as np
 import logging
 from sqlmodel import Session, select
@@ -21,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Global variable to cache the model
 _cached_model = None
 _cached_distillation_model = None
+_cached_quality_model = None
 
 def get_model():
     """
@@ -42,6 +45,16 @@ def get_distillation_model():
         logger.info("🔧 Loading distillation time model...")
         _cached_distillation_model = load_distillation_model()
     return _cached_distillation_model
+
+def get_quality_model():
+    """
+    Get the oil quality prediction model, loading it if not already cached.
+    """
+    global _cached_quality_model
+    if _cached_quality_model is None:
+        logger.info("🔧 Loading oil quality model...")
+        _cached_quality_model = load_quality_model()
+    return _cached_quality_model
 
 @router.post("/predict", response_model=OilYieldOutput)
 def predict_yield(data: OilYieldInput):
@@ -139,6 +152,57 @@ def predict_distillation_time(data: DistillationTimeInput):
             "plant_part": data.plant_part,
             "cinnamon_type": data.cinnamon_type,
             "distillation_capacity_liters": data.distillation_capacity_liters
+        }
+    }
+
+@router.post("/quality", response_model=OilQualityOutput)
+def predict_oil_quality(data: OilQualityInput):
+    """
+    Predict oil quality score based on batch characteristics.
+
+    Inputs include cinnamon type, plant part, mass, plant age, season,
+    and observed sensory properties (color, clarity, aroma).
+    """
+    model = get_quality_model()
+
+    # Encode categorical features consistent with training
+    cinnamon_type_encoded = 0 if data.cinnamon_type == "Sri Gamunu" else 1
+    plant_part_encoded = 0 if data.plant_part == "Featherings & Chips" else 1
+    season_map = {"January": 0, "April": 1, "July": 2, "October": 3}
+    color_map = {"pale_yellow": 0, "golden": 1, "amber": 2, "dark": 3}
+    clarity_map = {"clear": 0, "slightly_cloudy": 1, "cloudy": 2}
+    aroma_map = {"mild": 0, "aromatic": 1, "pungent": 2}
+
+    season_encoded = season_map[data.harvest_season]
+    color_encoded = color_map[data.color]
+    clarity_encoded = clarity_map[data.clarity]
+    aroma_encoded = aroma_map[data.aroma]
+
+    # Feature order must match training
+    X = np.array([[
+        data.mass_kg,
+        data.plant_age_years,
+        cinnamon_type_encoded,
+        plant_part_encoded,
+        season_encoded,
+        color_encoded,
+        clarity_encoded,
+        aroma_encoded,
+    ]])
+
+    prediction = float(model.predict(X)[0])
+
+    return {
+        "predicted_quality_score": round(prediction, 2),
+        "input_summary": {
+            "cinnamon_type": data.cinnamon_type,
+            "plant_part": data.plant_part,
+            "mass_kg": data.mass_kg,
+            "plant_age_years": data.plant_age_years,
+            "harvest_season": data.harvest_season,
+            "color": data.color,
+            "clarity": data.clarity,
+            "aroma": data.aroma,
         }
     }
 

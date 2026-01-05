@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
@@ -24,6 +25,7 @@ const API_BASE_URL = Platform.OS === 'web'
 
 export default function DistillationProcess() {
   const { t } = useTranslation();
+  const navigation = useNavigation<any>();
   type MaterialBatch = {
     id: number;
     batch_name?: string | null;
@@ -318,6 +320,13 @@ export default function DistillationProcess() {
       >
         {/* Header with Icon */}
         <View style={styles.headerContainer}>
+          <TouchableOpacity
+            style={styles.backButtonInline}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={20} color="#4aab4e" />
+          </TouchableOpacity>
           <View style={styles.headerIconContainer}>
             <View style={styles.headerIconCircle}>
               <MaterialCommunityIcons name="flask" size={28} color="#4aab4e" />
@@ -615,6 +624,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 0.5,
     borderColor: 'rgba(74, 171, 78, 0.2)',
+  },
+  backButtonInline: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   header: {
     fontSize: 34,

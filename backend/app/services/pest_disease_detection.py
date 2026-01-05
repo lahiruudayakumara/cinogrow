@@ -26,11 +26,13 @@ client = InferenceHTTPClient(
 # --------------------------------------------------
 # Core Service Logic
 # --------------------------------------------------
-async def detect_pest_disease(file, mode: str):
+async def detect_pest_disease(file, mode: str, lang: str = "en"):
     temp_path = None
 
     try:
+        # ---------------------------
         # Save uploaded image
+        # ---------------------------
         with NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
             tmp.write(await file.read())
             temp_path = tmp.name
@@ -38,7 +40,7 @@ async def detect_pest_disease(file, mode: str):
         pred: Optional[dict] = None
 
         # ---------------------------
-        # 1️⃣ Roboflow Workflow
+        # Roboflow Workflow
         # ---------------------------
         try:
             result = client.run_workflow(
@@ -47,12 +49,14 @@ async def detect_pest_disease(file, mode: str):
                 images={"image": temp_path},
                 use_cache=True,
             )
+
             pred = extract_prediction(result, DISEASE_PEST_KNOWLEDGE)
+
         except Exception:
             pred = None
 
         # ---------------------------
-        # 2️⃣ Algorithm fallback
+        # Algorithm fallback
         # ---------------------------
         if not pred:
             try:
@@ -70,30 +74,43 @@ async def detect_pest_disease(file, mode: str):
                         "stem": 1,
                         "bark": 2,
                         "branch": 3,
+                        "root": 4,
+                        "fruit": 5,
                     }
+
                     known.sort(
                         key=lambda p: (
                             region_order.get(p.get("region", "leaf"), 99),
                             -(p.get("confidence") or 0),
                         )
                     )
+
                     pred = {
                         "class": known[0]["class"],
                         "confidence": float(known[0].get("confidence", 0.0)),
                     }
+
             except Exception:
                 pred = None
 
+        # ---------------------------
+        # No detection
+        # ---------------------------
         if not pred:
-            return {"status": "invalid", "message": "No disease detected"}
+            return {
+                "status": "invalid",
+                "message": "No pest or disease detected",
+                "language": lang,
+            }
 
         # ---------------------------
         # Output Mode
         # ---------------------------
         if mode == "advanced":
-            return build_advanced_output(pred)
+            print(build_advanced_output(pred, lang))
+            return build_advanced_output(pred, lang)
 
-        return build_normal_output(pred)
+        return build_normal_output(pred, lang)
 
     finally:
         if temp_path and os.path.exists(temp_path):

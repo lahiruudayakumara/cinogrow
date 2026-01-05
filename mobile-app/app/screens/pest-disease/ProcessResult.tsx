@@ -8,7 +8,9 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import Header from "@/components/pest-disease/Header";
 import RecommendationButton from "@/components/pest-disease/RecommendationButton";
 import { detectPestDisease } from "@/services/pestDiseaseAPI";
@@ -30,6 +32,7 @@ type DetectionResult = {
 };
 
 export default function ProcessResult() {
+  const { t } = useTranslation();
   const { image, data } = useLocalSearchParams<{
     image?: string;
     data?: string;
@@ -75,11 +78,13 @@ export default function ProcessResult() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 40 }}
-    >
-      <Header title="Pest & Disease Result" backButton />
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 24 }}
+      >
+      <Header title={t("pestDisease.resultTitle", "Pest & Disease Result")} backButton />
 
       {image ? (
         <Image
@@ -88,7 +93,7 @@ export default function ProcessResult() {
           resizeMode="cover"
         />
       ) : (
-        <Text>No image provided</Text>
+        <Text>{t("common.noImage", "No image provided")}</Text>
       )}
 
       {result ? (
@@ -108,11 +113,15 @@ export default function ProcessResult() {
                     : "#ff440051", // red for high
               }}
             >
-              <Text style={styles.resultText}>Name: {result.name}</Text>
               <Text style={styles.resultText}>
-                Confidence: {result.confidence}%
+                {t("common.name", "Name")}: {result.name}
               </Text>
-              <Text style={styles.resultText}>Severity: {result.severity}</Text>
+              <Text style={styles.resultText}>
+                {t("common.confidence", "Confidence")}: {result.confidence}%
+              </Text>
+              <Text style={styles.resultText}>
+                {t("common.severity", "Severity")}: {result.severity}
+              </Text>
             </View>
 
             <View style={{ marginTop: 16 }}>
@@ -120,20 +129,20 @@ export default function ProcessResult() {
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 8, backgroundColor: "#fdc794ff", padding: 8, borderRadius: 6 }}>
                   <Lightbulb color="#ff8800ff" />
                   <Text style={styles.resultText}>
-                    Recommendation: {result.recommendation}
+                    {t("common.recommendation", "Recommendation")}: {result.recommendation}
                   </Text>
                 </View>
               )}
             </View>
           </View>
         ) : (
-          <Text style={[styles.resultText, { marginTop: 16 }]}>
-            {result.message || "No valid detection result"}
+          <Text style={[styles.resultText, { marginTop: 16 }]}> 
+            {result.message || t("pestDisease.noValidResult", "No valid detection result")}
           </Text>
         )
       ) : (
-        <Text style={[styles.resultText, { marginTop: 16 }]}>
-          No detection data available
+        <Text style={[styles.resultText, { marginTop: 16 }]}> 
+          {t("pestDisease.noData", "No detection data available")}
         </Text>
       )}
 
@@ -141,23 +150,27 @@ export default function ProcessResult() {
       {loading ? <ActivityIndicator style={{ marginTop: 36 }} /> : (
         <RecommendationButton
         title={
-          loading ? "Loading..." : "Advanced Pest & Disease Recommendations"
+          loading
+            ? t("common.loading", "Loading...")
+            : t("pestDisease.advancedButton", "Advanced Pest & Disease Recommendations")
         }
         onPress={handleAdvancedRecommendations}
         disabled={loading}
       />
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 24 },
+  container: { flex: 1, backgroundColor: "#fff" },
   image: { width: "100%", height: 350, borderRadius: 12, marginVertical: 16 },
   resultText: {
     fontSize: 16,
     fontWeight: "500",
     color: "#1A1A1A",
     marginBottom: 8,
+    paddingEnd: 24,
   },
 });

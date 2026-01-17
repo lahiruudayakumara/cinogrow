@@ -23,6 +23,7 @@ import type { YieldWeatherStackParamList } from '../../../navigation/YieldWeathe
 // API imports
 import { yieldAPI } from '../../../services/yield_weather/yieldAPI';
 import { farmAPI, Farm, Plot } from '../../../services/yield_weather/farmAPI';
+import TreeImageUpload from '../../../components/yield_weather/TreeImageUpload';
 
 // Extended Plot interface with farm context
 interface PlotWithFarmInfo extends Plot {
@@ -66,6 +67,8 @@ const YieldPredictorScreen = () => {
   const [recentPredictions, setRecentPredictions] = useState<any[]>([]);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
   const [readyToCollectTreeData, setReadyToCollectTreeData] = useState(false);
+  const [useImageUpload, setUseImageUpload] = useState(false); // Toggle between manual and image upload
+  const [showImageUpload, setShowImageUpload] = useState(false); // Show image upload modal
 
   // Collapsible sections state
   const [showHowToUse, setShowHowToUse] = useState(false);
@@ -287,6 +290,28 @@ const YieldPredictorScreen = () => {
     const updatedTrees = [...treeData];
     updatedTrees[index] = { ...updatedTrees[index], [field]: value };
     setTreeData(updatedTrees);
+  };
+
+  const handleImageAnalysisComplete = (result: {
+    stem_count: number;
+    stem_circumference_inches: number;
+    confidence: number;
+  }) => {
+    // Update current tree data with image analysis results
+    const updatedTrees = [...treeData];
+    updatedTrees[currentTreeIndex] = {
+      ...updatedTrees[currentTreeIndex],
+      stem_circumference_inches: result.stem_circumference_inches.toString(),
+      num_existing_stems: result.stem_count.toString(),
+    };
+    setTreeData(updatedTrees);
+    setShowImageUpload(false);
+    
+    Alert.alert(
+      'Analysis Complete',
+      `Stem data automatically filled from images (${result.confidence}% confidence)`,
+      [{ text: 'OK' }]
+    );
   };
 
   const nextTree = () => {
@@ -746,30 +771,6 @@ const YieldPredictorScreen = () => {
                     </Text>
                     <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
                   </TouchableOpacity>
-
-                  {selectedFarmId && (
-                    <View style={styles.infoBox}>
-                      {(() => {
-                        const farm = availableFarms.find(f => f.id === selectedFarmId);
-                        if (!farm) return null;
-                        const farmPlots = getFilteredPlots();
-                        const harvestingPlots = farmPlots.filter(p => p.status === 'HARVESTING');
-                        return (
-                          <>
-                            <Text style={styles.infoText}>
-                              <Ionicons name="location" size={14} color="#6B7280" /> {t('yield_weather.my_yield.location_label')}: {farm.location}
-                            </Text>
-                            <Text style={styles.infoText}>
-                              <Ionicons name="resize" size={14} color="#6B7280" /> {t('yield_weather.my_yield.total_area_label')}: {farm.total_area} {t('yield_weather.my_yield.hectares_suffix')}
-                            </Text>
-                            <Text style={styles.infoText}>
-                              <Ionicons name="grid" size={14} color="#6B7280" /> {t('yield_weather.my_yield.plots_info')}: {t('yield_weather.my_yield.total_ready_harvest', { total: farmPlots.length, ready: harvestingPlots.length })}
-                            </Text>
-                          </>
-                        );
-                      })()}
-                    </View>
-                  )}
                 </View>
               )}
 
@@ -854,37 +855,6 @@ const YieldPredictorScreen = () => {
                     </Text>
                     <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
                   </TouchableOpacity>
-
-                  {selectedPlotId && (
-                    <View style={styles.infoBox}>
-                      {(() => {
-                        const plot = getFilteredPlots().find(p => p.id === selectedPlotId);
-                        if (!plot) return null;
-                        const ageYears = (plot.age_months || 0) / 12;
-                        return (
-                          <>
-                            <Text style={styles.infoText}>
-                              <Ionicons name="business" size={14} color="#6B7280" /> {t('yield_weather.my_yield.farm')}: {plot.farm_name || t('yield_weather.common.unknown')}
-                            </Text>
-                            <Text style={styles.infoText}>
-                              <Ionicons name="time" size={14} color="#6B7280" /> {t('yield_weather.my_yield.age_label')}: {ageYears.toFixed(1)} {t('yield_weather.my_yield.years_suffix')}
-                            </Text>
-                            <Text style={styles.infoText}>
-                              <Ionicons name="resize" size={14} color="#6B7280" /> {t('yield_weather.my_yield.area_label')}: {plot.area} {t('yield_weather.my_yield.hectares_suffix')}
-                            </Text>
-                            <Text style={styles.infoText}>
-                              <Ionicons name="leaf" size={14} color="#6B7280" /> {t('yield_weather.my_yield.status_label')}: {plot.status}
-                            </Text>
-                            {plot.farm_location && (
-                              <Text style={styles.infoText}>
-                                <Ionicons name="location" size={14} color="#6B7280" /> {t('yield_weather.my_yield.location_label')}: {plot.farm_location}
-                              </Text>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </View>
-                  )}
 
                   {selectedPlotId && !readyToCollectTreeData && (
                     <TouchableOpacity
@@ -1083,27 +1053,110 @@ const YieldPredictorScreen = () => {
                     />
                   </View>
 
-                  <View style={styles.formGroup}>
-                    <Text style={styles.label}>{t('yield_weather.my_yield.stem_circumference')} *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={treeData[currentTreeIndex].stem_circumference_inches}
-                      onChangeText={(text) => updateTreeData(currentTreeIndex, 'stem_circumference_inches', text)}
-                      placeholder={t('yield_weather.my_yield.enter_circumference_placeholder')}
-                      keyboardType="numeric"
-                    />
+                  {/* Input Method Selection */}
+                  <View style={styles.inputMethodContainer}>
+                    <Text style={styles.sectionLabel}>Data Collection Method:</Text>
+                    <View style={styles.inputMethodButtons}>
+                      <TouchableOpacity
+                        style={[
+                          styles.inputMethodButton,
+                          !useImageUpload && styles.inputMethodButtonActive
+                        ]}
+                        onPress={() => setUseImageUpload(false)}
+                      >
+                        <Ionicons 
+                          name="create-outline" 
+                          size={20} 
+                          color={!useImageUpload ? "#FFFFFF" : "#4CAF50"} 
+                        />
+                        <Text style={[
+                          styles.inputMethodButtonText,
+                          !useImageUpload && styles.inputMethodButtonTextActive
+                        ]}>Manual Input</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={[
+                          styles.inputMethodButton,
+                          useImageUpload && styles.inputMethodButtonActive
+                        ]}
+                        onPress={() => setUseImageUpload(true)}
+                      >
+                        <Ionicons 
+                          name="camera-outline" 
+                          size={20} 
+                          color={useImageUpload ? "#FFFFFF" : "#4CAF50"} 
+                        />
+                        <Text style={[
+                          styles.inputMethodButtonText,
+                          useImageUpload && styles.inputMethodButtonTextActive
+                        ]}>Upload Images</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
 
-                  <View style={styles.formGroup}>
-                    <Text style={styles.label}>{t('yield_weather.my_yield.number_of_stems')} *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={treeData[currentTreeIndex].num_existing_stems}
-                      onChangeText={(text) => updateTreeData(currentTreeIndex, 'num_existing_stems', text)}
-                      placeholder={t('yield_weather.my_yield.enter_stems_placeholder')}
-                      keyboardType="numeric"
-                    />
-                  </View>
+                  {useImageUpload ? (
+                    /* Image Upload Section */
+                    <View style={styles.imageUploadSection}>
+                      <View style={styles.infoBox}>
+                        <Ionicons name="information-circle" size={20} color="#2196F3" />
+                        <Text style={styles.infoText}>
+                          Upload 1 image of the tree to automatically detect stem count and circumference using AI
+                        </Text>
+                      </View>
+                      
+                      <TouchableOpacity
+                        style={styles.uploadButton}
+                        onPress={() => setShowImageUpload(true)}
+                      >
+                        <Ionicons name="camera" size={24} color="#FFFFFF" />
+                        <Text style={styles.uploadButtonText}>Upload Tree Image</Text>
+                      </TouchableOpacity>
+
+                      {/* Show filled values if available */}
+                      {(treeData[currentTreeIndex].stem_circumference_inches || 
+                        treeData[currentTreeIndex].num_existing_stems) && (
+                        <View style={styles.detectedValuesBox}>
+                          <Text style={styles.detectedValuesTitle}>📊 Detected Values:</Text>
+                          {treeData[currentTreeIndex].num_existing_stems && (
+                            <Text style={styles.detectedValue}>
+                              • Stem Count: {treeData[currentTreeIndex].num_existing_stems}
+                            </Text>
+                          )}
+                          {treeData[currentTreeIndex].stem_circumference_inches && (
+                            <Text style={styles.detectedValue}>
+                              • Circumference: {treeData[currentTreeIndex].stem_circumference_inches}" 
+                            </Text>
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  ) : (
+                    /* Manual Input Section */
+                    <View>
+                      <View style={styles.formGroup}>
+                        <Text style={styles.label}>{t('yield_weather.my_yield.stem_circumference')} *</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={treeData[currentTreeIndex].stem_circumference_inches}
+                          onChangeText={(text) => updateTreeData(currentTreeIndex, 'stem_circumference_inches', text)}
+                          placeholder={t('yield_weather.my_yield.enter_circumference_placeholder')}
+                          keyboardType="numeric"
+                        />
+                      </View>
+
+                      <View style={styles.formGroup}>
+                        <Text style={styles.label}>{t('yield_weather.my_yield.number_of_stems')} *</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={treeData[currentTreeIndex].num_existing_stems}
+                          onChangeText={(text) => updateTreeData(currentTreeIndex, 'num_existing_stems', text)}
+                          placeholder={t('yield_weather.my_yield.enter_stems_placeholder')}
+                          keyboardType="numeric"
+                        />
+                      </View>
+                    </View>
+                  )}
 
                   <View style={styles.formGroup}>
                     <Text style={styles.label}>{t('yield_weather.my_yield.fertilizer_used_label')}</Text>
@@ -1210,6 +1263,22 @@ const YieldPredictorScreen = () => {
               )}
             </View>
           </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Tree Image Upload Modal */}
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={showImageUpload}
+        onRequestClose={() => setShowImageUpload(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+          <TreeImageUpload
+            treeCode={treeData[currentTreeIndex]?.treeCode || `TREE_${currentTreeIndex + 1}`}
+            onAnalysisComplete={handleImageAnalysisComplete}
+            onCancel={() => setShowImageUpload(false)}
+          />
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -1422,19 +1491,20 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   infoBox: {
+    flexDirection: 'column',
     backgroundColor: '#F8FAFC',
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
     marginTop: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   infoText: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#64748B',
+    lineHeight: 16,
     marginBottom: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: '100%',
   },
   primaryButton: {
     backgroundColor: '#4CAF50',
@@ -1791,6 +1861,91 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#4CAF50',
     fontWeight: '700',
+  },
+  inputMethodContainer: {
+    marginBottom: 20,
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
+  },
+  inputMethodButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  inputMethodButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    backgroundColor: '#FFFFFF',
+  },
+  inputMethodButtonActive: {
+    backgroundColor: '#4CAF50',
+  },
+  inputMethodButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4CAF50',
+  },
+  inputMethodButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  imageUploadSection: {
+    marginBottom: 20,
+  },
+  infoBoxRow: {
+    flexDirection: 'row',
+    backgroundColor: '#E3F2FD',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  infoTextRow: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#1976D2',
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2196F3',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  uploadButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  detectedValuesBox: {
+    backgroundColor: '#F0FDF4',
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  detectedValuesTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#16A34A',
+    marginBottom: 8,
+  },
+  detectedValue: {
+    fontSize: 14,
+    color: '#15803D',
+    marginBottom: 4,
   },
   modalActions: {
     paddingTop: 16,

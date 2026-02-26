@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { useTranslation } from 'react-i18next';
 import { CINNAMON_VARIETY_OPTIONS, DEFAULT_CINNAMON_VARIETY, CINNAMON_VARIETIES } from '../constants/CinnamonVarieties';
+import CustomDropdown from './ui/CustomDropdown';
 
 interface CinnamonVarietyPickerProps {
   value?: string;
@@ -29,31 +29,22 @@ export const CinnamonVarietyPicker: React.FC<CinnamonVarietyPickerProps> = ({
   const displayLabel = label || t('yield_weather.common.cinnamon_variety');
   const displayPlaceholder = placeholder || t('yield_weather.common.select_variety');
 
+  const dropdownOptions = CINNAMON_VARIETIES.map((variety) => ({
+    label: t(variety.translationKey),
+    value: variety.value,
+  }));
+
   return (
     <View style={[styles.container, style]}>
-      {displayLabel && <Text style={styles.label}>{displayLabel}</Text>}
-      
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={value}
-          onValueChange={onValueChange}
-          enabled={!disabled}
-          style={styles.picker}
-        >
-          <Picker.Item 
-            label={displayPlaceholder} 
-            value="" 
-            color="#9CA3AF"
-          />
-          {CINNAMON_VARIETIES.map((variety) => (
-            <Picker.Item
-              key={variety.value}
-              label={t(variety.translationKey)}
-              value={variety.value}
-            />
-          ))}
-        </Picker>
-      </View>
+      <CustomDropdown
+        options={dropdownOptions}
+        selectedValue={value}
+        onValueChange={onValueChange}
+        label={displayLabel}
+        placeholder={displayPlaceholder}
+        disabled={disabled}
+        modalTitle={displayLabel}
+      />
 
       {showDescription && selectedVariety && (
         <Text style={styles.description}>
@@ -69,23 +60,6 @@ export default CinnamonVarietyPicker;
 const styles = StyleSheet.create({
   container: {
     marginVertical: 8,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 56,
-    color: '#111827',
   },
   description: {
     fontSize: 12,

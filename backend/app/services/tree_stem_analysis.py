@@ -28,9 +28,10 @@ TREE_ANALYSIS_ROBOFLOW_API_KEY = os.getenv('TREE_ANALYSIS_ROBOFLOW_API_KEY', os.
 TREE_ANALYSIS_ROBOFLOW_WORKSPACE = os.getenv('TREE_ANALYSIS_ROBOFLOW_WORKSPACE', 'cinogrow')
 TREE_ANALYSIS_ROBOFLOW_WORKFLOW_ID = os.getenv('TREE_ANALYSIS_ROBOFLOW_WORKFLOW_ID', 'custom-workflow-3')
 
-# Pixel to inch conversion factor (calibrated: avg 798.5 pixels = 6 inches actual)
-# Based on field measurement: 6 inches actual / 798.5 pixels average = 0.00751 inches/pixel
-PIXEL_TO_INCH_CONVERSION = float(os.getenv('TREE_ANALYSIS_PIXEL_TO_INCH', '0.00751'))
+# Pixel to inch conversion factor
+# Calibrated using actual field measurement: 
+
+PIXEL_TO_INCH_CONVERSION = float(os.getenv('TREE_ANALYSIS_PIXEL_TO_INCH', '0.00355'))
 
 # Debug: Log configuration (mask API key for security)
 if TREE_ANALYSIS_ROBOFLOW_API_KEY:
@@ -277,13 +278,17 @@ class TreeStemAnalysisService:
                 logger.info(f"🔍 Data extracted: {data}")
                 logger.info(f"🔍 Keys in data: {data.keys() if isinstance(data, dict) else 'not a dict'}")
                 
-                # Extract stem count - handle nested arrays
+                # Extract stem count - handle nested arrays or direct value
                 if "stem count" in data:
                     stem_count_data = data["stem count"]
                     logger.info(f"🔍 stem_count_data type: {type(stem_count_data)}, value: {stem_count_data}")
                     
-                    # Handle various nesting levels
-                    if isinstance(stem_count_data, list) and len(stem_count_data) > 0:
+                    # Handle direct integer value
+                    if isinstance(stem_count_data, (int, float)):
+                        stem_count = int(stem_count_data)
+                        logger.info(f"✅ Extracted stem_count (direct): {stem_count}")
+                    # Handle various nesting levels in arrays
+                    elif isinstance(stem_count_data, list) and len(stem_count_data) > 0:
                         # Could be [7] or [[7]] or [[[7]]]
                         temp = stem_count_data[0]
                         logger.info(f"🔍 stem_count_data[0] type: {type(temp)}, value: {temp}")
@@ -294,7 +299,7 @@ class TreeStemAnalysisService:
                             logger.info(f"🔍 Unwrapped to type: {type(temp)}, value: {temp}")
                         
                         stem_count = int(temp) if temp is not None else 0
-                        logger.info(f"✅ Extracted stem_count: {stem_count}")
+                        logger.info(f"✅ Extracted stem_count (from array): {stem_count}")
                 
                 # Extract individual cane widths (misnamed as "average cane width")
                 # This is actually an array of individual stem widths
@@ -303,29 +308,39 @@ class TreeStemAnalysisService:
                     logger.info(f"🔍 cane_width_data type: {type(cane_width_data)}, length: {len(cane_width_data) if isinstance(cane_width_data, list) else 'N/A'}")
                     
                     if isinstance(cane_width_data, list) and len(cane_width_data) > 0:
-                        individual_widths = cane_width_data[0]  # Get the nested array
-                        logger.info(f"🔍 individual_widths type: {type(individual_widths)}, value: {individual_widths}")
+                        # Unwrap nested arrays to get to the actual width values
+                        individual_widths = cane_width_data
                         
-                        # Handle nested arrays - could be [45.3, 46.1] or [[45.3, 46.1]]
+                        # Keep unwrapping if we have nested arrays
+                        while (isinstance(individual_widths, list) and 
+                               len(individual_widths) > 0 and 
+                               isinstance(individual_widths[0], list) and
+                               not isinstance(individual_widths[0], (int, float))):
+                            individual_widths = individual_widths[0]
+                            logger.info(f"🔍 Unwrapped to: {individual_widths}")
+                        
+                        logger.info(f"🔍 Final individual_widths type: {type(individual_widths)}, value: {individual_widths}")
+                        
+                        # Process each individual stem width
                         if isinstance(individual_widths, list):
-                            # Check if it's doubly nested
-                            if len(individual_widths) > 0 and isinstance(individual_widths[0], list):
-                                individual_widths = individual_widths[0]
-                                logger.info(f"🔍 Unwrapped nested array: {individual_widths}")
-                            
-                            # Process each individual stem width
                             for width in individual_widths:
-                                width_pixels = float(width)
-                                # Convert pixels to inches using calibration factor
-                                width_inches = width_pixels * PIXEL_TO_INCH_CONVERSION
-                                individual_stems.append({
-                                    "circumference_inches": round(width_inches, 2),
-                                    "confidence": 0.85
-                                })
-                                total_circumference += width_inches
+                                if isinstance(width, (int, float)):
+                                    width_pixels = float(width)
+                                    # Convert pixels to inches using calibration factor
+                                    width_inches = width_pixels * PIXEL_TO_INCH_CONVERSION
+                                    individual_stems.append({
+                                        "circumference_inches": round(width_inches, 2),
+                                        "confidence": 0.85
+                                    })
+                                    total_circumference += width_inches
                             
                             logger.info(f"✅ Extracted {len(individual_stems)} stem widths")
                             logger.info(f"📏 Converted from pixels to inches: total {total_circumference:.2f} inches")
+                
+                # If we have stem count but no width measurements, log a warning
+                if stem_count > 0 and len(individual_stems) == 0:
+                    logger.warning(f"⚠️ Detected {stem_count} stems but no width measurements available")
+                    logger.warning(f"⚠️ Check if workflow is extracting 'width' property correctly")
                 
                 # Set confidence based on whether we got data
                 confidence = 0.85 if stem_count > 0 else 0.0

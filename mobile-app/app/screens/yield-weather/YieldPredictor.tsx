@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { YieldWeatherStackParamList } from '../../../navigation/YieldWeatherNavigator';
+import CustomDropdown from '../../../components/ui/CustomDropdown';
 
 // API imports
 import { yieldAPI } from '../../../services/yield_weather/yieldAPI';
@@ -285,6 +286,32 @@ const YieldPredictorScreen = () => {
     return plot ? plot.name : t('yield_weather.my_yield.no_plot_selected');
   };
 
+  const getPlotDropdownOptions = () => {
+    if (!selectedFarmId) return [];
+    
+    const filteredPlots = getFilteredPlots();
+    // Include both MATURE and HARVESTING plots since mature plots are ready for harvest
+    const harvestReadyPlots = filteredPlots.filter(plot => 
+      plot.status === 'HARVESTING' || plot.status === 'MATURE'
+    );
+    
+    return harvestReadyPlots.map(plot => ({
+      label: plot.name,
+      value: plot.id || 0,
+      subtitle: `${plot.farm_name || t('yield_weather.my_yield.unknown_plot')} - ${plot.area} ${t('yield_weather.my_yield.ha_suffix')} - ${plot.status}`,
+    }));
+  };
+
+  const handlePlotChange = (plotId: number | string) => {
+    if (plotId === 'clear') {
+      setSelectedPlotId(null);
+      setTreesCompletedForPlot(null);
+      setHybridYieldResult(null);
+    } else {
+      setSelectedPlotId(plotId as number);
+    }
+  };
+
   // Tree input functions
   const updateTreeData = (index: number, field: keyof TreeInputData, value: string | boolean) => {
     const updatedTrees = [...treeData];
@@ -308,8 +335,8 @@ const YieldPredictorScreen = () => {
     setShowImageUpload(false);
     
     Alert.alert(
-      'Analysis Complete',
-      `Stem data automatically filled from images (${result.confidence}% confidence)`,
+      t('yield_weather.my_yield.analysis_complete_title'),
+      t('yield_weather.my_yield.stem_data_filled_message', { confidence: Math.round(result.confidence * 100) }),
       [{ text: 'OK' }]
     );
   };
@@ -534,7 +561,9 @@ const YieldPredictorScreen = () => {
     // Check if plot meets criteria for hybrid prediction
     const plotAgeMonths = selectedPlot.age_months || 0;
     const plotAgeYears = plotAgeMonths / 12;
-    if (plotAgeYears <= 3) {
+    
+    // Allow plots that are 2 years or older (24+ months)
+    if (plotAgeYears < 2) {
       Alert.alert(
         t('yield_weather.my_yield.plot_not_ready'),
         t('yield_weather.my_yield.plot_age_message', { age: plotAgeYears.toFixed(1) }),
@@ -746,31 +775,17 @@ const YieldPredictorScreen = () => {
                     <Text style={styles.selectionLabel}>{t('yield_weather.my_yield.select_farm')}</Text>
                   </View>
 
-                  <TouchableOpacity
-                    style={styles.selectionDropdown}
-                    onPress={() => {
-                      if (availableFarms.length === 0) {
-                        Alert.alert(t('yield_weather.my_yield.no_farms_available'), t('yield_weather.my_yield.no_farms_message'));
-                        return;
-                      }
-
-                      Alert.alert(
-                        t('yield_weather.my_yield.select_farm'),
-                        t('yield_weather.my_yield.select_farm_message'),
-                        availableFarms.map(farm => ({
-                          text: `${farm.name} (${farm.num_plots} ${t('yield_weather.my_yield.plots_info')}, ${farm.total_area} ${t('yield_weather.my_yield.ha_suffix')})`,
-                          onPress: () => handleFarmChange(farm.id!),
-                        })).concat([
-                          { text: t('yield_weather.my_yield.cancel'), onPress: () => { } }
-                        ])
-                      );
-                    }}
-                  >
-                    <Text style={[styles.dropdownText, !selectedFarmId && styles.placeholderText]}>
-                      {getSelectedFarmName()}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
-                  </TouchableOpacity>
+                  <CustomDropdown
+                    options={availableFarms.map(farm => ({
+                      label: farm.name,
+                      value: farm.id || 0,
+                      subtitle: `${farm.num_plots} ${t('yield_weather.my_yield.plots_info')}, ${farm.total_area} ${t('yield_weather.my_yield.ha_suffix')}`,
+                    }))}
+                    selectedValue={selectedFarmId}
+                    onValueChange={(value) => handleFarmChange(value as number)}
+                    placeholder={t('yield_weather.my_yield.select_farm_message')}
+                    modalTitle={t('yield_weather.my_yield.select_farm')}
+                  />
                 </View>
               )}
 
@@ -782,79 +797,42 @@ const YieldPredictorScreen = () => {
                     <Text style={styles.selectionLabel}>{t('yield_weather.my_yield.select_plot_analysis')}</Text>
                   </View>
 
-                  <TouchableOpacity
-                    style={styles.selectionDropdown}
-                    onPress={() => {
-                      if (!selectedFarmId) {
-                        Alert.alert(t('yield_weather.my_yield.no_farm_selected'), t('yield_weather.my_yield.no_farms_message'));
-                        return;
-                      }
+                  <CustomDropdown
+                    options={getPlotDropdownOptions()}
+                    selectedValue={selectedPlotId}
+                    onValueChange={handlePlotChange}
+                    placeholder={t('yield_weather.my_yield.select_plot_message')}
+                    modalTitle={t('yield_weather.my_yield.select_plot')}
+                    disabled={!selectedFarmId || getPlotDropdownOptions().length === 0}
+                  />
 
-                      const filteredPlots = getFilteredPlots();
-                      if (filteredPlots.length === 0) {
-                        Alert.alert(
-                          t('yield_weather.my_yield.no_plots_available'),
-                          t('yield_weather.my_yield.no_plots_message', { farmName: getSelectedFarmName() }),
-                          [
-                            { text: t('yield_weather.my_yield.cancel') },
-                            {
-                              text: t('yield_weather.my_yield.go_to_farms'), onPress: () => {
-                                console.log('Navigate to farms tab');
-                              }
-                            }
-                          ]
-                        );
-                        return;
-                      }
-
-                      const plotOptions = filteredPlots
-                        .filter(plot => {
-                          return plot.status === 'HARVESTING'; // Only show plots ready for harvesting
-                        })
-                        .map(plot => ({
-                          text: `${plot.name} (${plot.farm_name || t('yield_weather.my_yield.unknown_plot')}) - ${t('yield_weather.my_yield.status_label')}: ${plot.status}, ${plot.area} ${t('yield_weather.my_yield.ha_suffix')}`,
-                          onPress: () => setSelectedPlotId(plot.id!)
-                        }));
-
-                      if (plotOptions.length === 0) {
-                        const totalPlots = filteredPlots.length;
-                        const harvestingPlots = filteredPlots.filter(plot => plot.status === 'HARVESTING');
-                        const otherStatusPlots = filteredPlots.filter(plot => plot.status !== 'HARVESTING');
-
-                        Alert.alert(
-                          t('yield_weather.my_yield.no_plots_harvesting'),
-                          t('yield_weather.my_yield.found_plots_message', {
-                            total: totalPlots,
-                            other: otherStatusPlots.length,
-                            statuses: otherStatusPlots.map(p => p.status).join(', ')
-                          }),
-                          [{ text: t('yield_weather.my_yield.ok') }]
-                        );
-                        return;
-                      }
-
-                      // Add option to clear selection
-                      plotOptions.push({
-                        text: t('yield_weather.my_yield.clear_selection'),
-                        onPress: () => {
-                          setSelectedPlotId(null);
-                          setTreesCompletedForPlot(null);
-                          setHybridYieldResult(null);
-                        }
-                      });
-
-                      Alert.alert(
-                        t('yield_weather.my_yield.select_plot'),
-                        t('yield_weather.my_yield.select_plot_message'),
-                        plotOptions.map(option => ({ text: option.text, onPress: option.onPress }))
-                      );
-                    }}
-                  >
-                    <Text style={[styles.dropdownText, !selectedPlotId && styles.placeholderText]}>
-                      {getSelectedPlotName()}
+                  {!selectedFarmId && (
+                    <Text style={styles.helperText}>
+                      {t('yield_weather.my_yield.please_select_farm_first')}
                     </Text>
-                    <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
-                  </TouchableOpacity>
+                  )}
+
+                  {selectedFarmId && getFilteredPlots().length === 0 && (
+                    <Text style={styles.helperText}>
+                      {t('yield_weather.my_yield.no_plots_message', { farmName: getSelectedFarmName() })}
+                    </Text>
+                  )}
+
+                  {selectedFarmId && getFilteredPlots().length > 0 && getPlotDropdownOptions().length === 0 && (
+                    <Text style={styles.helperText}>
+                      {t('yield_weather.my_yield.no_mature_plots_available')}
+                    </Text>
+                  )}
+
+                  {selectedPlotId && (
+                    <TouchableOpacity
+                      style={styles.clearButton}
+                      onPress={() => handlePlotChange('clear')}
+                    >
+                      <Ionicons name="close-circle-outline" size={18} color="#EF4444" />
+                      <Text style={styles.clearButtonText}>{t('yield_weather.my_yield.clear_selection')}</Text>
+                    </TouchableOpacity>
+                  )}
 
                   {selectedPlotId && !readyToCollectTreeData && (
                     <TouchableOpacity
@@ -1055,7 +1033,7 @@ const YieldPredictorScreen = () => {
 
                   {/* Input Method Selection */}
                   <View style={styles.inputMethodContainer}>
-                    <Text style={styles.sectionLabel}>Data Collection Method:</Text>
+                    <Text style={styles.sectionLabel}>{t('yield_weather.my_yield.data_collection_method')}:</Text>
                     <View style={styles.inputMethodButtons}>
                       <TouchableOpacity
                         style={[
@@ -1072,7 +1050,7 @@ const YieldPredictorScreen = () => {
                         <Text style={[
                           styles.inputMethodButtonText,
                           !useImageUpload && styles.inputMethodButtonTextActive
-                        ]}>Manual Input</Text>
+                        ]}>{t('yield_weather.my_yield.manual_input')}</Text>
                       </TouchableOpacity>
                       
                       <TouchableOpacity
@@ -1090,7 +1068,7 @@ const YieldPredictorScreen = () => {
                         <Text style={[
                           styles.inputMethodButtonText,
                           useImageUpload && styles.inputMethodButtonTextActive
-                        ]}>Upload Images</Text>
+                        ]}>{t('yield_weather.my_yield.upload_images')}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1101,7 +1079,7 @@ const YieldPredictorScreen = () => {
                       <View style={styles.infoBox}>
                         <Ionicons name="information-circle" size={20} color="#2196F3" />
                         <Text style={styles.infoText}>
-                          Upload 1 image of the tree to automatically detect stem count and circumference using AI
+                          {t('yield_weather.my_yield.image_upload_section.info_text')}
                         </Text>
                       </View>
                       
@@ -1110,22 +1088,22 @@ const YieldPredictorScreen = () => {
                         onPress={() => setShowImageUpload(true)}
                       >
                         <Ionicons name="camera" size={24} color="#FFFFFF" />
-                        <Text style={styles.uploadButtonText}>Upload Tree Image</Text>
+                        <Text style={styles.uploadButtonText}>{t('yield_weather.my_yield.image_upload_section.upload_button')}</Text>
                       </TouchableOpacity>
 
                       {/* Show filled values if available */}
                       {(treeData[currentTreeIndex].stem_circumference_inches || 
                         treeData[currentTreeIndex].num_existing_stems) && (
                         <View style={styles.detectedValuesBox}>
-                          <Text style={styles.detectedValuesTitle}>📊 Detected Values:</Text>
+                          <Text style={styles.detectedValuesTitle}>{t('yield_weather.my_yield.image_upload_section.detected_values_title')}:</Text>
                           {treeData[currentTreeIndex].num_existing_stems && (
                             <Text style={styles.detectedValue}>
-                              • Stem Count: {treeData[currentTreeIndex].num_existing_stems}
+                              • {t('yield_weather.my_yield.image_upload_section.stem_count')}: {treeData[currentTreeIndex].num_existing_stems}
                             </Text>
                           )}
                           {treeData[currentTreeIndex].stem_circumference_inches && (
                             <Text style={styles.detectedValue}>
-                              • Circumference: {treeData[currentTreeIndex].stem_circumference_inches}" 
+                              • {t('yield_weather.my_yield.image_upload_section.circumference')}: {treeData[currentTreeIndex].stem_circumference_inches}" 
                             </Text>
                           )}
                         </View>
@@ -1472,6 +1450,25 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     backgroundColor: '#FFFFFF',
   },
+  helperText: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 6,
+    marginLeft: 4,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  clearButtonText: {
+    fontSize: 14,
+    color: '#EF4444',
+    fontWeight: '500',
+  },
   dropdown: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1809,12 +1806,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111827',
     backgroundColor: '#FFFFFF',
-  },
-  helperText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 4,
-    fontStyle: 'italic',
   },
   activeOption: {
     backgroundColor: '#F0FDF4',

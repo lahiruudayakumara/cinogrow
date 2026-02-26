@@ -612,12 +612,15 @@
       "no_farms_available": "No Farms Available",
       "no_plots_available": "No Plots Available",
       "no_plots_harvesting": "No Plots Ready for Harvesting",
+      "no_harvesting_plots_available": "No plots with HARVESTING status available",
+      "no_mature_plots_available": "No MATURE or HARVESTING plots available for yield prediction. Plots need to be at least 2 years old.",
+      "please_select_farm_first": "Please select a farm first",
       "clear_selection": "Clear",
       "tree_data_collection": "Tree Data Collection",
       "collection_message": "You will now collect data for 3 random trees from \"{{plotName}}\". This data will be used to create a hybrid yield prediction combining tree-level and plot-level machine learning models.",
       "start_collection": "Start",
       "plot_not_ready": "Plot Not Ready",
-      "plot_age_message": "This plot is {{age}} years old. Cinnamon trees must be at least 3 years old for bark harvesting. Please select a mature plot.",
+      "plot_age_message": "This plot is {{age}} years old. Cinnamon trees must be at least 2 years old for yield prediction. Please select a plot that is 2+ years old.",
       "no_farms_message": "No farms found. Please create a farm first.",
       "select_farm_message": "Choose a farm to view its plots:",
       "plots_info": "Plots",
@@ -648,6 +651,48 @@
       "enter_stems_placeholder": "Enter number of stems",
       "fertilizer_used_label": "Fertilizer Used",
       "yes": "Yes",
+      "tree_image_upload": {
+        "title": "Upload Tree Images",
+        "info_text": "Upload 1 image of the tree for AI stem detection",
+        "tree_label": "Tree",
+        "no_image_selected": "No image selected",
+        "take_photo": "Take Photo",
+        "choose_photo": "Choose Photo",
+        "analyze_image": "Analyze Image",
+        "analyzing": "Analyzing",
+        "photo_tips_title": "Photo Tips",
+        "tip_lighting": "Ensure good lighting",
+        "tip_steady": "Keep the camera steady",
+        "tip_stem_area": "Capture the entire stem area clearly",
+        "tip_front_view": "Take from a clear front view",
+        "permissions_required": "Permissions Required",
+        "camera_permission_message": "Camera and photo library permissions are required to upload tree images.",
+        "image_already_selected": "Image Already Selected",
+        "remove_current_image": "Please remove the current image first.",
+        "error": "Error",
+        "failed_capture": "Failed to capture image",
+        "failed_select": "Failed to select image",
+        "no_image": "No Image",
+        "add_image_to_analyze": "Please add an image to analyze.",
+        "analysis_complete": "Analysis Complete",
+        "detected_stems_message": "Detected {{count}} stems with circumference of {{circumference}} inches ({{confidence}}% confidence)",
+        "use_results": "Use Results",
+        "retake_photo": "Retake Photo",
+        "analysis_failed": "Analysis failed. Please try again with a clearer image.",
+        "failed_analyze": "Failed to analyze image. Please try again."
+      },
+      "image_upload_section": {
+        "info_text": "Upload 1 image of the tree to automatically detect stem count and circumference using AI",
+        "upload_button": "Upload Tree Image",
+        "detected_values_title": "Detected Values",
+        "stem_count": "Stem Count",
+        "circumference": "Circumference"
+      },
+      "data_collection_method": "Data Collection Method",
+      "manual_input": "Manual Input",
+      "upload_images": "Upload Images",
+      "analysis_complete_title": "Analysis Complete",
+      "stem_data_filled_message": "Stem data automatically filled from images ({{confidence}}% confidence)",
       "no": "No",
       "disease_status_label": "Disease Status",
       "disease_none_label": "None",
@@ -704,6 +749,15 @@
       "recent_activities": "Recent Activities",
       "no_activities": "No activities recorded yet",
       "record_activities": "Record your farming activities to track your farm management",
+      "growth_timeline": "Growth Timeline",
+      "days": "days",
+      "go_to_module": "Go to Module",
+      "navigation": {
+        "title": "Navigate to Module",
+        "no_module": "No specific module available for this activity",
+        "unknown_module": "Unknown module type"
+      },
+      "progress": "Progress",
       "priority": {
         "high": "High Priority",
         "medium": "Medium Priority",
@@ -739,7 +793,268 @@
         "young": "Young Plant",
         "maturing": "Maturing",
         "mature": "Mature",
-        "ready_harvest": "Ready for Harvest"
+        "ready_harvest": "Ready for Harvest",
+        "nursery_establishment": "Nursery / Establishment",
+        "vegetative_growth": "Vegetative Growth",
+        "harvest_maturity": "Harvest / Maturity",
+        "unknown": "Unknown"
+      },
+      "activities": {
+        "soil_ph_testing": "Soil pH Testing",
+        "shade_management": "Shade Management",
+        "weed_control": "Weed Control",
+        "training_pruning": "Training and Pruning",
+        "organic_mulching": "Organic Mulching",
+        "support_staking": "Support Staking",
+        "bark_quality_assessment": "Bark Quality Assessment",
+        "canopy_management": "Canopy Management",
+        "harvest_preparation": "Harvest Preparation",
+        "weather_monitoring": "Weather Monitoring",
+        "critical_irrigation": "Critical Irrigation",
+        "drainage_management": "Drainage Management",
+        "water_monitoring": "Water Monitoring",
+        "heat_protection": "Heat Protection",
+        "cold_protection": "Cold Protection",
+        "balanced_fertilization": "Balanced Fertilization",
+        "organic_nutrition": "Organic Nutrition",
+        "disease_prevention": "Disease Prevention",
+        "plant_health_check": "Plant Health Check",
+        "structural_pruning": "Structural Pruning",
+        "bark_harvesting": "Bark Harvesting",
+        "pre_harvest_management": "Pre-Harvest Management",
+        "post_harvest_processing": "Post-Harvest Processing",
+        "coppice_management": "Coppice Management",
+        "general_plant_care": "General Plant Care",
+        "routine_monitoring": "Routine Monitoring",
+        "quality_drying": "Post-Harvest Processing",
+        "regeneration": "Coppice Management",
+        "nutrient_deficiency_check": "Nutrient Deficiency Check",
+        "disease_pest_scan": "Disease & Pest Scan",
+        "weather_water_advisory": "Weather-Based Water Advisory",
+        "growth_yield_projection": "Growth Stage Yield Projection",
+        "fertilizer_optimization": "Fertilizer Optimization",
+        "preventive_pest_monitoring": "Preventive Pest Monitoring",
+        "crop_planning_advisory": "Pruning & Crop Planning Advisory",
+        "harvest_readiness_assessment": "Harvest Readiness Assessment",
+        "oil_yield_prediction": "Cinnamon Oil Yield Prediction",
+        "distillation_optimization": "Drying & Distillation Optimization",
+        "quality_monitoring": "Post-Harvest Quality Monitoring"
+      },
+      "recommendations": {
+        "soil_ph_testing": {
+          "action": "Test soil pH levels - cinnamon thrives in slightly acidic soil (pH 6.0-6.8)",
+          "trigger": "Seedling establishment phase",
+          "reason": "Proper soil pH ensures optimal nutrient uptake during critical early growth"
+        },
+        "shade_management_seedling": {
+          "action": "Provide 70-80% shade using natural or artificial shade cloth",
+          "trigger": "Young seedling protection needed",
+          "reason": "Seedlings are sensitive to direct sunlight and need gradual acclimatization"
+        },
+        "weed_control_seedling": {
+          "action": "Manually remove weeds around seedlings, maintain 1m weed-free circle",
+          "trigger": "Competition prevention",
+          "reason": "Weeds compete for nutrients and water that are crucial for seedling development"
+        },
+        "training_pruning": {
+          "action": "Prune lower branches up to 60cm height, maintain single leader stem",
+          "trigger": "Shape development phase",
+          "reason": "Proper training creates strong trunk structure and improves bark quality"
+        },
+        "organic_mulching": {
+          "action": "Apply 5-7cm thick organic mulch around base, keep 15cm away from trunk",
+          "trigger": "Moisture and temperature regulation",
+          "reason": "Mulch conserves moisture, controls temperature, and suppresses weed growth"
+        },
+        "support_staking": {
+          "action": "Install bamboo stakes for support, tie loosely with soft material",
+          "trigger": "Structural support needed",
+          "reason": "Young plants need support to develop straight trunks and resist wind damage"
+        },
+        "bark_quality_assessment": {
+          "action": "Inspect bark thickness and quality, check for optimal harvest timing",
+          "trigger": "Production readiness evaluation",
+          "reason": "Regular assessment ensures harvest at peak bark quality and oil content"
+        },
+        "canopy_management": {
+          "action": "Prune to maintain 3-4m height, remove dead/diseased branches",
+          "trigger": "Productivity optimization",
+          "reason": "Proper canopy management improves air circulation and bark accessibility"
+        },
+        "harvest_preparation_mature": {
+          "action": "Prepare harvesting tools, plan bark peeling schedule for optimal weather",
+          "trigger": "Production phase management",
+          "reason": "Proper preparation ensures efficient harvest and maximum bark quality"
+        },
+        "weather_monitoring": {
+          "action": "Check weather conditions manually and monitor plant health",
+          "trigger": "No weather data available",
+          "reason": "Unable to fetch current weather data for location-based recommendations."
+        },
+        "critical_irrigation": {
+          "action": "Water seedlings daily with 5-8L per plant. Check soil moisture 2cm deep.",
+          "trigger": "Low rainfall: {{rainfall}}mm/week, soil moisture: {{moisture}}%",
+          "reason": "Young seedlings (under 6 months) are extremely vulnerable to water stress during root establishment."
+        },
+        "drainage_management": {
+          "action": "Ensure proper drainage around seedlings to prevent waterlogging",
+          "trigger": "Excessive rainfall: {{rainfall}}mm/week",
+          "reason": "Waterlogged conditions can cause root rot in young cinnamon plants."
+        },
+        "water_monitoring": {
+          "action": "Monitor soil moisture daily, water if top 2cm is dry",
+          "trigger": "Moderate rainfall: {{rainfall}}mm/week",
+          "reason": "Consistent moisture is critical for seedling survival and growth."
+        },
+        "heat_protection": {
+          "action": "Install 50-70% shade cloth, water early morning and evening",
+          "trigger": "High temperature: {{temperature}}°C",
+          "reason": "Young seedlings cannot tolerate high temperatures - can cause permanent damage."
+        },
+        "cold_protection": {
+          "action": "Protect seedlings with plastic covers during cold nights",
+          "trigger": "Low temperature: {{temperature}}°C",
+          "reason": "Cold stress can slow growth and weaken young cinnamon plants."
+        },
+        "weed_control_stage1": {
+          "action": "Remove all weeds within 1m radius of each seedling",
+          "trigger": "Seedling competition management - {{daysOld}} days old",
+          "reason": "Weeds compete with young seedlings for nutrients and water, significantly affecting growth."
+        },
+        "balanced_fertilization": {
+          "action": "Apply NPK fertilizer (2:1:1 ratio) - 150-200g per plant. Add organic compost monthly.",
+          "trigger": "Good soil conditions: {{moisture}}% moisture, {{rainfall}}mm rainfall",
+          "reason": "Plants at {{monthsOld}} months need regular nutrition for strong branch development and root expansion."
+        },
+        "organic_nutrition": {
+          "action": "Apply well-decomposed compost and mulch around plants",
+          "trigger": "Suboptimal soil conditions for chemical fertilizer application",
+          "reason": "Organic matter improves soil structure and provides slow-release nutrients."
+        },
+        "disease_prevention": {
+          "action": "Inspect leaves weekly for fungal spots, scale insects, and stem borers",
+          "trigger": "High humidity: {{humidity}}% promotes disease development",
+          "reason": "High humidity creates favorable conditions for cinnamon leaf spot and other fungal diseases."
+        },
+        "plant_health_check": {
+          "action": "Weekly inspection for pests, diseases, and nutrient deficiencies",
+          "trigger": "Routine monitoring for {{monthsOld}}-month-old plants",
+          "reason": "Regular monitoring prevents major pest and disease outbreaks."
+        },
+        "structural_pruning": {
+          "action": "Shape main stems, remove weak branches, promote 4-6 strong shoots",
+          "trigger": "Plants ready for structure development ({{monthsOld}} months old)",
+          "reason": "Proper structure now determines future harvest quality and quantity."
+        },
+        "bark_harvesting": {
+          "action": "Harvest shoots 1.2-2.0cm diameter. Process bark within 6 hours.",
+          "trigger": "Optimal harvest conditions: {{humidity}}% humidity, {{rainfall}}mm weekly rain",
+          "reason": "Plants are {{yearsOld}} years old - perfect age for premium quality bark harvesting."
+        },
+        "harvest_preparation_ready": {
+          "action": "Prepare harvesting tools and drying areas, monitor weather for optimal conditions",
+          "trigger": "Suboptimal harvest conditions - waiting for better weather",
+          "reason": "Harvest timing affects bark quality - wait for proper humidity and minimal rain."
+        },
+        "pre_harvest_management": {
+          "action": "Continue regular care, prepare for harvesting in coming months",
+          "trigger": "Plants approaching harvest maturity ({{yearsOld}}.{{monthsRemaining}} years old)",
+          "reason": "Plants need continued care to ensure optimal bark development for future harvest."
+        },
+        "post_harvest_processing": {
+          "action": "Ideal conditions for bark drying and curing - process any harvested bark",
+          "trigger": "Dry conditions: {{rainfall}}mm rain, {{humidity}}% humidity",
+          "reason": "Low humidity prevents fungal growth during bark processing and ensures premium quality."
+        },
+        "coppice_management": {
+          "action": "Monitor shoot regrowth, apply organic fertilizer to cut stumps",
+          "trigger": "Mature plant regeneration cycle management",
+          "reason": "Proper post-harvest care ensures strong regrowth for next harvest cycle in 18-24 months."
+        },
+        "general_plant_care": {
+          "action": "Monitor plant health daily, maintain proper spacing and cleanliness around plants",
+          "trigger": "Standard care for {{stage}} stage",
+          "reason": "Regular monitoring and maintenance is essential for healthy cinnamon cultivation at {{daysOld}} days old."
+        },
+        "nutrient_deficiency_check": {
+          "action": "Capture clear images of the leaf and surrounding soil using the app. Ensure good lighting and no shadow distortion.",
+          "trigger": "Seedling stage OR slow growth observed",
+          "reason": "Young cinnamon plants require balanced nutrients for root establishment and early vigor."
+        },
+        "disease_pest_scan": {
+          "action": "Scan affected leaves and stems using the camera. Upload multiple angles for accurate detection.",
+          "trigger": "After rainy week OR visible leaf spots",
+          "reason": "High moisture increases fungal infection risk in young plants."
+        },
+        "weather_water_advisory": {
+          "action": "Check irrigation guidance based on current rainfall and temperature trends.",
+          "trigger": "Weekly rainfall below optimal levels",
+          "reason": "Proper water management prevents root stress."
+        },
+        "growth_yield_projection": {
+          "action": "Upload recent stem images for automated stem counting and circumference analysis.",
+          "trigger": "Plant age exceeds 6 months",
+          "reason": "Shoot density and stem thickness directly influence future bark yield."
+        },
+        "fertilizer_optimization": {
+          "action": "Capture leaf and soil images to detect nutrient deficiencies before fertilizer application.",
+          "trigger": "Active growth period with adequate moisture",
+          "reason": "Prevents over-fertilization and reduces cost."
+        },
+        "preventive_pest_monitoring": {
+          "action": "Perform a routine disease scan even if no visible symptoms.",
+          "trigger": "After heavy rain OR humidity spike",
+          "reason": "Early detection reduces yield loss."
+        },
+        "crop_planning_advisory": {
+          "action": "Check recommended pruning timing based on predicted weather patterns.",
+          "trigger": "Plant age exceeds 10 months",
+          "reason": "Proper pruning timing increases bark quality and regrowth rate."
+        },
+        "harvest_readiness_assessment": {
+          "action": "Upload stem images for diameter and maturity verification.",
+          "trigger": "Age 18+ months with recent rainfall",
+          "reason": "Harvesting at optimal stem thickness (1.5–2cm) ensures high-quality bark."
+        },
+        "oil_yield_prediction": {
+          "action": "Enter farm data (age, stem count, previous yield, drying method).",
+          "trigger": "Pre-harvest stage",
+          "reason": "Predict expected oil yield and economic return before harvest."
+        },
+        "distillation_optimization": {
+          "action": "Enter drying duration and distillation setup details.",
+          "trigger": "Post-harvest with optimal drying conditions",
+          "reason": "Optimizing drying time improves oil concentration and efficiency."
+        },
+        "quality_monitoring": {
+          "action": "Generate yield performance report and compare with previous cycles.",
+          "trigger": "Mature tree with harvest history",
+          "reason": "Helps improve next harvest strategy."
+        }
+      },
+      "more_activities": "+{{count}} more activities",
+      "select_plot": "Select a Plot",
+      "filters": "Filters",
+      "all": "All",
+      "clear_filters": "Clear All",
+      "suggested_activities": "Suggested Activities",
+      "no_recent_activities": "No recent activities for this plot",
+      "no_filtered_activities": "No activities match the selected priority filter",
+      "no_farm_message": "No farms found. Add your farm to get personalized weather-based recommendations.",
+      "add_farm_button": "Add Your Farm",
+      "no_plots_title": "No Plot Data Available",
+      "no_plots_description": "Add farms and planting records to get weather-based recommendations for your cinnamon plots.",
+      "further_assistance": {
+        "title": "Need Further Assistance?",
+        "description": "Contact the Cinnamon Research Center for expert advice and support",
+        "center_name": "Cinnamon Research Center - Sri Lanka",
+        "phone": "+94-11-2696734",
+        "email": "info@cinnamonresearch.lk",
+        "working_hours": "Monday - Friday: 8:00 AM - 4:30 PM",
+        "view_contact_button": "View Full Contact Info",
+        "contact_dialog_title": "Contact Information",
+        "contact_dialog_message": "For expert assistance:\n\n📞 Phone: {{phone}}\n📧 Email: {{email}}\n🌐 Website: {{website}}\n\nWorking Hours: {{hours}}",
+        "fallback_contact": "Phone: +94-11-2696734\nEmail: info@cinnamonresearch.lk"
       },
       "weather_condition": "Weather Condition",
       "temperature": "Temperature",

@@ -1,7 +1,7 @@
 /**
  * TreeImageUpload Component
  * 
- * Allows users to upload 3 images of a tree to automatically detect
+ * Allows users to upload 1 image of a tree to automatically detect
  * stem count and circumference using Roboflow workflow
  */
 
@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 import { treeAnalysisAPI, MultiTreeAnalysisResult } from '../../services/yield_weather/treeAnalysisAPI';
 
 interface TreeImageUploadProps {
@@ -35,6 +36,7 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
   onAnalysisComplete,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   const [image, setImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +47,8 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
 
     if (cameraPermission.status !== 'granted' || libraryPermission.status !== 'granted') {
       Alert.alert(
-        'Permissions Required',
-        'Camera and photo library permissions are required to upload tree images.',
+        t('yield_weather.my_yield.tree_image_upload.permissions_required'),
+        t('yield_weather.my_yield.tree_image_upload.camera_permission_message'),
         [{ text: 'OK' }]
       );
       return false;
@@ -56,7 +58,10 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
 
   const pickImageFromCamera = async () => {
     if (image) {
-      Alert.alert('Image Already Selected', 'Please remove the current image first.');
+      Alert.alert(
+        t('yield_weather.my_yield.tree_image_upload.image_already_selected'),
+        t('yield_weather.my_yield.tree_image_upload.remove_current_image')
+      );
       return;
     }
 
@@ -76,13 +81,19 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
       }
     } catch (error) {
       console.error('Camera error:', error);
-      Alert.alert('Error', 'Failed to capture image');
+      Alert.alert(
+        t('yield_weather.my_yield.tree_image_upload.error'),
+        t('yield_weather.my_yield.tree_image_upload.failed_capture')
+      );
     }
   };
 
   const pickImageFromLibrary = async () => {
     if (image) {
-      Alert.alert('Image Already Selected', 'Please remove the current image first.');
+      Alert.alert(
+        t('yield_weather.my_yield.tree_image_upload.image_already_selected'),
+        t('yield_weather.my_yield.tree_image_upload.remove_current_image')
+      );
       return;
     }
 
@@ -103,7 +114,10 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
       }
     } catch (error) {
       console.error('Library error:', error);
-      Alert.alert('Error', 'Failed to select image');
+      Alert.alert(
+        t('yield_weather.my_yield.tree_image_upload.error'),
+        t('yield_weather.my_yield.tree_image_upload.failed_select')
+      );
     }
   };
 
@@ -113,7 +127,10 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
 
   const analyzeImage = async () => {
     if (!image) {
-      Alert.alert('No Image', 'Please add an image to analyze.');
+      Alert.alert(
+        t('yield_weather.my_yield.tree_image_upload.no_image'),
+        t('yield_weather.my_yield.tree_image_upload.add_image_to_analyze')
+      );
       return;
     }
 
@@ -121,19 +138,23 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
     setError(null);
 
     try {
-      console.log(`🌳 Analyzing image for tree: ${treeCode}`);
+      console.log(`Analyzing image for tree: ${treeCode}`);
       
       const result = await treeAnalysisAPI.analyzeSingleImage(image);
       
-      console.log('✅ Analysis result:', result);
+      console.log('Analysis result:', result);
 
       if (result.success) {
         Alert.alert(
-          'Analysis Complete',
-          `Detected ${result.stem_count} stems with circumference of ${result.stem_circumference_inches} inches (${Math.round(result.confidence * 100)}% confidence)`,
+          t('yield_weather.my_yield.tree_image_upload.analysis_complete'),
+          t('yield_weather.my_yield.tree_image_upload.detected_stems_message', {
+            count: result.stem_count,
+            circumference: result.stem_circumference_inches,
+            confidence: Math.round(result.confidence * 100)
+          }),
           [
             {
-              text: 'Use Results',
+              text: t('yield_weather.my_yield.tree_image_upload.use_results'),
               onPress: () => {
                 onAnalysisComplete({
                   stem_count: result.stem_count,
@@ -143,19 +164,22 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
               },
             },
             {
-              text: 'Retake Photo',
+              text: t('yield_weather.my_yield.tree_image_upload.retake_photo'),
               style: 'cancel',
               onPress: () => setImage(null),
             },
           ]
         );
       } else {
-        setError('Analysis failed. Please try again with a clearer image.');
+        setError(t('yield_weather.my_yield.tree_image_upload.analysis_failed'));
       }
     } catch (error) {
-      console.error('❌ Analysis error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to analyze image');
-      Alert.alert('Analysis Failed', 'Failed to analyze image. Please try again.');
+      console.error('Analysis error:', error);
+      setError(error instanceof Error ? error.message : t('yield_weather.my_yield.tree_image_upload.failed_analyze'));
+      Alert.alert(
+        t('yield_weather.my_yield.tree_image_upload.analysis_complete'),
+        t('yield_weather.my_yield.tree_image_upload.failed_analyze')
+      );
     } finally {
       setAnalyzing(false);
     }
@@ -166,7 +190,7 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Ionicons name="camera" size={24} color="#4CAF50" />
-          <Text style={styles.title}>Upload Tree Images</Text>
+          <Text style={styles.title}>{t('yield_weather.my_yield.tree_image_upload.title')}</Text>
         </View>
         {onCancel && (
           <TouchableOpacity onPress={onCancel} style={styles.closeButton}>
@@ -178,11 +202,11 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
       <View style={styles.infoBox}>
         <Ionicons name="information-circle" size={20} color="#2196F3" />
         <Text style={styles.infoText}>
-          Upload 1 image of the tree for AI stem detection
+          {t('yield_weather.my_yield.tree_image_upload.info_text')}
         </Text>
       </View>
 
-      <Text style={styles.treeCodeLabel}>Tree: {treeCode}</Text>
+      <Text style={styles.treeCodeLabel}>{t('yield_weather.my_yield.tree_image_upload.tree_label')}: {treeCode}</Text>
 
       {/* Single Image Display */}
       <View style={styles.singleImageContainer}>
@@ -199,7 +223,7 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
         ) : (
           <View style={styles.emptyImageSlot}>
             <Ionicons name="image-outline" size={64} color="#CCCCCC" />
-            <Text style={styles.emptySlotText}>No image selected</Text>
+            <Text style={styles.emptySlotText}>{t('yield_weather.my_yield.tree_image_upload.no_image_selected')}</Text>
           </View>
         )}
       </View>
@@ -212,7 +236,7 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
           disabled={analyzing || !!image}
         >
           <Ionicons name="camera" size={20} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Take Photo</Text>
+          <Text style={styles.buttonText}>{t('yield_weather.my_yield.tree_image_upload.take_photo')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -221,7 +245,7 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
           disabled={analyzing || !!image}
         >
           <Ionicons name="image" size={20} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Choose Photo</Text>
+          <Text style={styles.buttonText}>{t('yield_weather.my_yield.tree_image_upload.choose_photo')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -235,12 +259,12 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
           {analyzing ? (
             <>
               <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={styles.analyzeButtonText}>Analyzing...</Text>
+              <Text style={styles.analyzeButtonText}>{t('yield_weather.my_yield.tree_image_upload.analyzing')}...</Text>
             </>
           ) : (
             <>
               <Ionicons name="analytics" size={20} color="#FFFFFF" />
-              <Text style={styles.analyzeButtonText}>Analyze Image</Text>
+              <Text style={styles.analyzeButtonText}>{t('yield_weather.my_yield.tree_image_upload.analyze_image')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -248,11 +272,11 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
 
       {/* Tips */}
       <View style={styles.tipsBox}>
-        <Text style={styles.tipsTitle}>📸 Photo Tips:</Text>
-        <Text style={styles.tipText}>• Ensure good lighting</Text>
-        <Text style={styles.tipText}>• Keep the camera steady</Text>
-        <Text style={styles.tipText}>• Capture the entire stem area clearly</Text>
-        <Text style={styles.tipText}>• Take from a clear front view</Text>
+        <Text style={styles.tipsTitle}>{t('yield_weather.my_yield.tree_image_upload.photo_tips_title')}:</Text>
+        <Text style={styles.tipText}>• {t('yield_weather.my_yield.tree_image_upload.tip_lighting')}</Text>
+        <Text style={styles.tipText}>• {t('yield_weather.my_yield.tree_image_upload.tip_steady')}</Text>
+        <Text style={styles.tipText}>• {t('yield_weather.my_yield.tree_image_upload.tip_stem_area')}</Text>
+        <Text style={styles.tipText}>• {t('yield_weather.my_yield.tree_image_upload.tip_front_view')}</Text>
       </View>
     </ScrollView>
   );

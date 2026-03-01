@@ -76,18 +76,68 @@ const FertilizerResultScreen: React.FC = () => {
     const rawParams = useLocalSearchParams();
 
     // Memoize deserialized params to prevent infinite loops
-    const { leafImage, roboflowAnalysis, plantAge } = useMemo(
+    const { leafImage, soilImage, roboflowAnalysis, soilAnalysis, combinedAnalysis, analysisType, plantAge } = useMemo(
         () => deserializeResultParams(rawParams as any),
-        [rawParams.leafImage, rawParams.roboflowAnalysis, rawParams.plantAge]
+        [rawParams.leafImage, rawParams.soilImage, rawParams.roboflowAnalysis, rawParams.soilAnalysis, rawParams.combinedAnalysis, rawParams.analysisType, rawParams.plantAge]
     );
 
     const insets = useSafeAreaInsets();
     const [detections, setDetections] = useState<RoboflowDetection[]>([]);
     const [recommendations, setRecommendations] = useState<FertilizerRecommendation | null>(null);
     const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+    const [combinedSoilAnalysis, setCombinedSoilAnalysis] = useState<any>(null);
     const isHistoryView = !leafImage; // If no image, it's from history
 
+    // Handle combined analysis - extract both leaf and soil data
     useEffect(() => {
+        if (combinedAnalysis) {
+            console.log('🔬 Processing combined analysis:', combinedAnalysis);
+
+            // Extract leaf analysis data
+            const leafData = combinedAnalysis.leaf_analysis;
+            if (leafData) {
+                const leafDetection: RoboflowDetection = {
+                    deficiency: leafData.detected_deficiency || 'Unknown',
+                    confidence: leafData.confidence || 0,
+                    severity: leafData.severity || 'Low',
+                    class: leafData.detected_deficiency || 'Unknown'
+                };
+
+                console.log('🍃 Extracted leaf detection:', leafDetection);
+                setDetections([leafDetection]);
+
+                // Set recommendations if available
+                if (leafData.recommendations) {
+                    console.log('✅ Using leaf recommendations from combined analysis');
+                    setRecommendations(leafData.recommendations);
+                }
+            }
+
+            // Extract soil analysis data
+            const soilData = combinedAnalysis.soil_analysis;
+            if (soilData) {
+                console.log('🌍 Extracted soil analysis:', soilData);
+                // Transform the combined analysis soil data to match the expected format
+                setCombinedSoilAnalysis({
+                    soil_detected: soilData.soil_type && soilData.soil_type !== 'Not detected',
+                    soil_type: soilData.soil_type,
+                    confidence: soilData.confidence,
+                    soil_characteristics: {
+                        key_properties: soilData.characteristics || []
+                    },
+                    soil_improvement_actions: soilData.improvement_actions || [],
+                    recommendations: soilData.recommendations || {}
+                });
+            }
+        }
+    }, [combinedAnalysis]);
+
+    useEffect(() => {
+        // Skip processing roboflowAnalysis if we have combinedAnalysis
+        if (combinedAnalysis) {
+            return;
+        }
+
         if (roboflowAnalysis) {
             console.log('🔄 Processing Roboflow output:', roboflowAnalysis);
 
@@ -141,7 +191,7 @@ const FertilizerResultScreen: React.FC = () => {
                 setRecommendations(null);
             }
         }
-    }, [roboflowAnalysis, plantAge]);
+    }, [roboflowAnalysis, plantAge, combinedAnalysis]);
 
     const fetchRecommendations = async (detection: RoboflowDetection) => {
         try {
@@ -213,77 +263,153 @@ const FertilizerResultScreen: React.FC = () => {
                     </View>
                 )}
 
-                {/* Detections Section */}
-                <View style={styles.detectionsContainer}>
-                    <View style={styles.detectionsHeader}>
-                        <Ionicons name="scan" size={24} color="#4CAF50" />
-                        <Text style={styles.sectionTitle}>{t('fertilizer.result.detections.title')}</Text>
-                    </View>
-
-                    {detections.length === 0 ? (
-                        <View style={styles.noDetectionsCard}>
-                            <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
-                            <Text style={styles.noDetectionsTitle}>{t('fertilizer.result.detections.no_deficiencies_title')}</Text>
-                            <Text style={styles.noDetectionsText}>
-                                {t('fertilizer.result.detections.no_deficiencies_text')}
-                            </Text>
+                {/* Soil Analysis Section */}
+                {(soilAnalysis || combinedSoilAnalysis) && (
+                    <View style={styles.soilAnalysisContainer}>
+                        <View style={styles.sectionHeader}>
+                            <Ionicons name="earth" size={24} color="#8B7355" />
+                            <Text style={styles.sectionTitle}>Soil Analysis Results</Text>
                         </View>
-                    ) : (
-                        detections.map((detection, index) => (
-                            <View key={index} style={styles.detectionCard}>
-                                <View style={styles.detectionHeader}>
-                                    <View style={styles.detectionIconContainer}>
-                                        <Ionicons name="leaf" size={24} color="#4CAF50" />
+
+                        {soilImage && (
+                            <View style={styles.imageCard}>
+                                <Image source={{ uri: soilImage }} style={styles.leafImage} />
+                            </View>
+                        )}
+
+                        {(soilAnalysis?.soil_detected !== false || combinedSoilAnalysis?.soil_detected !== false) ? (
+                            <>
+                                <View style={styles.soilTypeCard}>
+                                    <View style={styles.soilTypeHeader}>
+                                        <Text style={styles.soilTypeTitle}>
+                                            {(combinedSoilAnalysis || soilAnalysis).soil_type || 'Unknown Soil Type'}
+                                        </Text>
+                                        <View style={styles.confidenceBadge}>
+                                            <Ionicons name="analytics" size={12} color="#6B7280" />
+                                            <Text style={styles.confidenceText}>
+                                                {((combinedSoilAnalysis || soilAnalysis).confidence?.toFixed(1) || '0')}%
+                                            </Text>
+                                        </View>
                                     </View>
-                                    <View style={styles.detectionInfo}>
-                                        <Text style={styles.detectionTitle}>{detection.deficiency}</Text>
-                                        <View style={styles.detectionMeta}>
-                                            <View style={[styles.severityBadge, {
-                                                backgroundColor: getSeverityColor(detection.severity)
-                                            }]}>
-                                                <Text style={styles.severityText}>{t(`fertilizer.result.detections.severity_${detection.severity.toLowerCase()}`)}</Text>
+
+                                    {(combinedSoilAnalysis || soilAnalysis).soil_characteristics && (
+                                        <View style={styles.characteristicsSection}>
+                                            <Text style={styles.subSectionTitle}>Soil Characteristics</Text>
+                                            {(combinedSoilAnalysis || soilAnalysis).soil_characteristics.key_properties?.map((prop: string, idx: number) => (
+                                                <View key={idx} style={styles.bulletPoint}>
+                                                    <Text style={styles.bulletText}>• {prop}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+
+                                    {(combinedSoilAnalysis || soilAnalysis).soil_improvement_actions && (combinedSoilAnalysis || soilAnalysis).soil_improvement_actions.length > 0 && (
+                                        <View style={styles.improvementSection}>
+                                            <Text style={styles.subSectionTitle}>Improvement Actions</Text>
+                                            {(combinedSoilAnalysis || soilAnalysis).soil_improvement_actions.map((action: string, idx: number) => (
+                                                <View key={idx} style={styles.bulletPoint}>
+                                                    <Text style={styles.bulletText}>• {action}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
+                            </>
+                        ) : (
+                            <View style={styles.noDetectionsCard}>
+                                <Ionicons name="alert-circle" size={48} color="#D97706" />
+                                <Text style={styles.noDetectionsTitle}>Soil Type Not Detected</Text>
+                                <Text style={styles.noDetectionsText}>
+                                    {(combinedSoilAnalysis || soilAnalysis).recommendations?.message || 'Unable to detect soil type from the image'}
+                                </Text>
+                                {(combinedSoilAnalysis || soilAnalysis).recommendations?.suggestions && (
+                                    <View style={styles.suggestionsSection}>
+                                        <Text style={styles.subSectionTitle}>Suggestions:</Text>
+                                        {(combinedSoilAnalysis || soilAnalysis).recommendations.suggestions.map((suggestion: string, idx: number) => (
+                                            <View key={idx} style={styles.bulletPoint}>
+                                                <Text style={styles.bulletText}>• {suggestion}</Text>
                                             </View>
-                                            <View style={styles.confidenceBadge}>
-                                                <Ionicons name="analytics" size={12} color="#6B7280" />
-                                                <Text style={styles.confidenceText}>
-                                                    {(detection.confidence * 100).toFixed(1)}%
-                                                </Text>
+                                        ))}
+                                    </View>
+                                )}
+                            </View>
+                        )}
+                    </View>
+                )}
+
+                {/* Detections Section - Only show for leaf analysis */}
+                {analysisType !== 'soil-only' && (
+                    <View style={styles.detectionsContainer}>
+                        <View style={styles.detectionsHeader}>
+                            <Ionicons name="scan" size={24} color="#4CAF50" />
+                            <Text style={styles.sectionTitle}>{t('fertilizer.result.detections.title')}</Text>
+                        </View>
+
+                        {detections.length === 0 ? (
+                            <View style={styles.noDetectionsCard}>
+                                <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
+                                <Text style={styles.noDetectionsTitle}>{t('fertilizer.result.detections.no_deficiencies_title')}</Text>
+                                <Text style={styles.noDetectionsText}>
+                                    {t('fertilizer.result.detections.no_deficiencies_text')}
+                                </Text>
+                            </View>
+                        ) : (
+                            detections.map((detection, index) => (
+                                <View key={index} style={styles.detectionCard}>
+                                    <View style={styles.detectionHeader}>
+                                        <View style={styles.detectionIconContainer}>
+                                            <Ionicons name="leaf" size={24} color="#4CAF50" />
+                                        </View>
+                                        <View style={styles.detectionInfo}>
+                                            <Text style={styles.detectionTitle}>{detection.deficiency}</Text>
+                                            <View style={styles.detectionMeta}>
+                                                <View style={[styles.severityBadge, {
+                                                    backgroundColor: getSeverityColor(detection.severity)
+                                                }]}>
+                                                    <Text style={styles.severityText}>{t(`fertilizer.result.detections.severity_${detection.severity.toLowerCase()}`)}</Text>
+                                                </View>
+                                                <View style={styles.confidenceBadge}>
+                                                    <Ionicons name="analytics" size={12} color="#6B7280" />
+                                                    <Text style={styles.confidenceText}>
+                                                        {(detection.confidence * 100).toFixed(1)}%
+                                                    </Text>
+                                                </View>
                                             </View>
                                         </View>
                                     </View>
-                                </View>
 
-                                <View style={styles.detectionDetails}>
-                                    <View style={styles.detailItem}>
-                                        <Text style={styles.detailLabel}>{t('fertilizer.result.detections.class')}:</Text>
-                                        <Text style={styles.detailValue}>{detection.class}</Text>
+                                    <View style={styles.detectionDetails}>
+                                        <View style={styles.detailItem}>
+                                            <Text style={styles.detailLabel}>{t('fertilizer.result.detections.class')}:</Text>
+                                            <Text style={styles.detailValue}>{detection.class}</Text>
+                                        </View>
+                                        <View style={styles.detailItem}>
+                                            <Text style={styles.detailLabel}>{t('fertilizer.result.detections.confidence')}:</Text>
+                                            <Text style={styles.detailValue}>
+                                                {(detection.confidence * 100).toFixed(2)}%
+                                            </Text>
+                                        </View>
                                     </View>
-                                    <View style={styles.detailItem}>
-                                        <Text style={styles.detailLabel}>{t('fertilizer.result.detections.confidence')}:</Text>
-                                        <Text style={styles.detailValue}>
-                                            {(detection.confidence * 100).toFixed(2)}%
-                                        </Text>
-                                    </View>
-                                </View>
 
-                                {/* Confidence Progress Bar */}
-                                <View style={styles.progressBarContainer}>
-                                    <View style={styles.progressBarBackground}>
-                                        <View
-                                            style={[
-                                                styles.progressBarFill,
-                                                {
-                                                    width: `${detection.confidence * 100}%`,
-                                                    backgroundColor: getSeverityColor(detection.severity)
-                                                }
-                                            ]}
-                                        />
+                                    {/* Confidence Progress Bar */}
+                                    <View style={styles.progressBarContainer}>
+                                        <View style={styles.progressBarBackground}>
+                                            <View
+                                                style={[
+                                                    styles.progressBarFill,
+                                                    {
+                                                        width: `${detection.confidence * 100}%`,
+                                                        backgroundColor: getSeverityColor(detection.severity)
+                                                    }
+                                                ]}
+                                            />
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                        ))
-                    )}
-                </View>
+                            ))
+                        )}
+                    </View>
+                )}
 
                 {/* Fertilizer Recommendations Section - Only show if deficiencies detected */}
                 {plantAge && detections.length > 0 && (
@@ -978,6 +1104,73 @@ const styles = StyleSheet.create({
         color: '#374151',
         flex: 1,
         lineHeight: 20,
+    },
+    soilAnalysisContainer: {
+        marginTop: 24,
+        marginBottom: 16,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 16,
+    },
+    soilTypeCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+        marginTop: 8,
+    },
+    soilTypeHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    soilTypeTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#8B7355',
+    },
+    characteristicsSection: {
+        marginTop: 12,
+    },
+    improvementSection: {
+        marginTop: 16,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#F3F4F6',
+    },
+    subSectionTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#111827',
+        marginBottom: 8,
+    },
+    bulletPoint: {
+        flexDirection: 'row',
+        marginBottom: 6,
+        paddingLeft: 8,
+    },
+    bulletText: {
+        fontSize: 14,
+        color: '#374151',
+        lineHeight: 20,
+        flex: 1,
+    },
+    suggestionsSection: {
+        marginTop: 12,
+        padding: 12,
+        backgroundColor: '#FEF3C7',
+        borderRadius: 8,
     },
 });
 

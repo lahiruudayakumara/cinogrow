@@ -150,6 +150,7 @@
       "buttons": {
         "retake": "ඡායාරූපය නැවත ගන්න",
         "get_ml_recommendations": "ML නිර්දේශ ලබා ගන්න",
+        "get_soil_ml_recommendations": "පස් විශ්ලේෂණය ලබා ගන්න",
         "add_soil": "වඩා හොඳ ප්‍රතිඵල සඳහා පස් විශ්ලේෂණය එක් කරන්න",
         "get_enhanced": "වැඩිදියුණු කළ ප්‍රතිඵල ලබා ගන්න",
         "analyzing": "විශ්ලේෂණය කරමින්..."

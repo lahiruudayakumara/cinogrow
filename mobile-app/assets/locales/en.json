@@ -150,6 +150,7 @@
       "buttons": {
         "retake": "Retake Photo",
         "get_ml_recommendations": "Get ML Recommendations",
+        "get_soil_ml_recommendations": "Get Soil Analysis",
         "add_soil": "Add Soil Analysis for Better Results",
         "get_enhanced": "Get Enhanced Results",
         "analyzing": "Analyzing..."

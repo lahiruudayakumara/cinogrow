@@ -58,16 +58,13 @@ const PhotoPreview: React.FC = () => {
             // Show age selector first, then perform analysis after age is selected
             setShowAgeSelectorModal(true);
         } else if (imageType === 'soil') {
-            // For now, go to results with basic soil analysis
-            // TODO: Implement soil analysis API
-            router.push({
-                pathname: '/fertilizer/result',
-                params: serializeResultParams({
-                    leafImage: leafImage,
-                    soilImage: imageUri,
-                    analysisType: 'comprehensive'
-                })
-            });
+            // If there's a leaf image, show age selector for combined analysis
+            // Otherwise, perform soil-only analysis
+            if (leafImage) {
+                setShowAgeSelectorModal(true);
+            } else {
+                performSoilAnalysis();
+            }
         }
     };
 
@@ -140,13 +137,112 @@ const PhotoPreview: React.FC = () => {
         }
     };
 
+    const performSoilAnalysis = async (plantAge?: number) => {
+        try {
+            setIsAnalyzing(true);
+            setAnalysisProgress(t('fertilizer.photo_preview.analysis.progress_detecting'));
+
+            console.log('🚀 Starting soil analysis with Roboflow via backend...');
+            console.log(`🖼️ Image URI: ${imageUri}`);
+
+            // If we have both leaf and soil images, perform combined analysis
+            if (leafImage && plantAge) {
+                console.log('🔬 Performing combined leaf + soil analysis...');
+                console.log(`🍃 Leaf Image: ${leafImage}`);
+                console.log(`🌍 Soil Image: ${imageUri}`);
+                console.log(`🌱 Plant Age: ${plantAge} years`);
+
+                const combinedResult = await fertilizerAPI.analyzeCombined(leafImage, imageUri, plantAge);
+
+                console.log('✅ Combined analysis completed:', combinedResult);
+
+                setIsAnalyzing(false);
+
+                // Navigate to results with combined analysis data
+                router.push({
+                    pathname: '/fertilizer/result',
+                    params: serializeResultParams({
+                        leafImage: leafImage,
+                        soilImage: imageUri,
+                        analysisType: 'comprehensive',
+                        combinedAnalysis: combinedResult,
+                        plantAge: plantAge
+                    })
+                });
+            } else {
+                // Soil-only analysis
+                console.log('🤖 Step 1: Calling backend Roboflow Soil API...');
+                const soilResult = await fertilizerAPI.analyzeSoilWithRoboflow(imageUri);
+
+                console.log('✅ Soil detection completed:', soilResult);
+
+                setIsAnalyzing(false);
+
+                // Navigate to results with soil analysis data
+                router.push({
+                    pathname: '/fertilizer/result',
+                    params: serializeResultParams({
+                        leafImage: leafImage,
+                        soilImage: imageUri,
+                        analysisType: leafImage ? 'comprehensive' : 'soil-only',
+                        soilAnalysis: soilResult
+                    })
+                });
+            }
+
+        } catch (error) {
+            console.error('❌ Soil analysis error:', error);
+            setIsAnalyzing(false);
+
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+
+            console.error('🚨 Soil analysis failed with details:', {
+                error: errorMessage,
+                imageUri: imageUri,
+                timestamp: new Date().toISOString()
+            });
+
+            Alert.alert(
+                t('fertilizer.photo_preview.alerts.analysis_failed'),
+                t('fertilizer.photo_preview.alerts.failed_message', { error: errorMessage }),
+                [
+                    {
+                        text: t('fertilizer.photo_preview.alerts.try_again'),
+                        onPress: () => performSoilAnalysis(plantAge)
+                    },
+                    {
+                        text: t('fertilizer.photo_preview.alerts.basic_analysis'),
+                        onPress: () => {
+                            console.log('👤 User chose basic analysis fallback');
+                            // Continue without ML analysis if it fails
+                            router.push({
+                                pathname: '/fertilizer/result',
+                                params: serializeResultParams({
+                                    leafImage: leafImage,
+                                    soilImage: imageUri,
+                                    analysisType: 'comprehensive'
+                                })
+                            });
+                        }
+                    }
+                ]
+            );
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
     const handleAgeConfirm = (plantAge: number) => {
         console.log(`🌱 Plant age selected: ${plantAge} years`);
         setShowAgeSelectorModal(false);
         setSelectedPlantAge(plantAge);
 
-        // Perform analysis with the selected plant age
-        performLeafAnalysis(plantAge);
+        // Perform analysis based on image type
+        if (imageType === 'leaf') {
+            performLeafAnalysis(plantAge);
+        } else if (imageType === 'soil') {
+            performSoilAnalysis(plantAge);
+        }
     };
 
     const handleAddSoilAnalysis = () => {
@@ -372,18 +468,30 @@ const PhotoPreview: React.FC = () => {
                         </View>
                     ) : (
                         <TouchableOpacity
-                            style={styles.continueButton}
+                            style={[styles.continueButton, isAnalyzing && styles.continueButtonDisabled]}
                             onPress={handleContinue}
                             activeOpacity={0.8}
+                            disabled={isAnalyzing}
                         >
                             <LinearGradient
-                                colors={['#8B7355', '#7A5F47']}
+                                colors={isAnalyzing ? ['#9CA3AF', '#6B7280'] : ['#8B7355', '#7A5F47']}
                                 style={styles.continueButtonGradient}
                             >
-                                <Text style={styles.continueButtonText}>
-                                    {t('fertilizer.photo_preview.buttons.get_enhanced')}
-                                </Text>
-                                <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+                                {isAnalyzing ? (
+                                    <>
+                                        <ActivityIndicator size="small" color="#FFFFFF" />
+                                        <Text style={styles.continueButtonText}>
+                                            {t('fertilizer.photo_preview.buttons.analyzing')}
+                                        </Text>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text style={styles.continueButtonText}>
+                                            {t('fertilizer.photo_preview.buttons.get_soil_ml_recommendations')}
+                                        </Text>
+                                        <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+                                    </>
+                                )}
                             </LinearGradient>
                         </TouchableOpacity>
                     )}

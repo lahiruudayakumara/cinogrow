@@ -13,6 +13,14 @@ from PIL import Image
 import io
 from pathlib import Path
 from sqlmodel import Session, select
+
+# Register HEIF/HEIC format support for PIL
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+    logging.info("✅ HEIF/HEIC image format support enabled")
+except ImportError:
+    logging.warning("⚠️ pillow-heif not installed. HEIC images won't be supported.")
 from app.database import get_session
 from app.models.fertilizer_history import (
     FertilizerHistory,

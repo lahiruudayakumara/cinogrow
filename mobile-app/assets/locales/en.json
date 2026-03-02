@@ -44,7 +44,6 @@
       "soil_sample": "Soil Sample",
       "soil_sample_subtitle": "Analyze soil conditions",
       "uploaded": "Uploaded",
-      "ready_for_analysis": "Ready for Analysis",
       "samples_uploaded": "1 of 2 samples uploaded",
       "upload_to_begin": "Upload samples to begin analysis",
       "recent_analysis": "Recent Analysis",
@@ -67,7 +66,7 @@
         "no_deficiencies_title": "No Deficiencies Detected",
         "no_deficiencies_text": "Your plant appears healthy. Continue regular care and monitoring.",
         "severity_high": "High",
-        "severity_moderate": "Moderate",
+        "severity_medium": "Moderate",
         "severity_low": "Low",
         "class": "Class",
         "confidence": "Confidence"
@@ -132,20 +131,43 @@
         "soil": "Soil Sample",
         "quality_good": "Good Quality"
       },
-      "analysis": {
-        "title": "AI Quick Analysis",
-        "status_analyzing": "Analyzing",
-        "status_ready": "Ready",
-        "leaf_condition": "Analyzing leaf condition...",
-        "checking_deficiencies": "Checking for deficiencies...",
-        "soil_ph_issue": "Soil pH imbalance identified",
-        "low_organic": "Low organic matter content",
-        "progress_detecting": "🔍 Detecting deficiencies with Roboflow AI..."
-      },
       "notes": {
         "leaf_analyzing": "Real-time ML analysis in progress. This will provide accurate fertilizer recommendations based on your leaf sample.",
-        "leaf_ready": "Tap \"Get ML Recommendations\" for AI-powered fertilizer advice based on real leaf analysis. Enhanced with soil data for better results.",
         "soil_enhanced": "Enhanced analysis with both leaf and soil samples for comprehensive recommendations."
+      },
+      "process_flow": {
+        "title": "How the Analysis Works",
+        "upload": "Upload",
+        "upload_description": "Image sent securely",
+        "analyze": "Analyze",
+        "analyze_description": "AI detection",
+        "results": "Results",
+        "results_description": "Get recommendations"
+      },
+      "dual_photo": {
+        "title": "Comprehensive Analysis",
+        "subtitle": "Both samples captured",
+        "leaf_sample": "Leaf Sample",
+        "soil_sample": "Soil Sample",
+        "retake_images": "Retake Images"
+      },
+      "instructions": {
+        "title": "Next Steps",
+        "both_samples": "Both samples are ready! Click the button below to get a comprehensive analysis combining leaf deficiency detection and soil type information.",
+        "leaf_only": "You can either analyze this leaf sample now for instant recommendations, or add a soil image first for enhanced comprehensive results.",
+        "soil_only": "Click \"Analyze Soil\" below to get detailed soil analysis and treatment recommendations."
+      },
+      "action_buttons": {
+        "analyzing_both": "Analyzing Both Samples...",
+        "comprehensive_analysis": "Get Comprehensive Analysis",
+        "comprehensive_subtitle": "AI-powered dual analysis",
+        "add_soil_image": "Proceed to Add Soil Image",
+        "add_leaf_image": "Proceed to Add Leaf Image",
+        "recommended_accuracy": "Recommended • Better accuracy",
+        "analyzing": "Analyzing...",
+        "leaf_analysis_only": "Get Only Leaf Analysis",
+        "soil_analysis_only": "Get Only Soil Analysis",
+        "quick_recommendations": "Quick AI recommendations"
       },
       "buttons": {
         "retake": "Retake Photo",
@@ -210,7 +232,16 @@
       "progress": {
         "title": "Leaf Sample Complete",
         "subtitle": "Great! Now upload your soil sample to complete the analysis.",
-        "step": "Step 2 of 2"
+        "step": "Step 2 of 2",
+        "both_images_success": "Both images captured successfully!",
+        "step_complete": "Step 2 of 2 Complete"
+      },
+      "labels": {
+        "captured_images": "Captured Images",
+        "leaf_sample": "Leaf Sample",
+        "add_soil_image": "Add Soil Image",
+        "soil_sample": "Soil Sample",
+        "proceed_analysis": "Proceed to Get Analysis"
       },
       "guidelines": {
         "title": "Soil Photography Guidelines",

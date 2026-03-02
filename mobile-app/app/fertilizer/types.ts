@@ -8,7 +8,10 @@ export type FertilizerHomeParams = {
     soilImage?: string;
 };
 
-export type UploadLeafParams = undefined;
+export type UploadLeafParams = {
+    fromSoil?: string;
+    soilImage?: string;
+};
 
 export type UploadSoilParams = {
     fromLeaf?: string;

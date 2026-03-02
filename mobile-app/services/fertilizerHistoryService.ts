@@ -19,10 +19,15 @@ export interface FertilizerDetection {
 
 export interface FertilizerHistoryRecord {
   id: number;
+  analysis_flow: 'leaf_only' | 'soil_only' | 'combined' | null;
   primary_deficiency: string | null;
   severity: 'Low' | 'Medium' | 'High' | null;
   confidence: number | null;
   image_path: string | null;
+  soil_type: string | null;
+  soil_confidence: number | null;
+  soil_image_path: string | null;
+  soil_characteristics: any | null;
   plant_age: number | null;
   recommendations: any | null;
   analyzed_at: string;

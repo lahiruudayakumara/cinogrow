@@ -227,6 +227,8 @@ const UploadSoilScreen: React.FC = () => {
     const renderProgressCard = () => {
         if (!leafImage) return null;
 
+        const progressPercentage = selectedImage ? 100 : 50;
+
         return (
             <View style={styles.progressCard}>
                 <LinearGradient
@@ -240,15 +242,17 @@ const UploadSoilScreen: React.FC = () => {
                         <Text style={styles.progressTitle}>{t('fertilizer.upload_soil.progress.title')}</Text>
                     </View>
                     <Text style={styles.progressSubtitle}>
-                        {t('fertilizer.upload_soil.progress.subtitle')}
+                        {selectedImage ? t('fertilizer.upload_soil.progress.both_images_success') : t('fertilizer.upload_soil.progress.subtitle')}
                     </Text>
                     <View style={styles.progressBar}>
                         <LinearGradient
                             colors={['#4CAF50', '#45A049']}
-                            style={[styles.progressFill, { width: '50%' }]}
+                            style={[styles.progressFill, { width: `${progressPercentage}%` }]}
                         />
                     </View>
-                    <Text style={styles.progressText}>{t('fertilizer.upload_soil.progress.step')}</Text>
+                    <Text style={styles.progressText}>
+                        {selectedImage ? t('fertilizer.upload_soil.progress.step_complete') : t('fertilizer.upload_soil.progress.step')}
+                    </Text>
                 </LinearGradient>
             </View>
         );
@@ -268,7 +272,15 @@ const UploadSoilScreen: React.FC = () => {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>{t('fertilizer.upload_soil.header.title')}</Text>
+                    <View style={styles.headerTop}>
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={styles.backButton}
+                        >
+                            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle}>{t('fertilizer.upload_soil.header.title')}</Text>
+                    </View>
                     <Text style={styles.headerSubtitle}>
                         {t('fertilizer.upload_soil.header.subtitle')}
                     </Text>
@@ -277,62 +289,136 @@ const UploadSoilScreen: React.FC = () => {
                 {/* Progress Card */}
                 {renderProgressCard()}
 
-                {/* Guidelines Card */}
-                <View style={styles.guidelinesCard}>
-                    <View style={styles.guidelinesHeader}>
-                        <View style={styles.guidelinesIconContainer}>
-                            <Ionicons name="earth" size={24} color="#8B7355" />
-                        </View>
-                        <Text style={styles.guidelinesTitle}>{t('fertilizer.upload_soil.guidelines.title')}</Text>
-                    </View>
-
-                    <View style={styles.guidelinesList}>
-                        {renderGuidelineItem('sunny', t('fertilizer.upload_soil.guidelines.natural_daylight'))}
-                        {renderGuidelineItem('earth-outline', t('fertilizer.upload_soil.guidelines.show_topsoil'))}
-                        {renderGuidelineItem('leaf-outline', t('fertilizer.upload_soil.guidelines.clear_debris'))}
-                        {renderGuidelineItem('water-outline', t('fertilizer.upload_soil.guidelines.moist_soil'))}
-                    </View>
-                </View>
-
-                {/* Upload Section */}
-                <View style={styles.uploadSection}>
-                    <Text style={styles.sectionTitle}>{t('fertilizer.upload_soil.upload.title')}</Text>
-
-                    <View style={styles.actionButtonsContainer}>
-                        {renderActionButton(
-                            'camera',
-                            t('fertilizer.upload_soil.upload.take_photo'),
-                            t('fertilizer.upload_soil.upload.take_photo_subtitle'),
-                            openCamera,
-                            ['#8B7355', '#7A5F47']
-                        )}
-
-                        {renderActionButton(
-                            'images',
-                            t('fertilizer.upload_soil.upload.photo_library'),
-                            t('fertilizer.upload_soil.upload.photo_library_subtitle'),
-                            openImageLibrary,
-                            ['#2196F3', '#1976D2']
-                        )}
-                    </View>
-                </View>
-
-                {/* Image Preview */}
-                {selectedImage && (
-                    <View style={styles.previewSection}>
-                        <Text style={styles.sectionTitle}>{t('fertilizer.upload_soil.preview.title')}</Text>
-                        <View style={styles.imagePreviewCard}>
-                            <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
-                            <View style={styles.imageActions}>
-                                <TouchableOpacity
-                                    style={styles.changeImageButton}
-                                    onPress={handleChooseFile}
-                                >
-                                    <Ionicons name="refresh" size={16} color="#8B7355" />
-                                    <Text style={styles.changeImageText}>{t('fertilizer.upload_soil.preview.change_image')}</Text>
-                                </TouchableOpacity>
+                {/* Existing Leaf Image Display */}
+                {fromLeaf && leafImage && (
+                    <View style={styles.existingImageSection}>
+                        <View style={styles.sectionHeaderRow}>
+                            <Text style={styles.sectionTitle}>{t('fertilizer.upload_soil.labels.captured_images')}</Text>
+                            <View style={styles.progressIndicator}>
+                                <View style={[styles.progressDot, styles.progressDotComplete]} />
+                                <View style={styles.progressLine} />
+                                <View style={[styles.progressDot, selectedImage ? styles.progressDotComplete : styles.progressDotPending]} />
                             </View>
                         </View>
+                        <View style={styles.imagesRow}>
+                            <View style={styles.imageCardWrapper}>
+                                <View style={styles.existingImageCard}>
+                                    <Image source={{ uri: leafImage }} style={styles.existingImage} />
+                                    <View style={styles.existingImageLabel}>
+                                        <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                                        <Text style={styles.existingImageText}>{t('fertilizer.upload_soil.labels.leaf_sample')}</Text>
+                                    </View>
+                                </View>
+                            <TouchableOpacity 
+                                style={styles.retakeIconButton} 
+                                onPress={() => router.back()}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="camera-reverse-outline" size={16} color="#4CAF50" />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        {/* Second image - Soil */}
+                        <View style={styles.imageCardWrapper}>
+                            {!selectedImage ? (
+                                <TouchableOpacity 
+                                    style={styles.addImageCard}
+                                    onPress={handleChooseFile}
+                                    activeOpacity={0.7}
+                                >
+                                    <Ionicons name="add-circle" size={48} color="#8B7355" />
+                                    <Text style={styles.addImageText}>{t('fertilizer.upload_soil.labels.add_soil_image')}</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <View style={styles.imageCardWrapper}>
+                                    <View style={styles.existingImageCard}>
+                                        <Image source={{ uri: selectedImage }} style={styles.existingImage} />
+                                        <View style={styles.existingImageLabel}>
+                                            <Ionicons name="checkmark-circle" size={16} color="#8B7355" />
+                                            <Text style={[styles.existingImageText, { color: '#8B7355' }]}>{t('fertilizer.upload_soil.labels.soil_sample')}</Text>
+                                        </View>
+                                    </View>
+                                    <TouchableOpacity 
+                                        style={styles.retakeIconButton} 
+                                        onPress={handleChooseFile}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons name="camera-reverse-outline" size={16} color="#8B7355" />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+
+                    {selectedImage && (
+                            <TouchableOpacity
+                                style={styles.proceedButton}
+                                onPress={() => {
+                                    router.push({
+                                        pathname: '/fertilizer/photo-preview',
+                                        params: serializePhotoPreviewParams({
+                                            imageUri: selectedImage,
+                                            imageType: 'soil',
+                                            leafImage: leafImage,
+                                            soilImage: selectedImage,
+                                        })
+                                    });
+                                }}
+                                activeOpacity={0.8}
+                            >
+                                <LinearGradient
+                                    colors={['#8B7355', '#7A5F47']}
+                                    style={styles.proceedButtonGradient}
+                                >
+                                    <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                                    <Text style={styles.proceedButtonText}>{t('fertilizer.upload_soil.labels.proceed_analysis')}</Text>
+                                    <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
+
+                {/* Guidelines Card */}
+                {!fromLeaf && (
+                    <View style={styles.guidelinesCard}>
+                        <View style={styles.guidelinesHeader}>
+                            <View style={styles.guidelinesIconContainer}>
+                                <Ionicons name="earth" size={24} color="#8B7355" />
+                            </View>
+                            <Text style={styles.guidelinesTitle}>{t('fertilizer.upload_soil.guidelines.title')}</Text>
+                        </View>
+
+                        <View style={styles.guidelinesList}>
+                            {renderGuidelineItem('sunny', t('fertilizer.upload_soil.guidelines.natural_daylight'))}
+                            {renderGuidelineItem('earth-outline', t('fertilizer.upload_soil.guidelines.show_topsoil'))}
+                            {renderGuidelineItem('leaf-outline', t('fertilizer.upload_soil.guidelines.clear_debris'))}
+                            {renderGuidelineItem('water-outline', t('fertilizer.upload_soil.guidelines.moist_soil'))}
+                        </View>
+                    </View>
+                )}
+
+                {/* Upload Section */}
+                {!fromLeaf && (
+                    <View style={styles.uploadSection}>
+                        <Text style={styles.sectionTitle}>{t('fertilizer.upload_soil.upload.title')}</Text>
+
+                        <View style={styles.actionButtonsContainer}>
+                            {renderActionButton(
+                                'camera',
+                                t('fertilizer.upload_soil.upload.take_photo'),
+                                t('fertilizer.upload_soil.upload.take_photo_subtitle'),
+                                openCamera,
+                                ['#8B7355', '#7A5F47']
+                            )}
+
+                            {renderActionButton(
+                                'images',
+                                t('fertilizer.upload_soil.upload.photo_library'),
+                                t('fertilizer.upload_soil.upload.photo_library_subtitle'),
+                                openImageLibrary,
+                                ['#2196F3', '#1976D2']
+                            )}                    </View>
                     </View>
                 )}
             </ScrollView>
@@ -353,12 +439,19 @@ const styles = StyleSheet.create({
         marginTop: 20,
         marginBottom: 24,
     },
-    headerTitle: {
-        fontSize: 28,
-        fontWeight: '800',
-        color: '#111827',
+    headerTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 8,
-        letterSpacing: -0.5,
+    },
+    backButton: {
+        marginRight: 12,
+        padding: 4,
+    },
+    headerTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#111827',
     },
     headerSubtitle: {
         fontSize: 16,
@@ -523,46 +616,126 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.8)',
         flexWrap: 'wrap',
     },
-    previewSection: {
-        marginBottom: 32,
+    existingImageSection: {
+        marginBottom: 24,
     },
-    imagePreviewCard: {
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    progressIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    progressDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+    },
+    progressDotComplete: {
+        backgroundColor: '#4CAF50',
+    },
+    progressDotPending: {
+        backgroundColor: '#E5E7EB',
+    },
+    progressLine: {
+        width: 24,
+        height: 2,
+        backgroundColor: '#E5E7EB',
+    },
+    imagesRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 16,
+    },
+    imageCardWrapper: {
+        flex: 1,
+        position: 'relative',
+    },
+    existingImageCard: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
-        padding: 20,
+        padding: 12,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    existingImage: {
+        width: '100%',
+        height: 160,
+        borderRadius: 12,
+        marginBottom: 8,
+    },
+    existingImageLabel: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    existingImageText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#4CAF50',
+    },
+    retakeIconButton: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
         elevation: 3,
-        alignItems: 'center',
     },
-    selectedImage: {
-        width: 200,
-        height: 200,
-        borderRadius: 12,
-        marginBottom: 16,
-        resizeMode: 'cover',
-    },
-    imageActions: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-    },
-    changeImageButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    addImageCard: {
+        flex: 1,
         backgroundColor: '#FEF7ED',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: '#FED7AA',
-        gap: 6,
+        borderRadius: 16,
+        padding: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 212,
+        borderWidth: 2,
+        borderColor: '#8B7355',
+        borderStyle: 'dashed',
     },
-    changeImageText: {
+    addImageText: {
         fontSize: 14,
-        color: '#8B7355',
         fontWeight: '600',
+        color: '#8B7355',
+        marginTop: 12,
+    },
+    proceedButton: {
+        borderRadius: 16,
+        overflow: 'hidden',
+        shadowColor: '#8B7355',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    proceedButtonGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        gap: 8,
+    },
+    proceedButtonText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        flex: 1,
+        textAlign: 'center',
     },
 });
 

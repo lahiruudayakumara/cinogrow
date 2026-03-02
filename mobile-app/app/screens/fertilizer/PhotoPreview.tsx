@@ -314,31 +314,31 @@ const PhotoPreview: React.FC = () => {
                         </View>
                         <View style={styles.processStepContent}>
                             <Text style={styles.processStepLabel}>{t('fertilizer.photo_preview.process_flow.upload')}</Text>
-                    
+
                         </View>
                     </View>
-                    
+
                     <Ionicons name="chevron-forward" size={16} color="#D1D5DB" style={styles.processArrow} />
-                    
+
                     <View style={styles.processStep}>
                         <View style={styles.processStepIcon}>
                             <Ionicons name="analytics" size={20} color="#4CAF50" />
                         </View>
                         <View style={styles.processStepContent}>
                             <Text style={styles.processStepLabel}>{t('fertilizer.photo_preview.process_flow.analyze')}</Text>
-                        
+
                         </View>
                     </View>
-                    
+
                     <Ionicons name="chevron-forward" size={16} color="#D1D5DB" style={styles.processArrow} />
-                    
+
                     <View style={styles.processStep}>
                         <View style={styles.processStepIcon}>
                             <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
                         </View>
                         <View style={styles.processStepContent}>
                             <Text style={styles.processStepLabel}>{t('fertilizer.photo_preview.process_flow.results')}</Text>
-                            
+
                         </View>
                     </View>
                 </View>
@@ -387,7 +387,7 @@ const PhotoPreview: React.FC = () => {
                             <Text style={styles.dualPhotoTitle}>{t('fertilizer.photo_preview.dual_photo.title')}</Text>
                             <Text style={styles.dualPhotoSubtitle}>{t('fertilizer.photo_preview.dual_photo.subtitle')}</Text>
                         </View>
-                        
+
                         <View style={styles.dualImagesContainer}>
                             {/* Leaf Image */}
                             <View style={styles.singleImageWrapper}>
@@ -401,7 +401,7 @@ const PhotoPreview: React.FC = () => {
                                     resizeMode="cover"
                                 />
                             </View>
-                            
+
                             {/* Soil Image */}
                             <View style={styles.singleImageWrapper}>
                                 <View style={styles.singleImageHeader}>
@@ -415,7 +415,7 @@ const PhotoPreview: React.FC = () => {
                                 />
                             </View>
                         </View>
-                        
+
                         {/* Retake Button */}
                         <TouchableOpacity
                             style={styles.retakeButtonBelowImage}
@@ -480,9 +480,9 @@ const PhotoPreview: React.FC = () => {
                             <Text style={styles.instructionText}>
                                 {leafImage && soilImage
                                     ? t('fertilizer.photo_preview.instructions.both_samples')
-                                    : imageType === 'leaf' 
-                                    ? t('fertilizer.photo_preview.instructions.leaf_only')
-                                    : t('fertilizer.photo_preview.instructions.soil_only')}
+                                    : imageType === 'leaf'
+                                        ? t('fertilizer.photo_preview.instructions.leaf_only')
+                                        : t('fertilizer.photo_preview.instructions.soil_only')}
                             </Text>
                         </View>
                     </View>
@@ -500,9 +500,7 @@ const PhotoPreview: React.FC = () => {
                         >
                             {isAnalyzing ? (
                                 <View style={styles.actionButtonContent}>
-                                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                        <Ionicons name={imageType === 'leaf' ? 'leaf' : 'earth'} size={24} color="#4CAF50" />
-                                    </Animated.View>
+                                    <ActivityIndicator size={24} color="#4CAF50" />
                                     <Text style={styles.analyzingText}>{t('fertilizer.photo_preview.action_buttons.analyzing_both')}</Text>
                                 </View>
                             ) : (
@@ -548,9 +546,7 @@ const PhotoPreview: React.FC = () => {
                             >
                                 {isAnalyzing ? (
                                     <View style={styles.actionButtonContent}>
-                                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                            <Ionicons name="leaf" size={24} color="#4CAF50" />
-                                        </Animated.View>
+                                        <ActivityIndicator size={24} color="#4CAF50" />
                                         <Text style={styles.analyzingText}>{t('fertilizer.photo_preview.action_buttons.analyzing')}</Text>
                                     </View>
                                 ) : (
@@ -597,9 +593,7 @@ const PhotoPreview: React.FC = () => {
                             >
                                 {isAnalyzing ? (
                                     <View style={styles.actionButtonContent}>
-                                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                                            <Ionicons name="earth" size={24} color="#8B7355" />
-                                        </Animated.View>
+                                        <ActivityIndicator size={24} color="#8B7355" />
                                         <Text style={styles.brownAnalyzingText}>{t('fertilizer.photo_preview.action_buttons.analyzing')}</Text>
                                     </View>
                                 ) : (

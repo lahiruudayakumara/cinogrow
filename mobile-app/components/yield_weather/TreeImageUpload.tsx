@@ -26,7 +26,8 @@ interface TreeImageUploadProps {
   onAnalysisComplete: (result: {
     stem_count: number;
     stem_circumference_inches: number;
-    confidence: number;
+    harvestable_stems: number;
+    total_stems: number;
   }) => void;
   onCancel?: () => void;
 }
@@ -76,8 +77,13 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
       });
 
       if (!result.canceled && result.assets[0]) {
-        setImage(result.assets[0].uri);
+        const imageUri = result.assets[0].uri;
+        console.log('📸 Camera image URI:', imageUri);
+        console.log('📸 Image dimensions:', result.assets[0].width, 'x', result.assets[0].height);
+        setImage(imageUri);
         setError(null);
+      } else {
+        console.log('❌ Camera capture canceled');
       }
     } catch (error) {
       console.error('Camera error:', error);
@@ -145,21 +151,36 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
       console.log('Analysis result:', result);
 
       if (result.success) {
+        // Calculate average circumference from individual stems
+        const avgCircumference = result.individual_stems.length > 0
+          ? result.individual_stems.reduce((sum, stem) => sum + stem.circumference_inches, 0) / result.individual_stems.length
+          : 0;
+        
+        // Calculate overall confidence
+        const avgConfidence = result.individual_stems.length > 0
+          ? result.individual_stems.reduce((sum, stem) => sum + stem.confidence, 0) / result.individual_stems.length
+          : 0;
+        
         Alert.alert(
           t('yield_weather.my_yield.tree_image_upload.analysis_complete'),
           t('yield_weather.my_yield.tree_image_upload.detected_stems_message', {
-            count: result.stem_count,
-            circumference: result.stem_circumference_inches,
-            confidence: Math.round(result.confidence * 100)
+            count: result.total_stems_detected,
+            circumference: avgCircumference.toFixed(2),
+            confidence: Math.round(avgConfidence * 100)
+          }) + '\n\n' + 
+          t('yield_weather.my_yield.tree_image_upload.harvestable_stems_message', {
+            harvestable: result.harvestable_stems,
+            total: result.total_stems_detected
           }),
           [
             {
               text: t('yield_weather.my_yield.tree_image_upload.use_results'),
               onPress: () => {
                 onAnalysisComplete({
-                  stem_count: result.stem_count,
-                  stem_circumference_inches: result.stem_circumference_inches,
-                  confidence: result.confidence,
+                  stem_count: result.total_stems_detected,
+                  stem_circumference_inches: avgCircumference,
+                  harvestable_stems: result.harvestable_stems,
+                  total_stems: result.total_stems_detected,
                 });
               },
             },
@@ -199,20 +220,74 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
         )}
       </View>
 
-      <View style={styles.infoBox}>
-        <Ionicons name="information-circle" size={20} color="#2196F3" />
-        <Text style={styles.infoText}>
-          {t('yield_weather.my_yield.tree_image_upload.info_text')}
-        </Text>
-      </View>
+      <Text style={styles.treeCodeLabel}>
+        {t('yield_weather.my_yield.tree_image_upload.tree_label')}: <Text style={styles.treeCodeValue}>{treeCode}</Text>
+      </Text>
 
-      <Text style={styles.treeCodeLabel}>{t('yield_weather.my_yield.tree_image_upload.tree_label')}: {treeCode}</Text>
+      {/* Photography Instructions */}
+      <View style={styles.instructionsBox}>
+        <View style={styles.instructionsHeader}>
+          <Ionicons name="information-circle" size={22} color="#4CAF50" />
+          <Text style={styles.instructionsTitle}>
+            {t('yield_weather.my_yield.tree_image_upload.photo_instructions_title')}
+          </Text>
+        </View>
+        <Text style={styles.instructionsSubtitle}>
+          {t('yield_weather.my_yield.tree_image_upload.photo_instructions_subtitle')}
+        </Text>
+        
+        <View style={styles.instructionItem}>
+          <Ionicons name="arrow-down-circle" size={18} color="#4CAF50" />
+          <Text style={styles.instructionText}>
+            {t('yield_weather.my_yield.tree_image_upload.instruction_distance_ground')}
+          </Text>
+        </View>
+        
+        <View style={styles.instructionItem}>
+          <Ionicons name="resize" size={18} color="#4CAF50" />
+          <Text style={styles.instructionText}>
+            {t('yield_weather.my_yield.tree_image_upload.instruction_distance_stem')}
+          </Text>
+        </View>
+        
+        <View style={styles.instructionItem}>
+          <Ionicons name="sunny" size={18} color="#4CAF50" />
+          <Text style={styles.instructionText}>
+            {t('yield_weather.my_yield.tree_image_upload.instruction_lighting')}
+          </Text>
+        </View>
+        
+        <View style={styles.instructionItem}>
+          <Ionicons name="eye" size={18} color="#4CAF50" />
+          <Text style={styles.instructionText}>
+            {t('yield_weather.my_yield.tree_image_upload.instruction_focus')}
+          </Text>
+        </View>
+        
+        <View style={styles.instructionItem}>
+          <Ionicons name="image" size={18} color="#4CAF50" />
+          <Text style={styles.instructionText}>
+            {t('yield_weather.my_yield.tree_image_upload.instruction_angle')}
+          </Text>
+        </View>
+      </View>
 
       {/* Single Image Display */}
       <View style={styles.singleImageContainer}>
         {image ? (
           <View style={styles.imageContainer}>
-            <Image source={{ uri: image }} style={styles.singleImage} />
+            <Image 
+              key={image}
+              source={{ uri: image }} 
+              style={styles.singleImage}
+              resizeMode="cover"
+              onError={(error) => {
+                console.error('Image load error:', error.nativeEvent.error);
+                Alert.alert('Error', 'Failed to load image. Please try again.');
+              }}
+              onLoad={() => console.log('✅ Image loaded successfully:', image)}
+              onLoadStart={() => console.log('🔄 Image loading started...')}
+            />
             <TouchableOpacity
               style={styles.removeButton}
               onPress={removeImage}
@@ -231,7 +306,7 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.button, styles.cameraButton]}
+          style={[styles.button, styles.cameraButton, (analyzing || !!image) && styles.buttonDisabled]}
           onPress={pickImageFromCamera}
           disabled={analyzing || !!image}
         >
@@ -240,11 +315,11 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.libraryButton]}
+          style={[styles.button, styles.libraryButton, (analyzing || !!image) && styles.buttonDisabled]}
           onPress={pickImageFromLibrary}
           disabled={analyzing || !!image}
         >
-          <Ionicons name="image" size={20} color="#FFFFFF" />
+          <Ionicons name="images" size={20} color="#FFFFFF" />
           <Text style={styles.buttonText}>{t('yield_weather.my_yield.tree_image_upload.choose_photo')}</Text>
         </TouchableOpacity>
       </View>
@@ -269,15 +344,6 @@ export const TreeImageUpload: React.FC<TreeImageUploadProps> = ({
           )}
         </TouchableOpacity>
       )}
-
-      {/* Tips */}
-      <View style={styles.tipsBox}>
-        <Text style={styles.tipsTitle}>{t('yield_weather.my_yield.tree_image_upload.photo_tips_title')}:</Text>
-        <Text style={styles.tipText}>• {t('yield_weather.my_yield.tree_image_upload.tip_lighting')}</Text>
-        <Text style={styles.tipText}>• {t('yield_weather.my_yield.tree_image_upload.tip_steady')}</Text>
-        <Text style={styles.tipText}>• {t('yield_weather.my_yield.tree_image_upload.tip_stem_area')}</Text>
-        <Text style={styles.tipText}>• {t('yield_weather.my_yield.tree_image_upload.tip_front_view')}</Text>
-      </View>
     </ScrollView>
   );
 };
@@ -286,6 +352,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: '#FAFAFA',
   },
   header: {
     flexDirection: 'row',
@@ -298,7 +365,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
     marginLeft: 8,
@@ -306,43 +373,80 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 4,
   },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: '#E3F2FD',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  infoText: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#1976D2',
-  },
   treeCodeLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4CAF50',
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#666',
     marginBottom: 16,
+  },
+  treeCodeValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  instructionsBox: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  instructionsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  instructionsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginLeft: 8,
+  },
+  instructionsSubtitle: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 12,
+    marginLeft: 30,
+  },
+  instructionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingLeft: 8,
+  },
+  instructionText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 12,
+    lineHeight: 20,
   },
   imageGrid: {
     flexDirection: 'row',
   },
   singleImageContainer: {
     marginBottom: 20,
-    alignItems: 'center',
+    width: '100%',
   },
   imageContainer: {
     width: '100%',
-    aspectRatio: 0.75,
+    height: 400,
     borderRadius: 12,
     overflow: 'hidden',
-    position: 'relative',
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   singleImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    backgroundColor: 'transparent',
   },
   removeButton: {
     position: 'absolute',
@@ -364,29 +468,45 @@ const styles = StyleSheet.create({
     aspectRatio: 0.75,
     backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    marginTop: 8,
-    fontSize: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#CCCCCC',
+  },
+  emptySlotText: {
+    marginTop: 12,
+    fontSize: 14,
     color: '#999',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
+    gap: 12,
   },
   button: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginHorizontal: 4,
+    padding: 14,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
   },
   cameraButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#4CAF50',
   },
   libraryButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: '#66BB6A',
+  },
+  buttonDisabled: {
+    backgroundColor: '#BDBDBD',
+    opacity: 0.6,
   },
   buttonText: {
     color: '#FFFFFF',
@@ -413,35 +533,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#4CAF50',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   analyzeButtonDisabled: {
     backgroundColor: '#BDBDBD',
+    opacity: 0.7,
   },
   analyzeButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
-  },
-  tipsBox: {
-    backgroundColor: '#FFF9E6',
-    padding: 16,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#FFC107',
-  },
-  tipsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#F57C00',
-    marginBottom: 8,
-  },
-  tipText: {
-    fontSize: 14,
-    color: '#F57C00',
-    marginBottom: 4,
   },
 });
 

@@ -322,7 +322,8 @@ const YieldPredictorScreen = () => {
   const handleImageAnalysisComplete = (result: {
     stem_count: number;
     stem_circumference_inches: number;
-    confidence: number;
+    harvestable_stems: number;
+    total_stems: number;
   }) => {
     // Update current tree data with image analysis results
     const updatedTrees = [...treeData];
@@ -336,7 +337,12 @@ const YieldPredictorScreen = () => {
     
     Alert.alert(
       t('yield_weather.my_yield.analysis_complete_title'),
-      t('yield_weather.my_yield.stem_data_filled_message', { confidence: Math.round(result.confidence * 100) }),
+      t('yield_weather.my_yield.stem_data_filled_message_with_harvestable', { 
+        total: result.total_stems,
+        harvestable: result.harvestable_stems
+      }) || t('yield_weather.my_yield.stem_data_filled_message', { 
+        confidence: 85 
+      }),
       [{ text: 'OK' }]
     );
   };
@@ -1058,7 +1064,10 @@ const YieldPredictorScreen = () => {
                           styles.inputMethodButton,
                           useImageUpload && styles.inputMethodButtonActive
                         ]}
-                        onPress={() => setUseImageUpload(true)}
+                        onPress={() => {
+                          setUseImageUpload(true);
+                          setShowImageUpload(true);
+                        }}
                       >
                         <Ionicons 
                           name="camera-outline" 
@@ -1073,68 +1082,30 @@ const YieldPredictorScreen = () => {
                     </View>
                   </View>
 
-                  {useImageUpload ? (
-                    /* Image Upload Section */
-                    <View style={styles.imageUploadSection}>
-                      <View style={styles.infoBox}>
-                        <Ionicons name="information-circle" size={20} color="#2196F3" />
-                        <Text style={styles.infoText}>
-                          {t('yield_weather.my_yield.image_upload_section.info_text')}
-                        </Text>
-                      </View>
-                      
-                      <TouchableOpacity
-                        style={styles.uploadButton}
-                        onPress={() => setShowImageUpload(true)}
-                      >
-                        <Ionicons name="camera" size={24} color="#FFFFFF" />
-                        <Text style={styles.uploadButtonText}>{t('yield_weather.my_yield.image_upload_section.upload_button')}</Text>
-                      </TouchableOpacity>
-
-                      {/* Show filled values if available */}
-                      {(treeData[currentTreeIndex].stem_circumference_inches || 
-                        treeData[currentTreeIndex].num_existing_stems) && (
-                        <View style={styles.detectedValuesBox}>
-                          <Text style={styles.detectedValuesTitle}>{t('yield_weather.my_yield.image_upload_section.detected_values_title')}:</Text>
-                          {treeData[currentTreeIndex].num_existing_stems && (
-                            <Text style={styles.detectedValue}>
-                              • {t('yield_weather.my_yield.image_upload_section.stem_count')}: {treeData[currentTreeIndex].num_existing_stems}
-                            </Text>
-                          )}
-                          {treeData[currentTreeIndex].stem_circumference_inches && (
-                            <Text style={styles.detectedValue}>
-                              • {t('yield_weather.my_yield.image_upload_section.circumference')}: {treeData[currentTreeIndex].stem_circumference_inches}" 
-                            </Text>
-                          )}
-                        </View>
-                      )}
+                  {/* Manual Input Section */}
+                  <View>
+                    <View style={styles.formGroup}>
+                      <Text style={styles.label}>{t('yield_weather.my_yield.stem_circumference')} *</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={treeData[currentTreeIndex].stem_circumference_inches}
+                        onChangeText={(text) => updateTreeData(currentTreeIndex, 'stem_circumference_inches', text)}
+                        placeholder={t('yield_weather.my_yield.enter_circumference_placeholder')}
+                        keyboardType="numeric"
+                      />
                     </View>
-                  ) : (
-                    /* Manual Input Section */
-                    <View>
-                      <View style={styles.formGroup}>
-                        <Text style={styles.label}>{t('yield_weather.my_yield.stem_circumference')} *</Text>
-                        <TextInput
-                          style={styles.input}
-                          value={treeData[currentTreeIndex].stem_circumference_inches}
-                          onChangeText={(text) => updateTreeData(currentTreeIndex, 'stem_circumference_inches', text)}
-                          placeholder={t('yield_weather.my_yield.enter_circumference_placeholder')}
-                          keyboardType="numeric"
-                        />
-                      </View>
 
-                      <View style={styles.formGroup}>
-                        <Text style={styles.label}>{t('yield_weather.my_yield.number_of_stems')} *</Text>
-                        <TextInput
-                          style={styles.input}
-                          value={treeData[currentTreeIndex].num_existing_stems}
-                          onChangeText={(text) => updateTreeData(currentTreeIndex, 'num_existing_stems', text)}
-                          placeholder={t('yield_weather.my_yield.enter_stems_placeholder')}
-                          keyboardType="numeric"
-                        />
-                      </View>
+                    <View style={styles.formGroup}>
+                      <Text style={styles.label}>{t('yield_weather.my_yield.number_of_stems')} *</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={treeData[currentTreeIndex].num_existing_stems}
+                        onChangeText={(text) => updateTreeData(currentTreeIndex, 'num_existing_stems', text)}
+                        placeholder={t('yield_weather.my_yield.enter_stems_placeholder')}
+                        keyboardType="numeric"
+                      />
                     </View>
-                  )}
+                  </View>
 
                   <View style={styles.formGroup}>
                     <Text style={styles.label}>{t('yield_weather.my_yield.fertilizer_used_label')}</Text>

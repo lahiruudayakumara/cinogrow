@@ -10,24 +10,32 @@ const TREE_ANALYSIS_ENDPOINT = `${API_BASE_URL}/tree-analysis`;
 
 export interface TreeAnalysisResult {
   success: boolean;
-  stem_count: number;
-  stem_circumference_inches: number;
-  confidence: number;
+  total_stems_detected: number;
+  harvestable_stems: number;
   individual_stems: Array<{
     circumference_inches: number;
     confidence: number;
+    harvestable: boolean;
   }>;
   filename?: string;
   analyzed_at?: string;
+  raw_response?: any;
 }
 
 export interface MultiTreeAnalysisResult {
   success: boolean;
   images_analyzed: number;
-  average_stem_count: number;
-  average_circumference_inches: number;
+  average_total_stems: number;
+  average_harvestable_stems: number;
+  total_stems_detected: number;
+  total_harvestable_stems: number;
   overall_confidence: number;
   individual_results: TreeAnalysisResult[];
+  all_stems: Array<{
+    circumference_inches: number;
+    confidence: number;
+    harvestable: boolean;
+  }>;
   tree_code?: string;
   analyzed_at?: string;
 }
@@ -39,8 +47,8 @@ export interface BatchTreeAnalysisResult {
   total_images: number;
   tree_results: MultiTreeAnalysisResult[];
   overall_statistics: {
-    average_stem_count_across_trees: number;
-    average_circumference_across_trees: number;
+    average_total_stems_across_trees: number;
+    average_harvestable_stems_across_trees: number;
     overall_confidence: number;
   };
   analyzed_at: string;

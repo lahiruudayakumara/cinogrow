@@ -252,58 +252,58 @@ const FertilizerResultScreen: React.FC = () => {
         if (deficiency.includes('nitrogen') || deficiency.includes('n')) {
             npkRatio = '20:10:10';
             fertilizerName = 'Nitrogen-Rich Fertilizer';
-            additionalNotes = 'High nitrogen is essential for leaf growth and green color restoration.';
+            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.nitrogen');
         } else if (deficiency.includes('phosphorus') || deficiency.includes('p')) {
             npkRatio = '10:20:10';
             fertilizerName = 'Phosphorus-Rich Fertilizer';
-            additionalNotes = 'Phosphorus promotes root development and energy transfer.';
+            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.phosphorus');
         } else if (deficiency.includes('potassium') || deficiency.includes('k')) {
             npkRatio = '10:10:20';
             fertilizerName = 'Potassium-Rich Fertilizer';
-            additionalNotes = 'Potassium enhances disease resistance and overall plant health.';
+            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.potassium');
         } else if (deficiency.includes('iron') || deficiency.includes('fe')) {
             fertilizerName = 'Iron Chelate Supplement';
             npkRatio = '0:0:0 + Fe';
-            additionalNotes = 'Iron deficiency causes yellowing of young leaves (chlorosis).';
+            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.iron');
         } else if (deficiency.includes('magnesium') || deficiency.includes('mg')) {
             fertilizerName = 'Magnesium Sulfate (Epsom Salt)';
             npkRatio = '0:0:0 + Mg';
             dosage = '1-2 tablespoons per gallon of water';
-            additionalNotes = 'Magnesium is crucial for chlorophyll production.';
+            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.magnesium');
         }
 
         // Soil-type specific adjustments
         if (soilType.includes('clay')) {
             dosage = '40-60g per plant';
-            additionalNotes += ' Clay soil retains nutrients well but may have drainage issues. Apply in smaller doses more frequently.';
+            additionalNotes += t('fertilizer.result.recommendations.soil_notes.clay');
         } else if (soilType.includes('sand')) {
             dosage = '75-100g per plant';
-            additionalNotes += ' Sandy soil drains quickly and loses nutrients faster. Apply slightly higher doses with increased frequency.';
+            additionalNotes += t('fertilizer.result.recommendations.soil_notes.sandy');
         } else if (soilType.includes('loam')) {
             dosage = '50-75g per plant';
-            additionalNotes += ' Loamy soil has good nutrient retention and drainage. Standard application rates work well.';
+            additionalNotes += t('fertilizer.result.recommendations.soil_notes.loamy');
         } else if (soilType.includes('silt')) {
             dosage = '60-80g per plant';
-            additionalNotes += ' Silty soil has medium drainage. Monitor moisture levels carefully.';
+            additionalNotes += t('fertilizer.result.recommendations.soil_notes.silty');
         }
 
         // Age-based adjustments
-        let frequency = 'Every 4-6 weeks';
-        let applicationMethod = 'Apply around the drip line, avoiding direct contact with the trunk.';
+        let frequency = t('fertilizer.result.recommendations.frequencies.every_4_6_weeks');
+        let applicationMethod = t('fertilizer.result.recommendations.application_methods.avoid_trunk');
         
         if (age <= 2) {
             dosage = dosage.replace(/\\d+-\\d+/g, (match) => {
                 const [min, max] = match.split('-').map(Number);
                 return `${Math.floor(min * 0.5)}-${Math.floor(max * 0.6)}`;
             });
-            frequency = 'Every 6-8 weeks';
-            applicationMethod = 'Apply in a circle 15-20cm from the trunk. Young plants need gentle feeding.';
+            frequency = t('fertilizer.result.recommendations.frequencies.every_6_8_weeks');
+            applicationMethod = t('fertilizer.result.recommendations.application_methods.young_plants');
         } else if (age <= 5) {
-            frequency = 'Every 4-6 weeks';
-            applicationMethod = 'Apply in a circle around the plant canopy edge (drip line).';
+            frequency = t('fertilizer.result.recommendations.frequencies.every_4_6_weeks');
+            applicationMethod = t('fertilizer.result.recommendations.application_methods.growing_plants');
         } else {
-            frequency = 'Every 3-4 weeks during growing season';
-            applicationMethod = 'Broadcast evenly around the drip line extending 30-50cm outward. Mature trees benefit from broader application.';
+            frequency = t('fertilizer.result.recommendations.frequencies.every_3_4_weeks');
+            applicationMethod = t('fertilizer.result.recommendations.application_methods.mature_plants');
         }
 
         // Create comprehensive recommendation

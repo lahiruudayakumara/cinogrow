@@ -108,6 +108,59 @@
         },
         "additional_care": {
           "title": "Additional Care"
+        },
+        "growth_stages": {
+          "young_plant": "Young Plant (Establishment)",
+          "growing_plant": "Growing Plant (Development)",
+          "mature_plant": "Mature Plant (Production)",
+          "young_description": "Focus on establishing healthy root system and vegetative growth.",
+          "growing_description": "Active growth phase - building strong structure and leaf canopy.",
+          "mature_description": "Mature plant - focus on maintaining health and productivity."
+        },
+        "frequencies": {
+          "every_6_8_weeks": "Every 6-8 weeks",
+          "every_4_6_weeks": "Every 4-6 weeks",
+          "every_3_4_weeks": "Every 3-4 weeks during growing season"
+        },
+        "application_methods": {
+          "young_plants": "Apply in a circle 15-20cm from the trunk. Young plants need gentle feeding.",
+          "growing_plants": "Apply in a circle around the plant canopy edge (drip line).",
+          "mature_plants": "Broadcast evenly around the drip line extending 30-50cm outward. Mature trees benefit from broader application.",
+          "avoid_trunk": "Apply around the drip line, avoiding direct contact with the trunk."
+        },
+        "watering": {
+          "sandy_soil": "Water deeply 2-3 times per week. Sandy soil drains quickly.",
+          "clay_soil": "Water deeply once per week. Clay retains moisture longer.",
+          "default": "Water deeply 1-2 times per week. Maintain consistent moisture."
+        },
+        "mulching": {
+          "template": "Apply 5-7cm organic mulch around the base. This is especially important for {{soilType}} soil to regulate moisture and temperature."
+        },
+        "monitoring": {
+          "template_base": "Check leaves weekly for improvement. Expected changes: ",
+          "nitrogen_change": "greening of leaves",
+          "iron_change": "new leaves turning darker green",
+          "general_change": "overall health improvement",
+          "timeline": " within 2-3 weeks."
+        },
+        "soil_testing": {
+          "template_base": "Given your {{soilType}} soil type, consider soil pH testing. ",
+          "clay_note": "Clay soils may have pH issues.",
+          "sandy_note": "Sandy soils may be acidic.",
+          "default_note": "Regular testing ensures optimal nutrient availability."
+        },
+        "fertilizer_notes": {
+          "nitrogen": "High nitrogen is essential for leaf growth and green color restoration.",
+          "phosphorus": "Phosphorus promotes root development and energy transfer.",
+          "potassium": "Potassium enhances disease resistance and overall plant health.",
+          "iron": "Iron deficiency causes yellowing of young leaves (chlorosis).",
+          "magnesium": "Magnesium is crucial for chlorophyll production."
+        },
+        "soil_notes": {
+          "clay": " Clay soil retains nutrients well but may have drainage issues. Apply in smaller doses more frequently.",
+          "sandy": " Sandy soil drains quickly and loses nutrients faster. Apply slightly higher doses with increased frequency.",
+          "loamy": " Loamy soil has good nutrient retention and drainage. Standard application rates work well.",
+          "silty": " Silty soil has medium drainage. Monitor moisture levels carefully."
         }
       },
       "actions": {
@@ -684,14 +737,21 @@
       "fertilizer_used_label": "Fertilizer Used",
       "yes": "Yes",
       "tree_image_upload": {
-        "title": "Upload Tree Images",
-        "info_text": "Upload 1 image of the tree for AI stem detection",
+        "title": "Tree Stem Analysis",
+        "info_text": "Take a photo of the tree stem for AI-powered measurement",
         "tree_label": "Tree",
         "no_image_selected": "No image selected",
         "take_photo": "Take Photo",
-        "choose_photo": "Choose Photo",
+        "choose_photo": "Choose from Gallery",
         "analyze_image": "Analyze Image",
         "analyzing": "Analyzing",
+        "photo_instructions_title": "Photography Instructions",
+        "photo_instructions_subtitle": "Follow these guidelines for accurate measurements",
+        "instruction_distance_ground": "Position camera 20cm (8 inches) from ground level",
+        "instruction_distance_stem": "Maintain 20cm (8 inches) distance from the stem",
+        "instruction_lighting": "Take photo in good natural lighting",
+        "instruction_focus": "Ensure stem area is clearly visible and in focus",
+        "instruction_angle": "Capture from a straight, front-facing angle",
         "photo_tips_title": "Photo Tips",
         "tip_lighting": "Ensure good lighting",
         "tip_steady": "Keep the camera steady",
@@ -708,6 +768,7 @@
         "add_image_to_analyze": "Please add an image to analyze.",
         "analysis_complete": "Analysis Complete",
         "detected_stems_message": "Detected {{count}} stems with circumference of {{circumference}} inches ({{confidence}}% confidence)",
+        "harvestable_stems_message": "{{harvestable}} of {{total}} stems are ready for harvest (≥5 inches)",
         "use_results": "Use Results",
         "retake_photo": "Retake Photo",
         "analysis_failed": "Analysis failed. Please try again with a clearer image.",
@@ -725,6 +786,7 @@
       "upload_images": "Upload Images",
       "analysis_complete_title": "Analysis Complete",
       "stem_data_filled_message": "Stem data automatically filled from images ({{confidence}}% confidence)",
+      "stem_data_filled_message_with_harvestable": "Found {{total}} stems, {{harvestable}} ready for harvest",
       "no": "No",
       "disease_status_label": "Disease Status",
       "disease_none_label": "None",

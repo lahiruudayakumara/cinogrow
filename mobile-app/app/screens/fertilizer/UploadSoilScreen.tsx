@@ -309,48 +309,48 @@ const UploadSoilScreen: React.FC = () => {
                                         <Text style={styles.existingImageText}>{t('fertilizer.upload_soil.labels.leaf_sample')}</Text>
                                     </View>
                                 </View>
-                            <TouchableOpacity 
-                                style={styles.retakeIconButton} 
-                                onPress={() => router.back()}
-                                activeOpacity={0.7}
-                            >
-                                <Ionicons name="camera-reverse-outline" size={16} color="#4CAF50" />
-                            </TouchableOpacity>
-                        </View>
-                        
-                        {/* Second image - Soil */}
-                        <View style={styles.imageCardWrapper}>
-                            {!selectedImage ? (
-                                <TouchableOpacity 
-                                    style={styles.addImageCard}
-                                    onPress={handleChooseFile}
+                                <TouchableOpacity
+                                    style={styles.retakeIconButton}
+                                    onPress={() => router.back()}
                                     activeOpacity={0.7}
                                 >
-                                    <Ionicons name="add-circle" size={48} color="#8B7355" />
-                                    <Text style={styles.addImageText}>{t('fertilizer.upload_soil.labels.add_soil_image')}</Text>
+                                    <Ionicons name="camera-reverse-outline" size={16} color="#4CAF50" />
                                 </TouchableOpacity>
-                            ) : (
-                                <View style={styles.imageCardWrapper}>
-                                    <View style={styles.existingImageCard}>
-                                        <Image source={{ uri: selectedImage }} style={styles.existingImage} />
-                                        <View style={styles.existingImageLabel}>
-                                            <Ionicons name="checkmark-circle" size={16} color="#8B7355" />
-                                            <Text style={[styles.existingImageText, { color: '#8B7355' }]}>{t('fertilizer.upload_soil.labels.soil_sample')}</Text>
-                                        </View>
-                                    </View>
-                                    <TouchableOpacity 
-                                        style={styles.retakeIconButton} 
+                            </View>
+
+                            {/* Second image - Soil */}
+                            <View style={styles.imageCardWrapper}>
+                                {!selectedImage ? (
+                                    <TouchableOpacity
+                                        style={styles.addImageCard}
                                         onPress={handleChooseFile}
                                         activeOpacity={0.7}
                                     >
-                                        <Ionicons name="camera-reverse-outline" size={16} color="#8B7355" />
+                                        <Ionicons name="add-circle" size={48} color="#8B7355" />
+                                        <Text style={styles.addImageText}>{t('fertilizer.upload_soil.labels.add_soil_image')}</Text>
                                     </TouchableOpacity>
-                                </View>
-                            )}
+                                ) : (
+                                    <View style={styles.imageCardWrapper}>
+                                        <View style={styles.existingImageCard}>
+                                            <Image source={{ uri: selectedImage }} style={styles.existingImage} />
+                                            <View style={styles.existingImageLabel}>
+                                                <Ionicons name="checkmark-circle" size={16} color="#8B7355" />
+                                                <Text style={[styles.existingImageText, { color: '#8B7355' }]}>{t('fertilizer.upload_soil.labels.soil_sample')}</Text>
+                                            </View>
+                                        </View>
+                                        <TouchableOpacity
+                                            style={styles.retakeIconButton}
+                                            onPress={handleChooseFile}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Ionicons name="camera-reverse-outline" size={16} color="#8B7355" />
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            </View>
                         </View>
-                    </View>
 
-                    {selectedImage && (
+                        {selectedImage && (
                             <TouchableOpacity
                                 style={styles.proceedButton}
                                 onPress={() => {
@@ -418,7 +418,8 @@ const UploadSoilScreen: React.FC = () => {
                                 t('fertilizer.upload_soil.upload.photo_library_subtitle'),
                                 openImageLibrary,
                                 ['#2196F3', '#1976D2']
-                            )}                    </View>
+                            )}
+                        </View>
                     </View>
                 )}
             </ScrollView>

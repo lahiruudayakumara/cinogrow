@@ -35,7 +35,7 @@ HARVEST_THRESHOLD = 5.0  # inches
 # Pixel to inch conversion factor
 # Calibrated using actual field measurement
 PIXEL_TO_INCH_CONVERSION = float(
-    os.getenv('TREE_ANALYSIS_PIXEL_TO_INCH', '0.005')
+    os.getenv('TREE_ANALYSIS_PIXEL_TO_INCH', '0.012')
 )
 
 # IoU threshold for filtering duplicate detections via Non-Maximum Suppression (NMS)

@@ -15,8 +15,11 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
+
+type BatchSource = 'own_farm' | 'purchased';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -38,6 +41,10 @@ interface MaterialBatch {
 export default function AddMaterialBatchScreen() {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
+  const params = useLocalSearchParams<{ source?: string }>();
+  const [source, setSource] = useState<BatchSource>(
+    params.source === 'purchased' ? 'purchased' : 'own_farm'
+  );
   const [batchName, setBatchName] = useState('');
   const [cinnamonType, setCinnamonType] = useState('');
   const [massKg, setMassKg] = useState('');
@@ -47,6 +54,8 @@ export default function AddMaterialBatchScreen() {
   const [loading, setLoading] = useState(false);
   const [batches, setBatches] = useState<MaterialBatch[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(true);
+
+  const isPurchased = source === 'purchased';
 
   // Dropdown options
   const cinnamonTypes = ['Sri Gemunu', 'Sri Vijaya'];
@@ -84,16 +93,26 @@ export default function AddMaterialBatchScreen() {
   const submit = async () => {
     try {
       setLoading(true);
-      const payload = {
+      const payload: Record<string, any> = {
         batch_name: batchName.trim() || undefined,
         cinnamon_type: cinnamonType.trim(),
-        mass_kg: parseFloat(massKg),
         plant_part: plantPart.trim(),
         plant_age_years: parseFloat(plantAgeYears),
         harvest_season: harvestSeason.trim(),
+        source,
       };
 
-      if (!payload.cinnamon_type || !payload.plant_part || !payload.harvest_season || isNaN(payload.mass_kg) || isNaN(payload.plant_age_years)) {
+      if (isPurchased) {
+        payload.mass_kg = parseFloat(massKg);
+      }
+
+      if (
+        !payload.cinnamon_type ||
+        !payload.plant_part ||
+        !payload.harvest_season ||
+        isNaN(payload.plant_age_years) ||
+        (isPurchased && (isNaN(payload.mass_kg) || payload.mass_kg <= 0))
+      ) {
         Alert.alert(t('oil_yield.add_batch.alerts.validation'), t('oil_yield.add_batch.alerts.fill_fields'));
         setLoading(false);
         return;
@@ -246,6 +265,73 @@ export default function AddMaterialBatchScreen() {
           </Text>
         </View>
 
+        {/* ── Source Toggle ── */}
+        <View style={styles.sourceToggleContainer}>
+          <TouchableOpacity
+            style={[
+              styles.sourceToggleBtn,
+              !isPurchased && styles.sourceToggleBtnActiveGreen,
+            ]}
+            onPress={() => setSource('own_farm')}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons
+              name="leaf"
+              size={18}
+              color={!isPurchased ? '#FFFFFF' : '#6B7280'}
+            />
+            <Text
+              style={[
+                styles.sourceToggleBtnText,
+                !isPurchased && styles.sourceToggleBtnTextActive,
+              ]}
+            >
+              Own Farm
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.sourceToggleBtn,
+              isPurchased && styles.sourceToggleBtnActivePurple,
+            ]}
+            onPress={() => setSource('purchased')}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons
+              name="cart"
+              size={18}
+              color={isPurchased ? '#FFFFFF' : '#6B7280'}
+            />
+            <Text
+              style={[
+                styles.sourceToggleBtnText,
+                isPurchased && styles.sourceToggleBtnTextActive,
+              ]}
+            >
+              Purchased
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Source context hint */}
+        <View
+          style={[
+            styles.sourceHint,
+            isPurchased ? styles.sourceHintPurple : styles.sourceHintGreen,
+          ]}
+        >
+          <MaterialCommunityIcons
+            name={isPurchased ? 'information-outline' : 'information-outline'}
+            size={15}
+            color={isPurchased ? '#7C3AED' : '#15803D'}
+          />
+          <Text style={[styles.sourceHintText, { color: isPurchased ? '#7C3AED' : '#15803D' }]}>
+            {isPurchased
+              ? 'Bark is already dried by the supplier. Enter the purchased weight below.'
+              : 'You will dry the bark yourself. Raw weight can be recorded after harvest.'}
+          </Text>
+        </View>
+
         {/* Form Section */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('oil_yield.add_batch.section_new.title')}</Text>
@@ -302,7 +388,8 @@ export default function AddMaterialBatchScreen() {
           </BlurView>
         </View>
 
-        {/* Mass */}
+        {/* Mass — only shown for purchased */}
+        {isPurchased && (
         <View style={styles.inputCard}>
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
@@ -329,6 +416,7 @@ export default function AddMaterialBatchScreen() {
             </View>
           </BlurView>
         </View>
+        )}
 
         {/* Plant Part */}
         <View style={styles.inputCard}>
@@ -806,5 +894,72 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
     letterSpacing: -0.24,
+  },
+
+  // Source Toggle
+  sourceToggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 12,
+    gap: 4,
+  },
+  sourceToggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 7,
+  },
+  sourceToggleBtnActiveGreen: {
+    backgroundColor: '#4aab4e',
+    shadowColor: '#4aab4e',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  sourceToggleBtnActivePurple: {
+    backgroundColor: '#7C3AED',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  sourceToggleBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+    letterSpacing: -0.24,
+  },
+  sourceToggleBtnTextActive: {
+    color: '#FFFFFF',
+  },
+  sourceHint: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+  },
+  sourceHintGreen: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#A7F3D0',
+  },
+  sourceHintPurple: {
+    backgroundColor: '#F5F3FF',
+    borderColor: '#DDD6FE',
+  },
+  sourceHintText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '500',
   },
 });

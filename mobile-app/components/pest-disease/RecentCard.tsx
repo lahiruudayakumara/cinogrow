@@ -1,11 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { ChevronRight } from "lucide-react-native";
+import { t } from "i18next";
 
 type Props = {
   date: string;
   name: string;
-  severity: "high" | "medium" | "low";
+  severity: "high" | "medium" | "low" | any;
   recommendation?: string;
 };
 
@@ -17,21 +18,20 @@ export default function RecentCard({ date, name, severity, recommendation }: Pro
     <View style={high ? styles.recentCardHigh : styles.recentCardMedium}>
       <View style={styles.recentContent}>
         <Text style={styles.recentDate}>{date}</Text>
-        <Text style={styles.recentName}>Name: {name}</Text>
+        <Text style={styles.recentName}>{t("common.name", "Name")}: {name}</Text>
         <View style={styles.severityRow}>
-          <Text style={styles.severityLabel}>Severity:</Text>
+          <Text style={styles.severityLabel}>{t("common.severity", "Severity")}:</Text>
           <View style={high ? styles.highDot : styles.mediumDot} />
           <Text style={high ? styles.severityTextHigh : styles.severityTextMedium}>
-            {high ? "High" : medium ? "Medium" : "Low"}
+            {high ? t("common.high", "High") : medium ? t("common.medium", "Medium") : t("common.low", "Low")}
           </Text>
         </View>
         {recommendation ? (
           <Text style={styles.recommendation} numberOfLines={1}>
-            Recommendation: {recommendation}
+            {t("common.recommendation", "Recommendation")}: {recommendation}
           </Text>
         ) : null}
       </View>
-      <ChevronRight color="#999" size={24} />
     </View>
   );
 }

@@ -6,15 +6,18 @@ import {
   StyleSheet,
   StatusBar,
   Alert,
+  Text,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Header from "@/components/pest-disease/Header";
 import UploadCard from "@/components/pest-disease/UploadCard";
 import RecentCard from "@/components/pest-disease/RecentCard";
 import RecommendationButton from "@/components/pest-disease/RecommendationButton";
-import { t } from "i18next";
+import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function PestDiseaseScreen() {
+  const { t } = useTranslation();
   useEffect(() => {
     (async () => {
       try {
@@ -40,16 +43,20 @@ export default function PestDiseaseScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <UploadCard />
           <RecommendationButton
+            disabled={false}
             title={t("pest_disease.get_recommendations")}
-            onPress={() => {}}
+            onPress={() => router.push("/screens/pest-disease/RecentDetection")}
           />
-          {/* <RecentCard
-            date="2025-01-10"
-            name="Powdery Mildew"
-            severity="high"
-            recommendation="Apply fungicide containing sulfur or potassium bicarbonate..."
+          <Text style={styles.recentDetectionText}>{t("pestDisease.recentDetection", "Recent Detection")}</Text>
+          <RecentCard
+            date="2026-01-01"
+            name={t("pestDisease.whiteRootDisease", "White Root Disease")}
+            severity={t("pestDisease.high", "High")}
+            recommendation={t(
+              "pestDisease.whiteRootRecommendation",
+              "Avoid planting in previously infected land..."
+            )}
           />
-          <RecentCard date="2025-01-10" name="Aphids" severity="medium" /> */}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -60,5 +67,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8FFFB",
+  },
+  recentDetectionText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginTop: 4,
+    marginBottom: 14,
   },
 });

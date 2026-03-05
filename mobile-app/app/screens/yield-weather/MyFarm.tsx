@@ -1097,7 +1097,6 @@ const MyFarm = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: Platform.OS === 'android' ? 0 : -70,
     backgroundColor: '#FAFBFC',
   },
   scrollView: {

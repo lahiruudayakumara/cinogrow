@@ -13,11 +13,25 @@ from PIL import Image
 import io
 from pathlib import Path
 from sqlmodel import Session, select
+
+# Register HEIF/HEIC format support for PIL
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+    logging.info("✅ HEIF/HEIC image format support enabled")
+except ImportError:
+    logging.warning("⚠️ pillow-heif not installed. HEIC images won't be supported.")
 from app.database import get_session
 from app.models.fertilizer_history import (
     FertilizerHistory,
     FertilizerHistoryCreate,
     FertilizerHistoryResponse
+)
+from app.services.soil_analysis import (
+    parse_soil_detection_result,
+    generate_soil_recommendations,
+    generate_combined_analysis,
+    SOIL_TYPE_DATA
 )
 
 # Import Roboflow Inference SDK
@@ -47,6 +61,7 @@ ROBOFLOW_WORKSPACE = os.getenv('ROBOFLOW_WORKSPACE', 'cinogrow')
 ROBOFLOW_MODEL_ID = os.getenv('ROBOFLOW_MODEL_ID', 'cinnamon-deficiency')
 ROBOFLOW_MODEL_VERSION = os.getenv('ROBOFLOW_MODEL_VERSION', '1')
 ROBOFLOW_WORKFLOW_ID = os.getenv('ROBOFLOW_WORKFLOW_ID', 'custom-workflow-2')
+ROBOFLOW_SOIL_WORKFLOW_ID = os.getenv('ROBOFLOW_SOIL_WORKFLOW_ID', 'soil-type-detection')
 ROBOFLOW_USE_WORKFLOW = os.getenv('ROBOFLOW_USE_WORKFLOW', 'true').lower() == 'true'
 
 # Initialize Roboflow client (will be None if SDK not available)
@@ -1304,3 +1319,532 @@ def generate_recommendations(deficiency: str, severity: str, plant_age: int, con
     }
     
     return recommendations
+
+
+# ============================================================================
+# NEW SOIL ANALYSIS ENDPOINTS
+# ============================================================================
+
+@router.post("/analyze-soil")
+async def analyze_soil_with_roboflow(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_session),
+    user_id: Optional[int] = None
+) -> Dict[str, Any]:
+    """
+    Analyze soil image using Roboflow soil detection workflow
+    
+    Detects soil type (sandy, laterite, black) and provides:
+    - Soil characteristics
+    - Common issues in Sri Lankan cinnamon cultivation
+    - Soil improvement recommendations
+    - Fertilizer strategy for the soil type
+    - Soil lab test recommendations
+    
+    Args:
+        file: Soil image file (JPEG, PNG)
+        db: Database session
+        user_id: Optional user ID for tracking
+        plant_age: Optional plant age for targeted recommendations
+        
+    Returns:
+        Dict containing soil analysis results and recommendations
+    """
+    try:
+        logger.info("🌍 Starting soil type detection with Roboflow")
+        logger.info(f"📁 File: {file.filename}, Content-Type: {file.content_type}")
+        
+        # Check if SDK is available
+        if not INFERENCE_SDK_AVAILABLE:
+            logger.error("❌ Inference SDK not installed")
+            raise HTTPException(
+                status_code=503,
+                detail="Roboflow Inference SDK not available. Install: pip install inference-sdk"
+            )
+        
+        if not roboflow_client:
+            logger.error("❌ Roboflow client not initialized")
+            raise HTTPException(
+                status_code=503,
+                detail="Roboflow service not configured properly"
+            )
+        
+        # Read and validate image
+        image_data = await file.read()
+        logger.info(f"📊 Image size: {len(image_data)} bytes")
+        
+        # Validate image format
+        try:
+            img = Image.open(io.BytesIO(image_data))
+            logger.info(f"✅ Valid image: {img.format}, {img.size}")
+        except Exception as e:
+            logger.error(f"❌ Invalid image file: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid image file: {str(e)}"
+            )
+        
+        # Save image to disk
+        upload_dir = Path("uploads/fertilizer_analysis/soil")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_filename = f"soil_{timestamp}_{file.filename}"
+        image_path = upload_dir / safe_filename
+        
+        with open(image_path, "wb") as f:
+            f.write(image_data)
+        logger.info(f"💾 Image saved: {image_path}")
+        
+        # Run Roboflow workflow for soil detection
+        logger.info(f"🚀 Running Roboflow workflow: {ROBOFLOW_SOIL_WORKFLOW_ID}")
+        result = roboflow_client.run_workflow(
+            workspace_name=ROBOFLOW_WORKSPACE,
+            workflow_id=ROBOFLOW_SOIL_WORKFLOW_ID,
+            images={"image": str(image_path)},
+            use_cache=True
+        )
+        logger.info("✅ Soil detection workflow complete")
+        logger.info(f"🔍 Raw result: {result}")
+        
+        # Parse soil detection result
+        parsed_result = parse_soil_detection_result(result)
+        soil_type = parsed_result.get("soil_type")
+        confidence = parsed_result.get("confidence", 0.0)
+        
+        logger.info(f"📊 Detected soil type: {soil_type}, Confidence: {confidence}")
+        
+        # Generate soil recommendations
+        recommendations = None
+        soil_detected = False
+        
+        if not soil_type:
+            logger.warning("⚠️ No soil type detected")
+            soil_type = "unknown"
+            confidence = 0.0
+            
+            # Provide helpful message when soil type not detected
+            recommendations = {
+                "error": "Soil type not detected",
+                "message": "Unable to detect soil type from the image",
+                "suggestions": [
+                    "Ensure the image clearly shows the soil surface",
+                    "Remove any plant matter or debris from the soil",
+                    "Take the photo in good lighting conditions",
+                    "Capture a close-up view of the soil texture",
+                    "Try taking another photo with better visibility of soil characteristics"
+                ],
+                "alternative_action": "Consider getting a professional soil lab test for accurate soil type identification"
+            }
+        else:
+            soil_detected = True
+            recommendations = generate_soil_recommendations(
+                soil_type=soil_type,
+                confidence=confidence,
+                plant_age=None
+            )
+            logger.info("✅ Generated soil recommendations")
+        
+        # Save to database
+        history_data = {
+            "analysis_flow": "soil_only",
+            "soil_type": soil_type if soil_detected else None,
+            "soil_confidence": confidence if soil_detected else 0.0,
+            "soil_image_path": str(image_path),
+            "user_id": user_id,
+            "recommendations": recommendations if soil_detected else None
+        }
+        
+        history_record = FertilizerHistory(**history_data)
+        db.add(history_record)
+        db.commit()
+        db.refresh(history_record)
+        logger.info(f"💾 Saved to database: ID={history_record.id}")
+        
+        return {
+            "success": soil_detected,
+            "message": "Soil analysis completed successfully" if soil_detected else "Soil type not detected",
+            "analysis_flow": "soil_only",
+            "soil_type": soil_type if soil_detected else None,
+            "soil_detected": soil_detected,
+            "confidence": confidence,
+            "soil_characteristics": recommendations.get("soil_characteristics") if soil_detected and recommendations else None,
+            "soil_improvement_actions": recommendations.get("soil_improvement_actions") if soil_detected and recommendations else None,
+            "recommendations": recommendations,
+            "recommend_soil_lab_test": True,
+            "option_to_proceed": "You can now proceed with leaf analysis for comprehensive results" if soil_detected else "Please try again with a clearer soil image",
+            "history_id": history_record.id,
+            "roboflow_output": result,
+            "debug_info": parsed_result if not soil_detected else None,
+            "metadata": {
+                "filename": file.filename,
+                "content_type": file.content_type,
+                "workflow_id": ROBOFLOW_SOIL_WORKFLOW_ID
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Soil analysis failed: {e}")
+        import traceback
+        logger.error(f"📋 Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Soil analysis failed: {str(e)}"
+        )
+
+
+@router.post("/analyze-combined")
+async def analyze_combined(
+    leaf_file: UploadFile = File(..., description="Leaf image"),
+    soil_file: UploadFile = File(..., description="Soil image"),
+    db: Session = Depends(get_session),
+    user_id: Optional[int] = None,
+    plant_age: int = Query(1, ge=1, description="Plant age in years")
+) -> Dict[str, Any]:
+    """
+    Combined leaf + soil analysis with cross-validation
+    
+    Performs both leaf deficiency detection and soil type detection,
+    then provides cross-validated recommendations considering both factors.
+    
+    Benefits:
+    - Enhanced confidence through cross-validation
+    - Integrated fertilizer + soil amendment plan
+    - Context-aware recommendations based on soil type
+    - Identifies inconsistencies between leaf symptoms and soil type
+    
+    Args:
+        leaf_file: Leaf image file
+        soil_file: Soil image file
+        db: Database session
+        user_id: Optional user ID
+        plant_age: Plant age in years
+        
+    Returns:
+        Dict with comprehensive combined analysis and recommendations
+    """
+    try:
+        logger.info("🔬 Starting combined leaf + soil analysis")
+        
+        # Check if SDK is available
+        if not INFERENCE_SDK_AVAILABLE or not roboflow_client:
+            raise HTTPException(
+                status_code=503,
+                detail="Roboflow service not available"
+            )
+        
+        # === STEP 1: Analyze Leaf ===
+        logger.info("🍃 Step 1: Analyzing leaf image")
+        leaf_data = await leaf_file.read()
+        
+        # Validate leaf image
+        try:
+            img = Image.open(io.BytesIO(leaf_data))
+            logger.info(f"✅ Valid leaf image: {img.format}, {img.size}")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid leaf image: {str(e)}")
+        
+        # Save leaf image
+        upload_dir = Path("uploads/fertilizer_analysis/combined")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        leaf_path = upload_dir / f"leaf_{timestamp}_{leaf_file.filename}"
+        
+        with open(leaf_path, "wb") as f:
+            f.write(leaf_data)
+        
+        # Run leaf analysis
+        leaf_result = roboflow_client.run_workflow(
+            workspace_name=ROBOFLOW_WORKSPACE,
+            workflow_id=ROBOFLOW_WORKFLOW_ID,
+            images={"image": str(leaf_path)},
+            use_cache=True
+        )
+        logger.info("✅ Leaf analysis complete")
+        
+        # Parse leaf detections (reuse existing logic)
+        detections = []
+        primary_deficiency = None
+        max_confidence = 0.0
+        severity = None
+        
+        # Parse the leaf result (simplified version)
+        if isinstance(leaf_result, list) and len(leaf_result) > 0:
+            result_item = leaf_result[0]
+            if isinstance(result_item, dict):
+                for key in ['predictions', 'output', 'result']:
+                    if key in result_item:
+                        pred_data = result_item[key]
+                        if isinstance(pred_data, dict):
+                            if 'top' in pred_data:
+                                primary_deficiency = pred_data['top']
+                                max_confidence = pred_data.get('confidence', 0.0)
+                                severity = 'High' if max_confidence > 0.8 else 'Medium' if max_confidence > 0.5 else 'Low'
+                                break
+        
+        if not primary_deficiency:
+            primary_deficiency = "Unknown"
+            max_confidence = 0.0
+            severity = "Low"
+        
+        logger.info(f"📊 Leaf: {primary_deficiency}, Confidence: {max_confidence}")
+        
+        # Generate leaf recommendations
+        leaf_recommendations = generate_recommendations(
+            deficiency=primary_deficiency,
+            severity=severity,
+            plant_age=plant_age,
+            confidence=max_confidence
+        )
+        
+        # === STEP 2: Analyze Soil ===
+        logger.info("🌍 Step 2: Analyzing soil image")
+        soil_data = await soil_file.read()
+        
+        # Validate soil image
+        try:
+            img = Image.open(io.BytesIO(soil_data))
+            logger.info(f"✅ Valid soil image: {img.format}, {img.size}")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid soil image: {str(e)}")
+        
+        # Save soil image
+        soil_path = upload_dir / f"soil_{timestamp}_{soil_file.filename}"
+        with open(soil_path, "wb") as f:
+            f.write(soil_data)
+        
+        # Run soil analysis
+        soil_result = roboflow_client.run_workflow(
+            workspace_name=ROBOFLOW_WORKSPACE,
+            workflow_id=ROBOFLOW_SOIL_WORKFLOW_ID,
+            images={"image": str(soil_path)},
+            use_cache=True
+        )
+        logger.info("✅ Soil analysis complete")
+        
+        # Parse soil result
+        parsed_soil = parse_soil_detection_result(soil_result)
+        soil_type = parsed_soil.get("soil_type")
+        soil_confidence = parsed_soil.get("confidence", 0.0)
+        soil_detected = bool(soil_type)
+        
+        if not soil_type:
+            logger.warning("⚠️ Soil type not detected in combined analysis")
+            soil_type = "unknown"
+            soil_confidence = 0.0
+        
+        logger.info(f"📊 Soil: {soil_type}, Confidence: {soil_confidence}, Detected: {soil_detected}")
+        
+        # === STEP 3: Generate Combined Analysis ===
+        logger.info("🔬 Step 3: Generating combined analysis")
+        
+        leaf_analysis = {
+            "primary_deficiency": primary_deficiency,
+            "confidence": max_confidence,
+            "severity": severity,
+            "recommendations": leaf_recommendations
+        }
+        
+        soil_analysis = {
+            "soil_type": soil_type if soil_detected else None,
+            "confidence": soil_confidence
+        }
+        
+        # Generate detailed soil info if soil was detected
+        soil_details = None
+        if soil_detected and soil_type in SOIL_TYPE_DATA:
+            soil_data = SOIL_TYPE_DATA[soil_type]
+            soil_details = {
+                "soil_type": soil_data["display_name"],
+                "confidence": round(soil_confidence * 100, 1),
+                "confidence_level": "High" if soil_confidence > 0.8 else "Medium" if soil_confidence > 0.5 else "Low",
+                "characteristics": soil_data["characteristics"],
+                "common_issues": soil_data["common_issues_in_sri_lanka"],
+                "improvement_actions": soil_data["improvement_actions"],
+                "recommendations": soil_data["recommendations"]
+            }
+        
+        # Only generate combined analysis if soil was detected
+        if soil_detected:
+            combined_recommendations = generate_combined_analysis(
+                leaf_analysis=leaf_analysis,
+                soil_analysis=soil_analysis,
+                plant_age=plant_age
+            )
+        else:
+            # Provide leaf-only recommendations with soil detection failure notice
+            combined_recommendations = {
+                "analysis_summary": {
+                    "detected_deficiency": primary_deficiency,
+                    "deficiency_confidence": round(max_confidence * 100, 1),
+                    "detected_soil_type": "Not detected",
+                    "soil_confidence": 0.0,
+                    "combined_confidence": round(max_confidence * 100, 1),
+                    "confidence_level": severity
+                },
+                "leaf_treatment_plan": leaf_recommendations,
+                "soil_analysis_note": {
+                    "status": "Soil type not detected",
+                    "message": "Unable to detect soil type from the provided image",
+                    "recommendation": "Consider retaking the soil image with better visibility, or proceed with leaf treatment and get a professional soil lab test"
+                },
+                "fertilizer_and_soil_amendment_plan": {
+                    "note": "Soil-specific plan not available due to detection failure",
+                    "general_advice": "Follow leaf deficiency treatment recommendations and consider getting a soil lab test for comprehensive soil analysis"
+                },
+                "soil_lab_test_recommendation": {
+                    "priority": "High",
+                    "reason": "Soil type detection failed - professional soil testing strongly recommended",
+                    "test_parameters": ["pH", "NPK levels", "Organic matter", "Calcium", "Magnesium", "Micronutrients"]
+                }
+            }
+        
+        # === STEP 4: Save to Database ===
+        history_data = {
+            "analysis_flow": "combined",
+            "primary_deficiency": primary_deficiency,
+            "severity": severity,
+            "confidence": max_confidence,
+            "image_path": str(leaf_path),
+            "soil_type": soil_type,
+            "soil_confidence": soil_confidence,
+            "soil_image_path": str(soil_path),
+            "user_id": user_id,
+            "plant_age": plant_age,
+            "recommendations": combined_recommendations
+        }
+        
+        history_record = FertilizerHistory(**history_data)
+        db.add(history_record)
+        db.commit()
+        db.refresh(history_record)
+        logger.info(f"💾 Saved combined analysis: ID={history_record.id}")
+        
+        return {
+            "success": True,
+            "message": "Combined analysis completed successfully",
+            "analysis_flow": "combined",
+            
+            # Leaf results
+            "leaf_analysis": {
+                "detected_deficiency": primary_deficiency,
+                "confidence": round(max_confidence * 100, 1),
+                "severity": severity,
+                "recommendations": leaf_recommendations
+            },
+            
+            # Soil results (detailed)
+            "soil_analysis": soil_details if soil_details else {
+                "soil_type": "Not detected",
+                "confidence": 0.0,
+                "confidence_level": "None",
+                "message": "Unable to detect soil type from the provided image"
+            },
+            
+            # Combined insights
+            "combined_confidence": round((max_confidence + soil_confidence) / 2 * 100, 1),
+            "cross_validated_recommendation": combined_recommendations,
+            
+            # Action items
+            "fertilizer_and_soil_amendment_plan": combined_recommendations.get("fertilizer_and_soil_amendment_plan"),
+            "soil_lab_test_recommendation": combined_recommendations.get("soil_lab_test_recommendation"),
+            
+            "history_id": history_record.id,
+            "metadata": {
+                "leaf_filename": leaf_file.filename,
+                "soil_filename": soil_file.filename,
+                "plant_age": plant_age,
+                "timestamp": timestamp
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Combined analysis failed: {e}")
+        import traceback
+        logger.error(f"📋 Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Combined analysis failed: {str(e)}"
+        )
+
+
+@router.get("/analysis-options")
+async def get_analysis_options() -> Dict[str, Any]:
+    """
+    Get available analysis flow options
+    
+    Returns information about the three analysis approaches:
+    - Leaf Analysis Only
+    - Soil Analysis Only
+    - Combined Leaf + Soil Analysis
+    """
+    return {
+        "success": True,
+        "analysis_options": [
+            {
+                "id": "leaf_only",
+                "name": "Leaf Analysis Only",
+                "description": "Detect NPK deficiencies from leaf images",
+                "endpoint": "/fertilizer/roboflow/analyze",
+                "outputs": [
+                    "Detected NPK Deficiency",
+                    "Fertilizer Recommendation",
+                    "Confidence Level",
+                    "Option to Proceed with Soil Analysis"
+                ],
+                "requires": ["leaf_image", "plant_age"]
+            },
+            {
+                "id": "soil_only",
+                "name": "Soil Analysis Only",
+                "description": "Detect soil type and get soil-specific recommendations",
+                "endpoint": "/fertilizer/roboflow/analyze-soil",
+                "outputs": [
+                    "Detected Soil Type",
+                    "Soil Characteristics",
+                    "Soil Improvement Actions",
+                    "Recommendation to Perform Soil Lab Test",
+                    "Option to Proceed with Leaf Analysis"
+                ],
+                "requires": ["soil_image", "plant_age (optional)"]
+            },
+            {
+                "id": "combined",
+                "name": "Leaf + Soil Combined Analysis",
+                "description": "Comprehensive analysis with cross-validation",
+                "endpoint": "/fertilizer/roboflow/analyze-combined",
+                "outputs": [
+                    "Detected Soil Type",
+                    "Detected NPK Deficiency",
+                    "Cross-validated Recommendation",
+                    "Enhanced Confidence Level",
+                    "Integrated Fertilizer + Soil Amendment Plan",
+                    "Soil Lab Test Recommendation (If Required)"
+                ],
+                "requires": ["leaf_image", "soil_image", "plant_age"]
+            }
+        ],
+        "soil_types_detected": [
+            {
+                "id": "sandy_soil",
+                "name": "Sandy Soil",
+                "characteristics": "Low nutrient retention, high drainage",
+                "common_issues": "Nitrogen deficiency, low moisture retention"
+            },
+            {
+                "id": "laterite_soil",
+                "name": "Laterite Soil",
+                "characteristics": "Acidic pH, iron/aluminum rich",
+                "common_issues": "Phosphorus fixation, magnesium deficiency"
+            },
+            {
+                "id": "black_soil",
+                "name": "Black Soil",
+                "characteristics": "High clay content, high water retention",
+                "common_issues": "Waterlogging, root rot risk"
+            }
+        ]
+    }

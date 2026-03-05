@@ -6,6 +6,7 @@ Analyzes tree images to detect stem count and circumference using Roboflow Workf
 from typing import Dict, Any, List, Optional
 import logging
 import os
+import math
 import requests
 from dotenv import load_dotenv
 
@@ -28,10 +29,19 @@ TREE_ANALYSIS_ROBOFLOW_API_KEY = os.getenv('TREE_ANALYSIS_ROBOFLOW_API_KEY', os.
 TREE_ANALYSIS_ROBOFLOW_WORKSPACE = os.getenv('TREE_ANALYSIS_ROBOFLOW_WORKSPACE', 'cinogrow')
 TREE_ANALYSIS_ROBOFLOW_WORKFLOW_ID = os.getenv('TREE_ANALYSIS_ROBOFLOW_WORKFLOW_ID', 'custom-workflow-3')
 
-# Pixel to inch conversion factor
-# Calibrated using actual field measurement: 
+# Harvest threshold in inches
+HARVEST_THRESHOLD = 5.0  # inches
 
-PIXEL_TO_INCH_CONVERSION = float(os.getenv('TREE_ANALYSIS_PIXEL_TO_INCH', '0.00355'))
+# Pixel to inch conversion factor
+# Calibrated using actual field measurement
+PIXEL_TO_INCH_CONVERSION = float(
+    os.getenv('TREE_ANALYSIS_PIXEL_TO_INCH', '0.005')
+)
+
+# IoU threshold for filtering duplicate detections via Non-Maximum Suppression (NMS)
+NMS_IOU_THRESHOLD = float(
+    os.getenv('TREE_ANALYSIS_NMS_IOU_THRESHOLD', '0.5')
+)
 
 # Debug: Log configuration (mask API key for security)
 if TREE_ANALYSIS_ROBOFLOW_API_KEY:
@@ -106,11 +116,16 @@ class TreeStemAnalysisService:
             
             # Parse the results
             parsed = TreeStemAnalysisService._parse_workflow_output(result)
-            parsed['raw_response'] = result
             
-            logger.info(f"✅ Parsed results: stem_count={parsed['stem_count']}, circumference={parsed['stem_circumference_inches']}")
+            logger.info(f"✅ Parsed results: total={parsed['total_stems_detected']}, harvestable={parsed['harvestable_stems']}")
             
-            return parsed
+            return {
+                "success": True,
+                "total_stems_detected": parsed["total_stems_detected"],
+                "harvestable_stems": parsed["harvestable_stems"],
+                "individual_stems": parsed["individual_stems"],
+                "raw_response": result
+            }
             
         except Exception as e:
             logger.error(f"❌ SDK workflow analysis failed: {str(e)}", exc_info=True)
@@ -171,9 +186,8 @@ class TreeStemAnalysisService:
             
             return {
                 "success": True,
-                "stem_count": analysis["stem_count"],
-                "stem_circumference_inches": analysis["stem_circumference_inches"],
-                "confidence": analysis["confidence"],
+                "total_stems_detected": analysis["total_stems_detected"],
+                "harvestable_stems": analysis["harvestable_stems"],
                 "individual_stems": analysis["individual_stems"],
                 "raw_output": result
             }
@@ -192,10 +206,9 @@ class TreeStemAnalysisService:
             
         Returns:
             Dict containing:
-                - stem_count: Number of stems detected
-                - stem_circumference_inches: Average circumference in inches
-                - confidence: Overall confidence score
-                - individual_stems: List of individual stem measurements
+                - total_stems_detected: Total number of stems detected
+                - harvestable_stems: Number of stems meeting harvest threshold
+                - individual_stems: List of individual stem measurements with harvestable flag
                 - raw_output: Complete Roboflow workflow output
         """
         if not tree_analysis_client:
@@ -234,9 +247,8 @@ class TreeStemAnalysisService:
             
             return {
                 "success": True,
-                "stem_count": analysis["stem_count"],
-                "stem_circumference_inches": analysis["stem_circumference_inches"],
-                "confidence": analysis["confidence"],
+                "total_stems_detected": analysis["total_stems_detected"],
+                "harvestable_stems": analysis["harvestable_stems"],
                 "individual_stems": analysis["individual_stems"],
                 "raw_output": result
             }
@@ -246,183 +258,164 @@ class TreeStemAnalysisService:
             raise
     
     @staticmethod
+    def _calculate_iou(box1: Dict[str, Any], box2: Dict[str, Any]) -> float:
+        """
+        Calculate Intersection over Union (IoU) between two bounding boxes.
+        Boxes have center coordinates (x, y) and dimensions (width, height).
+        """
+        x1, y1, w1, h1 = box1['x'], box1['y'], box1['width'], box1['height']
+        x2, y2, w2, h2 = box2['x'], box2['y'], box2['width'], box2['height']
+        
+        # Convert to corner coordinates
+        left1, top1 = x1 - w1/2, y1 - h1/2
+        right1, bottom1 = x1 + w1/2, y1 + h1/2
+        left2, top2 = x2 - w2/2, y2 - h2/2
+        right2, bottom2 = x2 + w2/2, y2 + h2/2
+        
+        # Calculate intersection
+        inter_left = max(left1, left2)
+        inter_top = max(top1, top2)
+        inter_right = min(right1, right2)
+        inter_bottom = min(bottom1, bottom2)
+        
+        inter_width = max(0, inter_right - inter_left)
+        inter_height = max(0, inter_bottom - inter_top)
+        inter_area = inter_width * inter_height
+        
+        # Calculate union
+        area1 = w1 * h1
+        area2 = w2 * h2
+        union_area = area1 + area2 - inter_area
+        
+        return inter_area / union_area if union_area > 0 else 0.0
+    
+    @staticmethod
+    def _filter_duplicate_detections(detections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Filter duplicate/overlapping detections using Non-Maximum Suppression (NMS).
+        Keeps the detection with highest confidence when IoU > threshold.
+        """
+        if len(detections) <= 1:
+            return detections
+        
+        # Sort by confidence (highest first)
+        sorted_dets = sorted(detections, key=lambda d: d.get('confidence', 0), reverse=True)
+        
+        filtered = []
+        for det in sorted_dets:
+            # Check if this detection overlaps significantly with any kept detection
+            is_duplicate = False
+            for kept in filtered:
+                iou = TreeStemAnalysisService._calculate_iou(det, kept)
+                if iou > NMS_IOU_THRESHOLD:
+                    logger.info(f"🚫 Filtering duplicate: width={det.get('width')}px (IoU={iou:.2f} with width={kept.get('width')}px)")
+                    is_duplicate = True
+                    break
+            
+            if not is_duplicate:
+                filtered.append(det)
+        
+        logger.info(f"📊 NMS: {len(detections)} detections → {len(filtered)} unique stems (removed {len(detections) - len(filtered)} duplicates)")
+        return filtered
+    
+    @staticmethod
     def _parse_workflow_output(workflow_output: Dict[str, Any]) -> Dict[str, Any]:
         """
         Parse the Roboflow workflow output to extract stem measurements
         
-        The workflow should output:
-        - Number of stems detected
-        - Individual stem circumferences (in pixels or real measurements)
-        - Confidence scores
+        Expected workflow output format:
+        [
+          {
+            "predictions": {
+              "image": {"width": 1536, "height": 2048},
+              "predictions": [
+                {
+                  "width": 303,
+                  "height": 2038,
+                  "x": 509.5,
+                  "y": 1027,
+                  "confidence": 0.9584445953369141,
+                  "class_id": 0,
+                  "class": "cinnamon_stem",
+                  "detection_id": "...",
+                  "parent_id": "image"
+                },
+                ...
+              ]
+            }
+          }
+        ]
         
         Args:
             workflow_output: Raw output from Roboflow workflow
             
         Returns:
-            Parsed analysis with stem_count, circumference, etc.
+            Dict with total_stems_detected, harvestable_stems, and individual_stems
         """
+        individual_stems = []
+        harvestable_count = 0
+        total_stems = 0
+
         try:
-            # Default values
-            stem_count = 0
-            individual_stems = []
-            total_circumference = 0.0
-            confidence = 0.0
-            
             logger.info(f"🔍 Parsing workflow output type: {type(workflow_output)}")
             logger.info(f"🔍 Workflow output: {workflow_output}")
             
-            # Handle custom-workflow-3 output format
-            # Output is a list with a dict containing "average cane width" and "stem count"
-            if isinstance(workflow_output, list) and len(workflow_output) > 0:
-                data = workflow_output[0]
-                logger.info(f"🔍 Data extracted: {data}")
-                logger.info(f"🔍 Keys in data: {data.keys() if isinstance(data, dict) else 'not a dict'}")
-                
-                # Extract stem count - handle nested arrays or direct value
-                if "stem count" in data:
-                    stem_count_data = data["stem count"]
-                    logger.info(f"🔍 stem_count_data type: {type(stem_count_data)}, value: {stem_count_data}")
-                    
-                    # Handle direct integer value
-                    if isinstance(stem_count_data, (int, float)):
-                        stem_count = int(stem_count_data)
-                        logger.info(f"✅ Extracted stem_count (direct): {stem_count}")
-                    # Handle various nesting levels in arrays
-                    elif isinstance(stem_count_data, list) and len(stem_count_data) > 0:
-                        # Could be [7] or [[7]] or [[[7]]]
-                        temp = stem_count_data[0]
-                        logger.info(f"🔍 stem_count_data[0] type: {type(temp)}, value: {temp}")
-                        
-                        # Keep unwrapping until we get a number
-                        while isinstance(temp, list) and len(temp) > 0:
-                            temp = temp[0]
-                            logger.info(f"🔍 Unwrapped to type: {type(temp)}, value: {temp}")
-                        
-                        stem_count = int(temp) if temp is not None else 0
-                        logger.info(f"✅ Extracted stem_count (from array): {stem_count}")
-                
-                # Extract individual cane widths (misnamed as "average cane width")
-                # This is actually an array of individual stem widths
-                if "average cane width" in data:
-                    cane_width_data = data["average cane width"]
-                    logger.info(f"🔍 cane_width_data type: {type(cane_width_data)}, length: {len(cane_width_data) if isinstance(cane_width_data, list) else 'N/A'}")
-                    
-                    if isinstance(cane_width_data, list) and len(cane_width_data) > 0:
-                        # Unwrap nested arrays to get to the actual width values
-                        individual_widths = cane_width_data
-                        
-                        # Keep unwrapping if we have nested arrays
-                        while (isinstance(individual_widths, list) and 
-                               len(individual_widths) > 0 and 
-                               isinstance(individual_widths[0], list) and
-                               not isinstance(individual_widths[0], (int, float))):
-                            individual_widths = individual_widths[0]
-                            logger.info(f"🔍 Unwrapped to: {individual_widths}")
-                        
-                        logger.info(f"🔍 Final individual_widths type: {type(individual_widths)}, value: {individual_widths}")
-                        
-                        # Process each individual stem width
-                        if isinstance(individual_widths, list):
-                            for width in individual_widths:
-                                if isinstance(width, (int, float)):
-                                    width_pixels = float(width)
-                                    # Convert pixels to inches using calibration factor
-                                    width_inches = width_pixels * PIXEL_TO_INCH_CONVERSION
-                                    individual_stems.append({
-                                        "circumference_inches": round(width_inches, 2),
-                                        "confidence": 0.85
-                                    })
-                                    total_circumference += width_inches
-                            
-                            logger.info(f"✅ Extracted {len(individual_stems)} stem widths")
-                            logger.info(f"📏 Converted from pixels to inches: total {total_circumference:.2f} inches")
-                
-                # If we have stem count but no width measurements, log a warning
-                if stem_count > 0 and len(individual_stems) == 0:
-                    logger.warning(f"⚠️ Detected {stem_count} stems but no width measurements available")
-                    logger.warning(f"⚠️ Check if workflow is extracting 'width' property correctly")
-                
-                # Set confidence based on whether we got data
-                confidence = 0.85 if stem_count > 0 else 0.0
-                
-                avg_width = total_circumference / stem_count if stem_count > 0 else 0.0
-                logger.info(f"📊 Parsed custom-workflow-3: {stem_count} stems, avg width: {avg_width:.2f} inches, {len(individual_stems)} measurements")
+            detections = workflow_output[0]["predictions"]["predictions"]
+
+            logger.info(f"🔍 Found {len(detections)} raw stem detections")
             
-            # Fallback: Check for standard workflow structures
-            elif isinstance(workflow_output, dict):
-                # Check for predictions in output
-                if "output" in workflow_output:
-                    output_data = workflow_output["output"]
-                    
-                    # If workflow returns stem detections
-                    if "stem_detections" in output_data:
-                        detections = output_data["stem_detections"]
-                        if isinstance(detections, list):
-                            stem_count = len(detections)
-                            
-                            for detection in detections:
-                                # Extract circumference from each stem
-                                # This assumes the workflow calculates circumference
-                                circumference = detection.get("circumference_inches", 0)
-                                confidence = detection.get("confidence", 0)
-                                
-                                individual_stems.append({
-                                    "circumference_inches": circumference,
-                                    "confidence": confidence
-                                })
-                                total_circumference += circumference
-                    
-                    # Alternative: workflow might return count and average directly
-                    elif "stem_count" in output_data:
-                        stem_count = output_data.get("stem_count", 0)
-                        total_circumference = output_data.get("average_circumference_inches", 0) * stem_count
-                        individual_stems = output_data.get("stems", [])
+            # Log raw detection data for debugging
+            for idx, det in enumerate(detections, 1):
+                logger.info(f"🔍 Raw stem {idx}: width={det.get('width')}px, height={det.get('height')}px, "
+                           f"x={det.get('x')}, y={det.get('y')}, conf={det.get('confidence'):.2f}")
+            
+            # Apply Non-Maximum Suppression to filter duplicate/overlapping detections
+            detections = TreeStemAnalysisService._filter_duplicate_detections(detections)
+
+            total_stems = len(detections)
+
+            for idx, detection in enumerate(detections, 1):
+                width_pixels = float(detection.get("width", 0))
+                height_pixels = float(detection.get("height", 0))
+                confidence = float(detection.get("confidence", 0))
+
+                # Convert pixel width to diameter in inches
+                diameter_inches = width_pixels * PIXEL_TO_INCH_CONVERSION
                 
-                # Some workflows return results in a predictions array
-                elif "predictions" in workflow_output:
-                    predictions = workflow_output["predictions"]
-                    if isinstance(predictions, list) and len(predictions) > 0:
-                        # Count stems from predictions
-                        stem_count = len(predictions)
-                        
-                        for pred in predictions:
-                            # Extract measurements from prediction
-                            circumference = pred.get("circumference_inches", pred.get("width", 0))
-                            confidence = pred.get("confidence", 0.0)
-                            
-                            individual_stems.append({
-                                "circumference_inches": circumference,
-                                "confidence": confidence
-                            })
-                            total_circumference += circumference
+                # Convert diameter to circumference (C = π * d)
+                circumference_inches = math.pi * diameter_inches
+
+                logger.info(f"📏 Stem {idx}: {width_pixels:.1f}px → {diameter_inches:.2f}\" diameter → {circumference_inches:.2f}\" circumference")
+
+                is_harvestable = circumference_inches >= HARVEST_THRESHOLD
+
+                if is_harvestable:
+                    harvestable_count += 1
+
+                individual_stems.append({
+                    "circumference_inches": round(circumference_inches, 2),
+                    "diameter_inches": round(diameter_inches, 2),
+                    "width_pixels": round(width_pixels, 1),
+                    "height_pixels": round(height_pixels, 1),
+                    "confidence": round(confidence, 2),
+                    "harvestable": is_harvestable
+                })
             
-            # Calculate average circumference
-            avg_circumference = total_circumference / stem_count if stem_count > 0 else 0.0
-            
-            # Calculate overall confidence
-            if individual_stems:
-                avg_confidence = sum(s["confidence"] for s in individual_stems) / len(individual_stems)
-            else:
-                avg_confidence = confidence  # Use the confidence set earlier (for custom-workflow-3)
-            
-            logger.info(f"📊 Parsed: {stem_count} stems, avg circumference: {avg_circumference:.2f} inches, confidence: {avg_confidence:.2f}")
-            
-            return {
-                "stem_count": stem_count,
-                "stem_circumference_inches": round(avg_circumference, 2),
-                "confidence": round(avg_confidence, 2),
-                "individual_stems": individual_stems
-            }
-            
-        except Exception as e:
+            logger.info(f"📊 Parsed: {total_stems} total stems, {harvestable_count} harvestable (>= {HARVEST_THRESHOLD} inches)")
+
+        except (KeyError, IndexError, TypeError) as e:
             logger.error(f"❌ Failed to parse workflow output: {e}")
-            # Return default values if parsing fails
             return {
-                "stem_count": 0,
-                "stem_circumference_inches": 0.0,
-                "confidence": 0.0,
+                "total_stems_detected": 0,
+                "harvestable_stems": 0,
                 "individual_stems": []
             }
+
+        return {
+            "total_stems_detected": total_stems,
+            "harvestable_stems": harvestable_count,
+            "individual_stems": individual_stems
+        }
     
     @staticmethod
     async def analyze_multiple_tree_images(
@@ -443,8 +436,8 @@ class TreeStemAnalysisService:
         logger.info(f"🌳 Analyzing {len(image_paths)} tree images")
         
         all_results = []
-        total_stems = 0
-        total_circumference = 0.0
+        total_stems_detected = 0
+        total_harvestable = 0
         all_individual_stems = []
         
         for idx, image_path in enumerate(image_paths, 1):
@@ -452,11 +445,11 @@ class TreeStemAnalysisService:
                 result = await TreeStemAnalysisService.analyze_tree_image(image_path)
                 all_results.append(result)
                 
-                total_stems += result["stem_count"]
-                total_circumference += result["stem_circumference_inches"] * result["stem_count"]
+                total_stems_detected += result["total_stems_detected"]
+                total_harvestable += result["harvestable_stems"]
                 all_individual_stems.extend(result["individual_stems"])
                 
-                logger.info(f"✅ Image {idx}/{len(image_paths)}: {result['stem_count']} stems detected")
+                logger.info(f"✅ Image {idx}/{len(image_paths)}: {result['total_stems_detected']} stems detected, {result['harvestable_stems']} harvestable")
                 
             except Exception as e:
                 logger.error(f"❌ Failed to analyze image {idx}: {e}")
@@ -467,21 +460,23 @@ class TreeStemAnalysisService:
             raise ValueError("Failed to analyze any images")
         
         # Calculate averages
-        avg_stem_count = round(total_stems / len(all_results))
-        avg_circumference = total_circumference / total_stems if total_stems > 0 else 0.0
+        avg_total_stems = round(total_stems_detected / len(all_results))
+        avg_harvestable = round(total_harvestable / len(all_results))
         
-        # Calculate overall confidence
-        avg_confidence = sum(r["confidence"] for r in all_results) / len(all_results)
+        # Calculate average confidence from all stems
+        all_confidences = [s["confidence"] for s in all_individual_stems if "confidence" in s]
+        avg_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
         
         return {
             "success": True,
             "images_analyzed": len(all_results),
-            "average_stem_count": avg_stem_count,
-            "average_circumference_inches": round(avg_circumference, 2),
+            "average_total_stems": avg_total_stems,
+            "average_harvestable_stems": avg_harvestable,
+            "total_stems_detected": total_stems_detected,
+            "total_harvestable_stems": total_harvestable,
             "overall_confidence": round(avg_confidence, 2),
             "individual_results": all_results,
-            "all_stems": all_individual_stems,
-            "total_stems_detected": total_stems
+            "all_stems": all_individual_stems
         }
 
 

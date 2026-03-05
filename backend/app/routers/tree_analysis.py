@@ -75,7 +75,7 @@ async def analyze_single_tree_image(
         db: Database session
         
     Returns:
-        Dict containing stem_count, stem_circumference_inches, confidence, and individual_stems
+        Dict containing total_stems_detected, harvestable_stems, and individual_stems with harvestable flags
     """
     try:
         logger.info(f"🌳 Analyzing single tree image: {file.filename}")
@@ -106,7 +106,10 @@ async def analyze_single_tree_image(
         result["saved_path"] = str(file_path)
         result["analyzed_at"] = datetime.now().isoformat()
         
-        logger.info(f"✅ Analysis complete: {result['stem_count']} stems, {result['stem_circumference_inches']} inches")
+        logger.info(
+            f"✅ Analysis complete: {result['total_stems_detected']} total stems, "
+            f"{result['harvestable_stems']} harvestable stems"
+        )
         
         return result
         
@@ -139,8 +142,10 @@ async def analyze_multiple_tree_images(
         
     Returns:
         Dict containing aggregated measurements:
-            - average_stem_count: Average number of stems across all images
-            - average_circumference_inches: Average stem circumference
+            - average_total_stems: Average number of total stems across all images
+            - average_harvestable_stems: Average number of harvestable stems
+            - total_stems_detected: Total stems across all images
+            - total_harvestable_stems: Total harvestable stems across all images
             - overall_confidence: Overall confidence score
             - individual_results: Results from each image
     """
@@ -186,8 +191,8 @@ async def analyze_multiple_tree_images(
         
         logger.info(
             f"✅ Multi-image analysis complete: "
-            f"{result['average_stem_count']} avg stems, "
-            f"{result['average_circumference_inches']} avg inches"
+            f"{result['average_total_stems']} avg total stems, "
+            f"{result['average_harvestable_stems']} avg harvestable stems"
         )
         
         return result
@@ -291,13 +296,13 @@ async def analyze_batch_trees(
             
             logger.info(
                 f"✅ Tree {tree_idx + 1} complete: "
-                f"{tree_result['average_stem_count']} stems, "
-                f"{tree_result['average_circumference_inches']} inches"
+                f"{tree_result['average_total_stems']} total stems, "
+                f"{tree_result['average_harvestable_stems']} harvestable stems"
             )
         
         # Calculate overall statistics
-        total_avg_stems = sum(t["average_stem_count"] for t in tree_results) / len(tree_results)
-        total_avg_circumference = sum(t["average_circumference_inches"] for t in tree_results) / len(tree_results)
+        total_avg_stems = sum(t["average_total_stems"] for t in tree_results) / len(tree_results)
+        total_avg_harvestable = sum(t["average_harvestable_stems"] for t in tree_results) / len(tree_results)
         overall_confidence = sum(t["overall_confidence"] for t in tree_results) / len(tree_results)
         
         return {
@@ -307,8 +312,8 @@ async def analyze_batch_trees(
             "total_images": num_files,
             "tree_results": tree_results,
             "overall_statistics": {
-                "average_stem_count_across_trees": round(total_avg_stems, 1),
-                "average_circumference_across_trees": round(total_avg_circumference, 2),
+                "average_total_stems_across_trees": round(total_avg_stems, 1),
+                "average_harvestable_stems_across_trees": round(total_avg_harvestable, 1),
                 "overall_confidence": round(overall_confidence, 2)
             },
             "analyzed_at": datetime.now().isoformat()

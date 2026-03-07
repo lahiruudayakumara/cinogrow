@@ -170,16 +170,16 @@ function getPipelineActivities(batch: MaterialBatch, t: (k: string) => string): 
         advancesTo: "distilling",
         requiresDriedWeight: true,
       });
-      activities.push({
-        id: `predict-before-distill-${batch.id}`,
-        stage: "drying",
-        kind: "secondary",
-        title: t("oil_yield.home.activities.predict_before_distill_title"),
-        description: t("oil_yield.home.activities.predict_before_distill_desc"),
-        moduleType: "yield-predictor",
-        buttonLabel: "Predict",
-        callsPredict: true,
-      });
+      // activities.push({
+      //   id: `predict-before-distill-${batch.id}`,
+      //   stage: "drying",
+      //   kind: "secondary",
+      //   title: t("oil_yield.home.activities.predict_before_distill_title"),
+      //   description: t("oil_yield.home.activities.predict_before_distill_desc"),
+      //   moduleType: "yield-predictor",
+      //   buttonLabel: "Predict",
+      //   callsPredict: true,
+      // });
       break;
 
     // ── Stage 3: Distilling ───────────────────────────────────────────────────
@@ -202,7 +202,6 @@ function getPipelineActivities(batch: MaterialBatch, t: (k: string) => string): 
         buttonLabel: "Predict",
         callsDistillPredict: true,
       });
-      if (batch.source === "purchased") {
         activities.push({
           id: `predict-before-distill-${batch.id}`,
           stage: "distilling",
@@ -213,7 +212,7 @@ function getPipelineActivities(batch: MaterialBatch, t: (k: string) => string): 
           buttonLabel: "Predict",
           callsPredict: true,
         });
-      }
+      
       break;
 
     // ── Stage 4: Quality Check ────────────────────────────────────────────────

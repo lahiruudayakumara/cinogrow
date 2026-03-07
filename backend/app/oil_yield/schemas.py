@@ -119,3 +119,88 @@ class OilQualityInput(BaseModel):
 class OilQualityOutput(BaseModel):
     predicted_quality_score: float = Field(..., description="Predicted quality score (0-100)")
     input_summary: dict = Field(..., description="Summary of input parameters")
+
+
+# --------------------------
+# Prediction Storage Schemas
+# --------------------------
+
+class OilYieldPredictionCreate(BaseModel):
+    batch_id: int
+    predicted_yield_ml: float
+    predicted_yield_liters: float
+    input_summary: dict
+    recommendation: dict
+    predicted_at: str
+
+
+class OilYieldPredictionRead(BaseModel):
+    id: int
+    batch_id: int
+    predicted_yield_ml: float
+    predicted_yield_liters: float
+    dried_mass_kg: float
+    species_variety: str
+    plant_part: str
+    age_years: float
+    harvesting_season: str
+    recommendation_primary: str
+    recommendation_tips: str
+    recommendation_quality: str
+    predicted_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DistillationPredictionCreate(BaseModel):
+    batch_id: int
+    predicted_time_hours: float
+    distillation_capacity_liters: float
+    plant_part: str
+    cinnamon_type: str
+    predicted_at: str
+
+
+class DistillationPredictionRead(BaseModel):
+    id: int
+    batch_id: int
+    predicted_time_hours: float
+    distillation_capacity_liters: float
+    plant_part: str
+    cinnamon_type: str
+    predicted_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class QualityPredictionCreate(BaseModel):
+    batch_id: int
+    score: float
+    label: str
+    price_range: str
+    recommendations: list[str]
+    lab_advice: str
+    color: str
+    clarity: str
+    aroma: str
+    cinnamon_type: str
+    plant_part: str
+    predicted_at: str
+
+
+class QualityPredictionRead(BaseModel):
+    id: int
+    batch_id: int
+    score: float
+    label: str
+    price_range: str
+    recommendations: str
+    lab_advice: str
+    color: str
+    clarity: str
+    aroma: str
+    cinnamon_type: str
+    plant_part: str
+    predicted_at: datetime
+
+    model_config = {"from_attributes": True}

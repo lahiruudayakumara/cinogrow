@@ -99,13 +99,22 @@ function mapApiBatch(b: ApiBatch): MaterialBatch {
 
 // ─── Stage config ──────────────────────────────────────────────────────────────
 
-const DISTILLATION_STAGES: { key: BatchStatus; label: string; icon: string; days: string }[] = [
-  { key: "raw",           label: "Raw Material",  icon: "leaf-outline",            days: "Day 0"    },
-  { key: "drying",        label: "Drying",         icon: "weather-sunny",           days: "1–7 days" },
-  { key: "distilling",    label: "Distillation",   icon: "flask-outline",           days: "6–8 hrs"  },
-  { key: "quality_check", label: "Quality Check",  icon: "clipboard-check-outline", days: "1 day"    },
-  { key: "complete",      label: "Complete",       icon: "check-circle-outline",    days: "Done"     },
-];
+const DISTILLATION_STAGE_ICONS: Record<BatchStatus, string> = {
+  raw:           "leaf-outline",
+  drying:        "weather-sunny",
+  distilling:    "flask-outline",
+  quality_check: "clipboard-check-outline",
+  complete:      "check-circle-outline",
+};
+
+function getDistillationStages(t: (k: string) => string) {
+  return STATUS_ORDER.map((key) => ({
+    key,
+    label: t(`oil_yield.home.stages.${key}`),
+    icon:  DISTILLATION_STAGE_ICONS[key],
+    days:  t(`oil_yield.home.stage_days.${key}`),
+  }));
+}
 
 const STATUS_ORDER: BatchStatus[] = ["raw", "drying", "distilling", "quality_check", "complete"];
 
@@ -113,13 +122,13 @@ function getStageIndex(status: BatchStatus): number {
   return STATUS_ORDER.indexOf(status);
 }
 
-function getStatusLabel(status: BatchStatus): string {
-  return DISTILLATION_STAGES.find((s) => s.key === status)?.label ?? status;
+function getStatusLabel(status: BatchStatus, t: (k: string) => string): string {
+  return t(`oil_yield.home.stages.${status}`);
 }
 
 // ─── Pipeline Activity definitions ───────────────────────────────────────────
 
-function getPipelineActivities(batch: MaterialBatch): PipelineActivity[] {
+function getPipelineActivities(batch: MaterialBatch, t: (k: string) => string): PipelineActivity[] {
   const activities: PipelineActivity[] = [];
 
   switch (batch.status) {
@@ -271,9 +280,10 @@ function BatchSelector({
   selectedId: number | null;
   onSelect: (id: number) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.selectorContainer}>
-      <Text style={styles.sectionTitle}>Select Batch</Text>
+      <Text style={styles.sectionTitle}>{t("oil_yield.home.select_batch")}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -310,7 +320,7 @@ function BatchSelector({
                     { color: isPurchased ? "#7C3AED" : "#15803D" },
                   ]}
                 >
-                  {isPurchased ? "Purchased" : "Own Farm"}
+                  {isPurchased ? t("oil_yield.home.purchased") : t("oil_yield.home.own_farm")}
                 </Text>
               </View>
 
@@ -334,15 +344,15 @@ function BatchSelector({
               </Text>
               <View style={[styles.statusPill, { backgroundColor: `${statusColor}18` }]}>
                 <Text style={[styles.statusPillText, { color: statusColor }]}>
-                  {getStatusLabel(batch.status)}
+                  {getStatusLabel(batch.status, t)}
                 </Text>
               </View>
               {/* Show dried weight indicator */}
               {batch.source === "own_farm" && !batch.driedWeightKg ? (
-                <Text style={styles.selectorWeightPending}>⏳ {batch.rawWeightKg} kg raw</Text>
+                <Text style={styles.selectorWeightPending}>⏳ {batch.rawWeightKg} {t("oil_yield.home.kg_raw")}</Text>
               ) : (
                 <Text style={styles.selectorWeight}>
-                  {batch.driedWeightKg ?? batch.rawWeightKg} kg dried
+                  {batch.driedWeightKg ?? batch.rawWeightKg} {t("oil_yield.home.kg_dried")}
                 </Text>
               )}
             </TouchableOpacity>
@@ -365,17 +375,19 @@ function DistillationTimeline({
   status: BatchStatus;
   source: BatchSource;
 }) {
+  const { t } = useTranslation();
   const currentIndex = getStageIndex(status);
   const isPurchased  = source === "purchased";
+  const stages = getDistillationStages(t);
 
   return (
     <View style={styles.timelineContainer}>
       <View style={styles.timelineHeaderRow}>
-        <Text style={styles.timelineTitle}>Distillation Pipeline</Text>
+        <Text style={styles.timelineTitle}>{t("oil_yield.home.distillation_pipeline")}</Text>
         {isPurchased && (
           <View style={styles.purchasedPipelineBadge}>
             <Ionicons name="cart-outline" size={12} color="#7C3AED" />
-            <Text style={styles.purchasedPipelineBadgeText}>Pre-dried</Text>
+            <Text style={styles.purchasedPipelineBadgeText}>{t("oil_yield.home.pre_dried")}</Text>
           </View>
         )}
       </View>
@@ -384,7 +396,7 @@ function DistillationTimeline({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.timelineScroll}
       >
-        {DISTILLATION_STAGES.map((stage, index) => {
+        {stages.map((stage, index) => {
           const isBypassed  = isPurchased && PURCHASED_BYPASS_STAGES.includes(stage.key);
           const isActive    = !isBypassed && index === currentIndex;
           const isPast      = !isBypassed && index < currentIndex;
@@ -423,10 +435,10 @@ function DistillationTimeline({
                   {stage.label}
                 </Text>
                 <Text style={[styles.timelineStageDays, isBypassed && { color: "#D1D5DB" }]}>
-                  {isBypassed ? "Skipped" : stage.days}
+                  {isBypassed ? t("oil_yield.home.skipped") : stage.days}
                 </Text>
               </View>
-              {index < DISTILLATION_STAGES.length - 1 && (
+              {index < stages.length - 1 && (
                 <View
                   style={[
                     styles.timelineLine,
@@ -456,6 +468,7 @@ function PipelineActivityCard({
   onNavigate: (m: ModuleType) => void;
   stageAdvancing: boolean;
 }) {
+  const { t } = useTranslation();
   const moduleColor  = getModuleColor(activity.moduleType);
   const isPrimary    = activity.kind === "primary";
   const canMarkDone  = isPrimary;
@@ -475,7 +488,7 @@ function PipelineActivityCard({
         </View>
         {isPrimary && (
           <View style={styles.primaryBadge}>
-            <Text style={styles.primaryBadgeText}>NEXT STEP</Text>
+            <Text style={styles.primaryBadgeText}>{t("oil_yield.home.next_step_badge")}</Text>
           </View>
         )}
       </View>
@@ -496,7 +509,7 @@ function PipelineActivityCard({
             onPress={() => onNavigate(activity.moduleType!)}
             activeOpacity={0.85}
           >
-            <Text style={styles.goButtonText}>Go to module</Text>
+            <Text style={styles.goButtonText}>{t("oil_yield.home.go_to_module")}</Text>
             <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -516,7 +529,7 @@ function PipelineActivityCard({
             ) : (
               <>
                 <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
-                <Text style={styles.doneButtonText}>Mark Done</Text>
+                <Text style={styles.doneButtonText}>{t("oil_yield.home.mark_done")}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -535,6 +548,7 @@ function BatchCompleteSummary({
   batch: MaterialBatch;
   onNavigate: (m: ModuleType) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.completeSummaryCard}>
       <View style={styles.completeSummaryHeader}>
@@ -542,18 +556,18 @@ function BatchCompleteSummary({
           <Ionicons name="checkmark-circle" size={36} color="#10B981" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.completeSummaryTitle}>Batch Complete</Text>
-          <Text style={styles.completeSummarySubtitle}>All pipeline stages finished</Text>
+          <Text style={styles.completeSummaryTitle}>{t("oil_yield.home.batch_complete_title")}</Text>
+          <Text style={styles.completeSummarySubtitle}>{t("oil_yield.home.batch_complete_subtitle")}</Text>
         </View>
       </View>
 
       {/* Summary Rows */}
       {[
-        { label: "Batch Name",   value: batch.name },
-        { label: "Source",       value: batch.source === "own_farm" ? "Own Farm" : "Purchased" },
-        { label: "Raw Weight",   value: `${batch.rawWeightKg} kg` },
-        { label: "Dried Weight", value: batch.driedWeightKg ? `${batch.driedWeightKg} kg` : "—" },
-        { label: "Added",        value: new Date(batch.addedDate).toLocaleDateString() },
+        { label: t("oil_yield.home.batch_name_label"),    value: batch.name },
+        { label: t("oil_yield.home.source_label"),        value: batch.source === "own_farm" ? t("oil_yield.home.own_farm") : t("oil_yield.home.purchased") },
+        { label: t("oil_yield.home.raw_weight_label"),    value: `${batch.rawWeightKg} kg` },
+        { label: t("oil_yield.home.dried_weight_label"),  value: batch.driedWeightKg ? `${batch.driedWeightKg} kg` : "—" },
+        { label: t("oil_yield.home.added_label"),         value: new Date(batch.addedDate).toLocaleDateString() },
       ].map(({ label, value }) => (
         <View key={label} style={styles.summaryRow}>
           <Text style={styles.summaryRowLabel}>{label}</Text>
@@ -568,7 +582,7 @@ function BatchCompleteSummary({
         activeOpacity={0.85}
       >
         <Ionicons name="cash-outline" size={18} color="#FFFFFF" />
-        <Text style={styles.marketPriceBtnText}>Check Market Price</Text>
+        <Text style={styles.marketPriceBtnText}>{t("oil_yield.home.check_market_price")}</Text>
         <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
@@ -584,15 +598,16 @@ function RecentActivities({
   activities: BatchActivity[];
   batchId: number | null;
 }) {
+  const { t } = useTranslation();
   const filtered = activities.filter((a) => a.batch_id === batchId);
 
   return (
     <View style={styles.recentContainer}>
-      <Text style={styles.sectionTitle}>Recent Activities</Text>
+      <Text style={styles.sectionTitle}>{t("oil_yield.home.recent_activities_title")}</Text>
       {filtered.length === 0 ? (
         <View style={styles.noActivitiesCard}>
           <Ionicons name="time-outline" size={32} color="#9CA3AF" />
-          <Text style={styles.noActivitiesText}>No activities recorded yet for this batch.</Text>
+          <Text style={styles.noActivitiesText}>{t("oil_yield.home.no_activities")}</Text>
         </View>
       ) : (
         filtered.slice(0, 5).map((act, i) => (
@@ -616,6 +631,7 @@ function RecentActivities({
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
 export default function OilScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
   const router = useRouter();
 
@@ -640,7 +656,7 @@ export default function OilScreen() {
         setSelectedBatchId((prev) => prev ?? mapped[0].id);
       }
     } catch (e: any) {
-      setError(e.message ?? "Failed to load batches");
+      setError(e.message ?? t("oil_yield.home.no_batches_desc"));
     } finally {
       setLoading(false);
     }
@@ -671,7 +687,7 @@ export default function OilScreen() {
     if (!selectedBatch) return;
     const kg = parseFloat(driedWeightInput);
     if (isNaN(kg) || kg <= 0) {
-      Alert.alert("Invalid Weight", "Please enter a valid weight in kilograms.");
+      Alert.alert(t("oil_yield.home.invalid_weight_title"), t("oil_yield.home.invalid_weight_msg"));
       return;
     }
     setShowDriedWeightModal(false);
@@ -685,13 +701,13 @@ export default function OilScreen() {
         {
           id: Date.now(),
           batch_id: selectedBatch.id,
-          activity_name: `Sun Dry the Bark — dried weight recorded: ${kg}\u202fkg`,
+          activity_name: `${t("oil_yield.home.activities.sun_dry_title")} — ${t("oil_yield.home.dried_weight_prefix")} ${kg}\u202fkg`,
           activity_date: new Date().toISOString(),
         },
         ...prev,
       ]);
     } catch (e: any) {
-      Alert.alert("Error", e.message ?? "Failed to update dried weight.");
+      Alert.alert(t("oil_yield.home.error_title"), e.message ?? t("oil_yield.home.failed_update_dried"));
     } finally {
       setStageAdvancing(false);
     }
@@ -724,7 +740,7 @@ export default function OilScreen() {
         ...prev,
       ]);
     } catch (e: any) {
-      Alert.alert("Error", e.message ?? "Failed to advance batch stage.");
+      Alert.alert(t("oil_yield.home.error_title"), e.message ?? t("oil_yield.home.failed_advance"));
     } finally {
       setStageAdvancing(false);
     }
@@ -735,7 +751,7 @@ export default function OilScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4CAF50" />
-          <Text style={styles.loadingText}>Loading batches…</Text>
+          <Text style={styles.loadingText}>{t("oil_yield.home.loading_batches")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -755,11 +771,9 @@ export default function OilScreen() {
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color="#1F2937" />
             </TouchableOpacity>
-            <Text style={styles.title}>Oil Yield</Text>
+            <Text style={styles.title}>{t("oil_yield.home.title")}</Text>
           </View>
-          <Text style={styles.subtitle}>
-            Track cinnamon oil batches from raw material through to distillation and sale.
-          </Text>
+          <Text style={styles.subtitle}>{t("oil_yield.home.subtitle")}</Text>
         </View>
 
         {/* ── Error Banner ── */}
@@ -771,7 +785,7 @@ export default function OilScreen() {
           >
             <Ionicons name="cloud-offline-outline" size={18} color="#991B1B" />
             <Text style={styles.errorBannerText}>{error}</Text>
-            <Text style={styles.errorBannerRetry}>Retry</Text>
+            <Text style={styles.errorBannerRetry}>{t("oil_yield.home.retry")}</Text>
           </TouchableOpacity>
         )}
 
@@ -789,12 +803,10 @@ export default function OilScreen() {
             <View style={styles.addBatchLeft}>
               <View style={[styles.startBadge, { backgroundColor: "#ECFDF5", borderColor: "#A7F3D0" }]}>
                 <Ionicons name="flask-outline" size={10} color="#065F46" />
-                <Text style={[styles.startBadgeText, { color: "#065F46" }]}>NEW BATCH</Text>
+                <Text style={[styles.startBadgeText, { color: "#065F46" }]}>{t("oil_yield.home.add_batch_badge")}</Text>
               </View>
-              <Text style={styles.addBatchTitle}>Add Batch</Text>
-              <Text style={styles.addBatchSubtitle}>
-                Register a new material{"\n"}batch for processing.
-              </Text>
+              <Text style={styles.addBatchTitle}>{t("oil_yield.home.add_batch_title")}</Text>
+              <Text style={styles.addBatchSubtitle}>{t("oil_yield.home.add_batch_subtitle")}</Text>
             </View>
           </TouchableOpacity>
 
@@ -810,20 +822,18 @@ export default function OilScreen() {
             <View style={styles.addBatchLeft}>
               <View style={[styles.startBadge, { backgroundColor: "#F5F3FF", borderColor: "#DDD6FE" }]}>
                 <Ionicons name="trending-up" size={10} color="#5B21B6" />
-                <Text style={[styles.startBadgeText, { color: "#5B21B6" }]}>MARKET</Text>
+                <Text style={[styles.startBadgeText, { color: "#5B21B6" }]}>{t("oil_yield.home.market_badge")}</Text>
               </View>
-              <Text style={styles.addBatchTitle}>Price Predictor</Text>
-              <Text style={styles.addBatchSubtitle}>
-                Check live market rates{"\n"}and predict oil prices.
-              </Text>
+              <Text style={styles.addBatchTitle}>{t("oil_yield.home.price_predictor_title")}</Text>
+              <Text style={styles.addBatchSubtitle}>{t("oil_yield.home.price_predictor_subtitle")}</Text>
             </View>
           </TouchableOpacity>
         </View>
         {batches.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="flask-outline" size={64} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>No Batches Yet</Text>
-            <Text style={styles.emptyDesc}>Add your first material batch to get started.</Text>
+            <Text style={styles.emptyTitle}>{t("oil_yield.home.no_batches_title")}</Text>
+            <Text style={styles.emptyDesc}>{t("oil_yield.home.no_batches_desc")}</Text>
           </View>
         ) : (
           <>
@@ -845,15 +855,15 @@ export default function OilScreen() {
                   <View style={styles.detailInfoRow}>
                     <View style={styles.weightBox}>
                       <Text style={styles.weightValue}>{selectedBatch.rawWeightKg}</Text>
-                      <Text style={styles.weightLabel}>KG</Text>
+                      <Text style={styles.weightLabel}>{t("oil_yield.home.kg_unit")}</Text>
                     </View>
                     <View style={styles.detailMeta}>
-                      <Text style={styles.detailStage}>{getStatusLabel(selectedBatch.status)}</Text>
+                      <Text style={styles.detailStage}>{getStatusLabel(selectedBatch.status, t)}</Text>
                       {selectedBatch.plotName && (
                         <Text style={styles.detailPlot}>📍 {selectedBatch.plotName}</Text>
                       )}
                       <Text style={styles.detailDate}>
-                        Added: {new Date(selectedBatch.addedDate).toLocaleDateString()}
+                        {t("oil_yield.home.added_prefix")} {new Date(selectedBatch.addedDate).toLocaleDateString()}
                       </Text>
                     </View>
                   </View>
@@ -861,17 +871,17 @@ export default function OilScreen() {
                   {/* Stats row */}
                   <View style={styles.statsRow}>
                     <View style={styles.statChip}>
-                      <Text style={styles.statLabel}>Moisture</Text>
+                      <Text style={styles.statLabel}>{t("oil_yield.home.moisture_label")}</Text>
                       <Text style={styles.statValue}>{selectedBatch.moisturePercent ?? "—"}%</Text>
                     </View>
                     <View style={styles.statChip}>
-                      <Text style={styles.statLabel}>Est. Yield</Text>
+                      <Text style={styles.statLabel}>{t("oil_yield.home.est_yield_label")}</Text>
                       <Text style={styles.statValue}>{selectedBatch.expectedYieldPercent ?? "—"}%</Text>
                     </View>
                     <View style={styles.statChip}>
-                      <Text style={styles.statLabel}>Status</Text>
+                      <Text style={styles.statLabel}>{t("oil_yield.home.status_label")}</Text>
                       <Text style={[styles.statValue, { color: getStatusColor(selectedBatch.status) }]}>
-                        {getStatusLabel(selectedBatch.status)}
+                        {getStatusLabel(selectedBatch.status, t)}
                       </Text>
                     </View>
                   </View>
@@ -886,14 +896,14 @@ export default function OilScreen() {
                       <View style={styles.driedWeightBannerLeft}>
                         <Ionicons name="scale-outline" size={20} color="#92400E" />
                         <View style={{ marginLeft: 10, flex: 1 }}>
-                          <Text style={styles.driedWeightBannerTitle}>Dried Weight Pending</Text>
+                          <Text style={styles.driedWeightBannerTitle}>{t("oil_yield.home.dried_weight_pending")}</Text>
                           <Text style={styles.driedWeightBannerSub}>
-                            Tap to record dried weight once drying is complete.
+                            {t("oil_yield.home.dried_weight_tap")}
                           </Text>
                         </View>
                       </View>
                       <View style={styles.driedWeightBannerBtn}>
-                        <Text style={styles.driedWeightBannerBtnText}>Update</Text>
+                        <Text style={styles.driedWeightBannerBtnText}>{t("oil_yield.home.update")}</Text>
                       </View>
                     </TouchableOpacity>
                   ) : (
@@ -920,14 +930,14 @@ export default function OilScreen() {
                 ) : (
                   <>
                     <View style={styles.sectionHeaderWithFilter}>
-                      <Text style={styles.sectionSubtitle}>Pipeline Activities</Text>
+                      <Text style={styles.sectionSubtitle}>{t("oil_yield.home.pipeline_activities")}</Text>
                       <View style={styles.stagePill}>
                         <Text style={styles.stagePillText}>
-                          {getStatusLabel(selectedBatch.status)}
+                          {getStatusLabel(selectedBatch.status, t)}
                         </Text>
                       </View>
                     </View>
-                    {getPipelineActivities(selectedBatch).map((activity) => (
+                    {getPipelineActivities(selectedBatch, t).map((activity) => (
                       <PipelineActivityCard
                         key={activity.id}
                         activity={activity}
@@ -947,13 +957,13 @@ export default function OilScreen() {
         )}
 
       {/* ── Modules section ── */}
-        <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>Modules</Text>
+        <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>{t("oil_yield.home.modules_title")}</Text>
         <View style={styles.toolsCard}>
           {[
-            { icon: "flask-outline",           color: "#10B981", bg: "#F0FDF4", label: "Yield Predictor",  sub: "Estimate oil output from bark weight",   route: "/oil-yield/predictor-second"     },
-            { icon: "steam",                   color: "#F59E0B", bg: "#FFF7ED", label: "Distillation",     sub: "Manage your extraction session",         route: "/oil-yield/distillation-process"  },
-            { icon: "clipboard-check-outline", color: "#3B82F6", bg: "#EFF6FF", label: "Quality Guide",    sub: "Grade and certify your oil",             route: "/oil-yield/quality-guide"         },
-            { icon: "chart-line",              color: "#8B5CF6", bg: "#FDF4FF", label: "Price Predictor",  sub: "Check live market rates",                route: "/oil-yield/price-predictor"       },
+            { icon: "flask-outline",           color: "#10B981", bg: "#F0FDF4", label: t("oil_yield.home.modules.yield_predictor_label"),  sub: t("oil_yield.home.modules.yield_predictor_sub"),  route: "/oil-yield/predictor-second"     },
+            { icon: "steam",                   color: "#F59E0B", bg: "#FFF7ED", label: t("oil_yield.home.modules.distillation_label"),     sub: t("oil_yield.home.modules.distillation_sub"),    route: "/oil-yield/distillation-process"  },
+            { icon: "clipboard-check-outline", color: "#3B82F6", bg: "#EFF6FF", label: t("oil_yield.home.modules.quality_label"),          sub: t("oil_yield.home.modules.quality_sub"),         route: "/oil-yield/quality-guide"         },
+            { icon: "chart-line",              color: "#8B5CF6", bg: "#FDF4FF", label: t("oil_yield.home.modules.price_label"),            sub: t("oil_yield.home.modules.price_sub"),           route: "/oil-yield/price-predictor"       },
           ].map((item, index, arr) => (
             <React.Fragment key={item.label}>
               <TouchableOpacity
@@ -992,16 +1002,14 @@ export default function OilScreen() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Ionicons name="scale-outline" size={24} color="#4CAF50" />
-              <Text style={styles.modalTitle}>Record Dried Weight</Text>
+              <Text style={styles.modalTitle}>{t("oil_yield.home.record_dried_title")}</Text>
             </View>
             <Text style={styles.modalSubtitle}>
-              Enter the dried weight (kg) for{" "}
-              <Text style={{ fontWeight: "700" }}>{selectedBatch?.name}</Text>.
-              The batch will automatically advance to Distillation.
+              {t("oil_yield.home.record_dried_subtitle", { name: selectedBatch?.name ?? "" })}
             </Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="e.g. 42.5"
+              placeholder={t("oil_yield.home.dried_weight_placeholder")}
               placeholderTextColor="#9CA3AF"
               keyboardType="decimal-pad"
               value={driedWeightInput}
@@ -1014,7 +1022,7 @@ export default function OilScreen() {
                 onPress={() => { setShowDriedWeightModal(false); setDriedWeightInput(""); }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                <Text style={styles.modalCancelBtnText}>{t("oil_yield.home.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalConfirmBtn, stageAdvancing && styles.doneButtonDisabled]}
@@ -1025,7 +1033,7 @@ export default function OilScreen() {
                 {stageAdvancing ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.modalConfirmBtnText}>Confirm &amp; Advance</Text>
+                  <Text style={styles.modalConfirmBtnText}>{t("oil_yield.home.confirm_advance")}</Text>
                 )}
               </TouchableOpacity>
             </View>

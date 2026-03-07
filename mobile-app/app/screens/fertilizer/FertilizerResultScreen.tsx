@@ -107,9 +107,14 @@ const FertilizerResultScreen: React.FC = () => {
                 console.log('🍃 Extracted leaf detection:', leafDetection);
                 setDetections([leafDetection]);
 
-                // Set recommendations if available
-                if (leafData.recommendations) {
-                    console.log('✅ Using leaf recommendations from combined analysis');
+                // Use cross-validated recommendations that are filtered based on the detected deficiency
+                // Check for cross_validated_recommendation first, then fall back to leaf recommendations
+                const crossValidatedRecs = combinedAnalysis.cross_validated_recommendation;
+                if (crossValidatedRecs && crossValidatedRecs.leaf_treatment_plan) {
+                    console.log('✅ Using cross-validated recommendations (filtered by deficiency)');
+                    setRecommendations(crossValidatedRecs.leaf_treatment_plan as unknown as FertilizerRecommendation);
+                } else if (leafData.recommendations) {
+                    console.log('⚠️ Falling back to generic leaf recommendations');
                     setRecommendations(leafData.recommendations as unknown as FertilizerRecommendation);
                 }
             }
@@ -233,119 +238,13 @@ const FertilizerResultScreen: React.FC = () => {
     };
 
     // Generate intelligent comprehensive recommendations based on deficiency + age + soil type
-    const generateComprehensiveRecommendations = () => {
-        if (!detections.length || !plantAge || !combinedSoilAnalysis?.soil_type) {
-            return recommendations; // Fallback to existing recommendations
-        }
-
-        const deficiency = detections[0].deficiency.toLowerCase();
-        const soilType = combinedSoilAnalysis.soil_type.toLowerCase();
-        const age = plantAge;
-
-        // Smart NPK ratio based on deficiency and soil type
-        let npkRatio = '10:10:10';
-        let fertilizerName = 'Balanced NPK Fertilizer';
-        let dosage = '50-75g per plant';
-        let additionalNotes = '';
-
-        // Deficiency-specific adjustments
-        if (deficiency.includes('nitrogen') || deficiency.includes('n')) {
-            npkRatio = '20:10:10';
-            fertilizerName = 'Nitrogen-Rich Fertilizer';
-            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.nitrogen');
-        } else if (deficiency.includes('phosphorus') || deficiency.includes('p')) {
-            npkRatio = '10:20:10';
-            fertilizerName = 'Phosphorus-Rich Fertilizer';
-            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.phosphorus');
-        } else if (deficiency.includes('potassium') || deficiency.includes('k')) {
-            npkRatio = '10:10:20';
-            fertilizerName = 'Potassium-Rich Fertilizer';
-            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.potassium');
-        } else if (deficiency.includes('iron') || deficiency.includes('fe')) {
-            fertilizerName = 'Iron Chelate Supplement';
-            npkRatio = '0:0:0 + Fe';
-            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.iron');
-        } else if (deficiency.includes('magnesium') || deficiency.includes('mg')) {
-            fertilizerName = 'Magnesium Sulfate (Epsom Salt)';
-            npkRatio = '0:0:0 + Mg';
-            dosage = '1-2 tablespoons per gallon of water';
-            additionalNotes = t('fertilizer.result.recommendations.fertilizer_notes.magnesium');
-        }
-
-        // Soil-type specific adjustments
-        if (soilType.includes('clay')) {
-            dosage = '40-60g per plant';
-            additionalNotes += t('fertilizer.result.recommendations.soil_notes.clay');
-        } else if (soilType.includes('sand')) {
-            dosage = '75-100g per plant';
-            additionalNotes += t('fertilizer.result.recommendations.soil_notes.sandy');
-        } else if (soilType.includes('loam')) {
-            dosage = '50-75g per plant';
-            additionalNotes += t('fertilizer.result.recommendations.soil_notes.loamy');
-        } else if (soilType.includes('silt')) {
-            dosage = '60-80g per plant';
-            additionalNotes += t('fertilizer.result.recommendations.soil_notes.silty');
-        }
-
-        // Age-based adjustments
-        let frequency = t('fertilizer.result.recommendations.frequencies.every_4_6_weeks');
-        let applicationMethod = t('fertilizer.result.recommendations.application_methods.avoid_trunk');
-        
-        if (age <= 2) {
-            dosage = dosage.replace(/\\d+-\\d+/g, (match) => {
-                const [min, max] = match.split('-').map(Number);
-                return `${Math.floor(min * 0.5)}-${Math.floor(max * 0.6)}`;
-            });
-            frequency = t('fertilizer.result.recommendations.frequencies.every_6_8_weeks');
-            applicationMethod = t('fertilizer.result.recommendations.application_methods.young_plants');
-        } else if (age <= 5) {
-            frequency = t('fertilizer.result.recommendations.frequencies.every_4_6_weeks');
-            applicationMethod = t('fertilizer.result.recommendations.application_methods.growing_plants');
-        } else {
-            frequency = t('fertilizer.result.recommendations.frequencies.every_3_4_weeks');
-            applicationMethod = t('fertilizer.result.recommendations.application_methods.mature_plants');
-        }
-
-        // Create comprehensive recommendation
-        return {
-            ...recommendations,
-            primary_fertilizer: {
-                name: fertilizerName,
-                npk_ratio: npkRatio,
-                dosage: dosage,
-                dosage_note: additionalNotes,
-                frequency: frequency,
-                application_method: applicationMethod
-            },
-            growth_stage: {
-                stage: age <= 2 ? 'Young Plant (Establishment)' : age <= 5 ? 'Growing Plant (Development)' : 'Mature Plant (Production)',
-                description: age <= 2 
-                    ? 'Focus on establishing healthy root system and vegetative growth.' 
-                    : age <= 5 
-                    ? 'Active growth phase - building strong structure and leaf canopy.'
-                    : 'Mature plant - focus on maintaining health and productivity.',
-                age_years: age
-            },
-            additional_care: {
-                watering: soilType.includes('sand') 
-                    ? 'Water deeply 2-3 times per week. Sandy soil drains quickly.'
-                    : soilType.includes('clay')
-                    ? 'Water deeply once per week. Clay retains moisture longer.'
-                    : 'Water deeply 1-2 times per week. Maintain consistent moisture.',
-                mulching: `Apply 5-7cm organic mulch around the base. This is especially important for ${soilType} soil to regulate moisture and temperature.`,
-                monitoring: `Check leaves weekly for improvement. Expected changes: ${deficiency.includes('nitrogen') ? 'greening of leaves' : deficiency.includes('iron') ? 'new leaves turning darker green' : 'overall health improvement'} within 2-3 weeks.`,
-                soil_testing: `Given your ${soilType} soil type, consider soil pH testing. ${soilType.includes('clay') ? 'Clay soils may have pH issues.' : soilType.includes('sand') ? 'Sandy soils may be acidic.' : 'Regular testing ensures optimal nutrient availability.'}`
-            }
-        } as FertilizerRecommendation;
-    };
-
-    // Use comprehensive recommendations when available
+    // Always use backend recommendations - they are already deficiency-specific and filtered
+    // The backend provides accurate fertilizer recommendations based on detected leaf deficiency
     const displayRecommendations = useMemo(() => {
-        if (analysisType === 'comprehensive' && detections.length > 0 && combinedSoilAnalysis?.soil_type) {
-            return generateComprehensiveRecommendations();
-        }
+        // Always return the recommendations from backend (leaf-based or combined analysis)
+        // These are already filtered by deficiency and include proper fertilizer names (Urea, MOP, ERP, etc.)
         return recommendations;
-    }, [recommendations, analysisType, detections, combinedSoilAnalysis, plantAge]);
+    }, [recommendations]);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -369,9 +268,9 @@ const FertilizerResultScreen: React.FC = () => {
                             <Ionicons name="arrow-back" size={24} color="#1F2937" />
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>
-                            {isHistoryView 
-                                ? t('fertilizer.result.header.title_history') 
-                                : analysisType === 'soil-only' 
+                            {isHistoryView
+                                ? t('fertilizer.result.header.title_history')
+                                : analysisType === 'soil-only'
                                     ? 'Soil Type Detection'
                                     : analysisType === 'comprehensive'
                                         ? 'Comprehensive Analysis'
@@ -380,8 +279,8 @@ const FertilizerResultScreen: React.FC = () => {
                         </Text>
                     </View>
                     <Text style={styles.headerSubtitle}>
-                        {isHistoryView 
-                            ? t('fertilizer.result.header.subtitle_history') 
+                        {isHistoryView
+                            ? t('fertilizer.result.header.subtitle_history')
                             : analysisType === 'soil-only'
                                 ? 'AI-powered soil type analysis results'
                                 : analysisType === 'comprehensive'
@@ -778,7 +677,7 @@ const FertilizerResultScreen: React.FC = () => {
                                             <Text style={[styles.cardTitle, { color: '#16A34A' }]}>Smart Comprehensive Analysis</Text>
                                         </View>
                                         <Text style={styles.stageDescription}>
-                                            These recommendations are intelligently tailored based on your detected {detections[0]?.deficiency} deficiency, 
+                                            These recommendations are intelligently tailored based on your detected {detections[0]?.deficiency} deficiency,
                                             {plantAge}-year-old plant age, and {combinedSoilAnalysis.soil_type} soil type for maximum effectiveness.
                                         </Text>
                                     </View>
@@ -786,45 +685,45 @@ const FertilizerResultScreen: React.FC = () => {
 
                                 {/* Tabs Navigation */}
                                 <View style={styles.tabsContainer}>
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[styles.tab, activeTab === 'overview' && styles.activeTab]}
                                         onPress={() => setActiveTab('overview')}
                                         activeOpacity={0.7}
                                     >
-                                        <Ionicons 
-                                            name="flask-outline" 
-                                            size={18} 
-                                            color={activeTab === 'overview' ? '#4CAF50' : '#9CA3AF'} 
+                                        <Ionicons
+                                            name="flask-outline"
+                                            size={18}
+                                            color={activeTab === 'overview' ? '#4CAF50' : '#9CA3AF'}
                                         />
                                         <Text style={[styles.tabText, activeTab === 'overview' && styles.activeTabText]}>
                                             Overview
                                         </Text>
                                     </TouchableOpacity>
 
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[styles.tab, activeTab === 'schedule' && styles.activeTab]}
                                         onPress={() => setActiveTab('schedule')}
                                         activeOpacity={0.7}
                                     >
-                                        <Ionicons 
-                                            name="calendar-outline" 
-                                            size={18} 
-                                            color={activeTab === 'schedule' ? '#4CAF50' : '#9CA3AF'} 
+                                        <Ionicons
+                                            name="calendar-outline"
+                                            size={18}
+                                            color={activeTab === 'schedule' ? '#4CAF50' : '#9CA3AF'}
                                         />
                                         <Text style={[styles.tabText, activeTab === 'schedule' && styles.activeTabText]}>
                                             Schedule
                                         </Text>
                                     </TouchableOpacity>
 
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[styles.tab, activeTab === 'details' && styles.activeTab]}
                                         onPress={() => setActiveTab('details')}
                                         activeOpacity={0.7}
                                     >
-                                        <Ionicons 
-                                            name="information-circle-outline" 
-                                            size={18} 
-                                            color={activeTab === 'details' ? '#4CAF50' : '#9CA3AF'} 
+                                        <Ionicons
+                                            name="information-circle-outline"
+                                            size={18}
+                                            color={activeTab === 'details' ? '#4CAF50' : '#9CA3AF'}
                                         />
                                         <Text style={[styles.tabText, activeTab === 'details' && styles.activeTabText]}>
                                             Details

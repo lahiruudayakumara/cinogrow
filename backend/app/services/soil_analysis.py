@@ -271,6 +271,39 @@ def generate_soil_recommendations(
         
         soil_data = SOIL_TYPE_DATA[soil_type]
         
+        # Filter fertilizer strategies based on detected leaf deficiency
+        detailed_recommendations = soil_data["recommendations"].copy()
+        if detected_leaf_deficiency:
+            # Filter fertilizer strategy to only show deficiency-relevant recommendations
+            deficiency_lower = detected_leaf_deficiency.lower()
+            filtered_strategies = []
+            
+            for strategy in soil_data["recommendations"]["fertilizer_strategy"]:
+                strategy_lower = strategy.lower()
+                # Check if strategy is relevant to the detected deficiency
+                if (("nitrogen" in deficiency_lower or "n" == deficiency_lower.strip()) and "nitrogen" in strategy_lower) or \
+                   (("phosphorus" in deficiency_lower or "p" == deficiency_lower.strip() or "phosphorous" in deficiency_lower) and ("phosphorus" in strategy_lower or "phosphate" in strategy_lower)) or \
+                   (("potassium" in deficiency_lower or "k" == deficiency_lower.strip() or "potasium" in deficiency_lower) and ("potassium" in strategy_lower or "potash" in strategy_lower)) or \
+                   (("magnesium" in deficiency_lower or "mg" == deficiency_lower.strip()) and ("magnesium" in strategy_lower or "dolomite" in strategy_lower)) or \
+                   (("calcium" in deficiency_lower or "ca" == deficiency_lower.strip()) and ("calcium" in strategy_lower or "lime" in strategy_lower)):
+                    filtered_strategies.append(strategy)
+            
+            # If we found relevant strategies, use them; otherwise provide deficiency-focused note
+            if filtered_strategies:
+                detailed_recommendations = detailed_recommendations.copy()
+                detailed_recommendations["fertilizer_strategy"] = filtered_strategies
+                logger.info(f"✅ Filtered fertilizer strategies based on {detected_leaf_deficiency}: {len(filtered_strategies)} relevant strategies")
+            else:
+                # No soil-specific strategies for this deficiency - provide targeted guidance
+                detailed_recommendations = detailed_recommendations.copy()
+                detailed_recommendations["fertilizer_strategy"] = [
+                    f"Focus on treating the detected {detected_leaf_deficiency}",
+                    f"The {soil_data['display_name']} characteristics may affect nutrient availability",
+                    "Follow the leaf-based fertilizer recommendations provided",
+                    "Consider soil testing to identify any underlying soil-specific issues"
+                ]
+                logger.info(f"⚠️ No specific soil strategies for {detected_leaf_deficiency} in {soil_type}, providing general guidance")
+        
         # Build recommendation response
         recommendations = {
             "soil_analysis": {
@@ -286,7 +319,7 @@ def generate_soil_recommendations(
             
             "soil_improvement_actions": soil_data["improvement_actions"],
             
-            "detailed_recommendations": soil_data["recommendations"],
+            "detailed_recommendations": detailed_recommendations,
             
             "soil_testing_recommendation": {
                 "priority": "High" if soil_type == "laterite_soil" else "Medium",
@@ -537,9 +570,9 @@ def generate_combined_analysis(
             "cross_validation": cross_validation,
             
             "integrated_recommendations": {
-                "immediate_action": f"Treat {detected_deficiency} according to leaf analysis recommendations",
-                "soil_improvement": f"Implement {SOIL_TYPE_DATA.get(soil_type, {}).get('display_name', 'Unknown')} improvement actions",
-                "long_term_strategy": "Combine fertilizer treatment with soil amendment for sustainable improvement"
+                "immediate_action": f"Treat {detected_deficiency} with appropriate fertilizer as per leaf analysis",
+                "soil_improvement": f"Implement {SOIL_TYPE_DATA.get(soil_type, {}).get('display_name', 'soil type')} improvement actions to enhance overall nutrient availability",
+                "long_term_strategy": f"Combine {detected_deficiency} treatment with soil amendment for sustainable improvement"
             },
             
             "leaf_treatment_plan": leaf_analysis.get("recommendations", {}),
@@ -606,30 +639,76 @@ def generate_integrated_plan(
             "details": "Apply agricultural lime (400 kg/acre if pH < 5.0)",
             "timing": "6 weeks before fertilizer application"
         })
-    
-    # Deficiency-specific fertilizer
-    if "nitrogen" in deficiency.lower():
+    elif soil_type == "sandy_soil":
         plan["treatment_sequence"].append({
-            "step": 2 if soil_type == "laterite_soil" else 1,
+            "step": 1,
+            "action": "Improve Soil Retention",
+            "details": "Apply compost and mulch to improve water and nutrient retention",
+            "timing": "Before fertilizer application"
+        })
+    
+    # Deficiency-specific fertilizer (only add treatments for the detected deficiency)
+    deficiency_lower = deficiency.lower()
+    step_num = len(plan["treatment_sequence"]) + 1
+    
+    if "nitrogen" in deficiency_lower:
+        plan["treatment_sequence"].append({
+            "step": step_num,
             "action": "Nitrogen Fertilizer Application",
             "details": f"Apply Urea (46% N) based on plant age: {get_age_based_dosage(plant_age, 'N')}",
             "timing": "Apply in split doses during rainy season"
         })
+        plan["expected_outcomes"].append("Improved leaf greening and overall plant vigor within 2-4 weeks")
+        step_num += 1
+    elif "phosphorus" in deficiency_lower or "phosphorous" in deficiency_lower:
+        plan["treatment_sequence"].append({
+            "step": step_num,
+            "action": "Phosphorus Fertilizer Application",
+            "details": f"Apply ERP (Rock Phosphate) or TSP based on plant age: {get_age_based_dosage(plant_age, 'P')}",
+            "timing": "Apply early in season for slow-release effect"
+        })
+        plan["expected_outcomes"].append("Improved root development and stem strength within 4-6 weeks")
+        step_num += 1
+    elif "potassium" in deficiency_lower or "potasium" in deficiency_lower:
+        plan["treatment_sequence"].append({
+            "step": step_num,
+            "action": "Potassium Fertilizer Application",
+            "details": f"Apply MOP (Muriate of Potash) based on plant age: {get_age_based_dosage(plant_age, 'K')}",
+            "timing": "Apply during moist conditions, avoid dry soil"
+        })
+        plan["expected_outcomes"].append("Reduced leaf scorching and improved bark quality within 3-5 weeks")
+        step_num += 1
+    elif "magnesium" in deficiency_lower:
+        plan["treatment_sequence"].append({
+            "step": step_num,
+            "action": "Magnesium Correction",
+            "details": f"Apply Dolomite based on plant age: {get_age_based_dosage(plant_age, 'Mg')}",
+            "timing": "Apply 6 weeks before other fertilizers"
+        })
+        plan["expected_outcomes"].append("Resolution of interveinal chlorosis within 3-4 weeks")
+        step_num += 1
     
-    # Soil improvement
+    # Soil improvement (always recommended)
     plan["treatment_sequence"].append({
-        "step": len(plan["treatment_sequence"]) + 1,
+        "step": step_num,
         "action": "Organic Matter Application",
         "details": "Apply compost (5-10 kg per plant)",
         "timing": "Ongoing, every 3-6 months"
     })
     
-    # Expected outcomes
-    plan["expected_outcomes"] = [
-        "Visible improvement in leaf color and size within 2-4 weeks",
-        "Improved soil structure and nutrient retention within 3-6 months",
-        "Enhanced plant vigor and productivity over 6-12 months"
-    ]
+    # Expected outcomes (add general outcomes if not already added deficiency-specific ones)
+    if not plan["expected_outcomes"]:
+        plan["expected_outcomes"] = [
+            "Visible improvement in leaf color and size within 2-4 weeks",
+            "Improved soil structure and nutrient retention within 3-6 months",
+            "Enhanced plant vigor and productivity over 6-12 months"
+        ]
+    else:
+        # Add soil improvement outcomes
+        plan["expected_outcomes"].extend([
+            "Improved soil structure and nutrient retention within 3-6 months",
+            "Enhanced plant vigor and productivity over 6-12 months"
+        ])
     
     return plan
 
@@ -637,10 +716,14 @@ def generate_integrated_plan(
 def get_age_based_dosage(plant_age: int, nutrient: str) -> str:
     """Helper function to get age-based nutrient dosage"""
     dosages = {
-        "N": {1: "8g", 2: "17g", "3+": "25g"},
+        "N": {1: "17g", 2: "34g", "3+": "50g"},
         "P": {1: "8g", 2: "17g", "3+": "25g"},
-        "K": {1: "8g", 2: "17g", "3+": "25g"}
+        "K": {1: "8g", 2: "17g", "3+": "25g"},
+        "Mg": {1: "50g", 2: "75g", "3+": "100g"}
     }
+    
+    if nutrient not in dosages:
+        return "consult guidelines"
     
     if plant_age <= 1:
         return dosages[nutrient][1]

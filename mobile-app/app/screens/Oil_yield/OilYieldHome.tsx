@@ -1204,23 +1204,23 @@ export default function OilScreen() {
       let labAdvice = "";
 
       if (finalScore >= 85) {
-        qualityLabel = "Excellent"; priceRange = "$120 – $200 / L";
+        qualityLabel = "Excellent"; priceRange = "";
         recs.push("Suitable for premium markets and export preparation");
         recs.push("Highly recommended for laboratory certification");
         recs.push("Maintain controlled storage to preserve volatile compounds");
         labAdvice = "Proceed with full laboratory analysis for certification and export.";
       } else if (finalScore >= 70) {
-        qualityLabel = "Good"; priceRange = "$70 – $120 / L";
+        qualityLabel = "Good"; priceRange = "";
         recs.push("Minor purification may improve market value");
         recs.push("Recommended to refine distillation parameters");
         labAdvice = "Improve quality slightly before investing in laboratory testing.";
       } else if (finalScore >= 50) {
-        qualityLabel = "Fair"; priceRange = "$30 – $70 / L";
+        qualityLabel = "Fair"; priceRange = "";
         recs.push("Filtering or redistillation is advised");
         recs.push("Review raw material handling and drying process");
         labAdvice = "Laboratory testing not cost-effective at this stage.";
       } else {
-        qualityLabel = "Poor"; priceRange = "$5 – $30 / L";
+        qualityLabel = "Poor"; priceRange = "";
         recs.push("Do not proceed with laboratory testing");
         recs.push("Investigate contamination or processing failures");
         labAdvice = "Resolve quality issues before any certification attempts.";
@@ -1847,7 +1847,7 @@ const styles = StyleSheet.create({
   selectorScroll:       { paddingVertical: 8 },
   selectorCard:         {
     backgroundColor: "#FFFFFF", borderRadius: 16, padding: 14,
-    marginRight: 12, width: 120, alignItems: "center",
+    marginRight: 12, width: 130, alignItems: "center",
     borderWidth: 2, borderColor: "#E5E7EB",
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,

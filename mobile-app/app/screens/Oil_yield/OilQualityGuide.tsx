@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
+import { saveQualityPrediction } from '@/services/oilYieldPredictionStore';
 
 // Use localhost for web platform, otherwise use the configured API URL
 const API_BASE_URL = Platform.OS === 'web'
@@ -170,6 +171,28 @@ export default function PreliminaryOilQualityAssessment() {
       setLabel(qualityLabel);
       setRecommendations(recs);
       setPredictedPrice(priceRange);
+
+      // Persist so OilYieldHome can surface results inline
+      if (selectedBatchId !== null) {
+        try {
+          await saveQualityPrediction({
+            batchId: selectedBatchId,
+            score: finalScore,
+            label: qualityLabel,
+            priceRange,
+            recommendations: recs,
+            labAdvice,
+            color,
+            clarity,
+            aroma,
+            cinnamonType: normalizeCinnamonType(selectedBatch?.cinnamon_type),
+            plantPart: normalizePlantPart(selectedBatch?.plant_part),
+            predictedAt: new Date().toISOString(),
+          });
+        } catch (storeErr) {
+          console.warn('⚠️ Failed to persist quality prediction', storeErr);
+        }
+      }
     } catch (e: any) {
       Alert.alert('Quality Prediction Error', e?.message || 'Failed to predict quality.');
     }

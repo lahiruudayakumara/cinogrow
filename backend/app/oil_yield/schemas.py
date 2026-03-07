@@ -108,7 +108,7 @@ class MaterialBatchRead(BaseModel):
 class OilQualityInput(BaseModel):
     cinnamon_type: Literal["Sri Gamunu", "Sri Wijaya"] = Field(..., description="Cinnamon type or variety")
     plant_part: Literal["Leaves & Twigs", "Featherings & Chips"] = Field(..., description="Part of the plant used")
-    mass_kg: float = Field(..., gt=0, description="Mass of material in kilograms")
+    mass_kg: float = Field(..., description="Mass of material in kilograms")
     plant_age_years: float = Field(..., gt=0, description="Age of the plant in years")
     harvest_season: Literal["January", "April", "July", "October"] = Field(..., description="Harvest season month")
     color: Literal["pale_yellow", "golden", "amber", "dark"] = Field(..., description="Oil color observed")

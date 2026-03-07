@@ -58,9 +58,18 @@ export default function AddMaterialBatchScreen() {
   const isPurchased = source === 'purchased';
 
   // Dropdown options
-  const cinnamonTypes = ['Sri Gemunu', 'Sri Vijaya'];
-  const plantParts = ['Leaves & Twigs', 'Featherings & Chips'];
-  const harvestSeasons = ['May–August', 'January–April'];
+  const cinnamonTypes = [
+    { value: 'Sri Gemunu',        label: t('oil_yield.add_batch.options.cinnamon_types.sri_gemunu') },
+    { value: 'Sri Vijaya',        label: t('oil_yield.add_batch.options.cinnamon_types.sri_vijaya') },
+  ];
+  const plantParts = [
+    { value: 'Leaves & Twigs',       label: t('oil_yield.add_batch.options.plant_parts.leaves_twigs') },
+    { value: 'Featherings & Chips',  label: t('oil_yield.add_batch.options.plant_parts.featherings_chips') },
+  ];
+  const harvestSeasons = [
+    { value: 'May–August',                label: t('oil_yield.add_batch.options.harvest_seasons.may_august') },
+    { value: 'October–December/January', label: t('oil_yield.add_batch.options.harvest_seasons.october_january') },
+  ];
 
   useEffect(() => {
     fetchBatches();
@@ -199,7 +208,7 @@ export default function AddMaterialBatchScreen() {
           <View style={styles.batchDetailRow}>
             <View style={styles.batchDetailItem}>
               <MaterialCommunityIcons name="leaf" size={16} color="#8E8E93" />
-              <Text style={styles.batchDetailLabel}>Type</Text>
+              <Text style={styles.batchDetailLabel}>{t('oil_yield.add_batch.list.detail_labels.type')}</Text>
             </View>
             <Text style={styles.batchDetailValue}>{batch.cinnamon_type}</Text>
           </View>
@@ -207,7 +216,7 @@ export default function AddMaterialBatchScreen() {
           <View style={styles.batchDetailRow}>
             <View style={styles.batchDetailItem}>
               <MaterialCommunityIcons name="weight-kilogram" size={16} color="#8E8E93" />
-              <Text style={styles.batchDetailLabel}>Mass</Text>
+              <Text style={styles.batchDetailLabel}>{t('oil_yield.add_batch.list.detail_labels.mass')}</Text>
             </View>
             <Text style={styles.batchDetailValue}>{batch.mass_kg} kg</Text>
           </View>
@@ -215,7 +224,7 @@ export default function AddMaterialBatchScreen() {
           <View style={styles.batchDetailRow}>
             <View style={styles.batchDetailItem}>
               <MaterialCommunityIcons name="sprout" size={16} color="#8E8E93" />
-              <Text style={styles.batchDetailLabel}>Part</Text>
+              <Text style={styles.batchDetailLabel}>{t('oil_yield.add_batch.list.detail_labels.part')}</Text>
             </View>
             <Text style={styles.batchDetailValue}>{batch.plant_part}</Text>
           </View>
@@ -223,15 +232,15 @@ export default function AddMaterialBatchScreen() {
           <View style={styles.batchDetailRow}>
             <View style={styles.batchDetailItem}>
               <MaterialCommunityIcons name="clock-outline" size={16} color="#8E8E93" />
-              <Text style={styles.batchDetailLabel}>Age</Text>
+              <Text style={styles.batchDetailLabel}>{t('oil_yield.add_batch.list.detail_labels.age')}</Text>
             </View>
-            <Text style={styles.batchDetailValue}>{batch.plant_age_years} years</Text>
+            <Text style={styles.batchDetailValue}>{batch.plant_age_years} {t('oil_yield.add_batch.form.plant_age.suffix')}</Text>
           </View>
           
           <View style={styles.batchDetailRow}>
             <View style={styles.batchDetailItem}>
               <MaterialCommunityIcons name="weather-sunny" size={16} color="#8E8E93" />
-              <Text style={styles.batchDetailLabel}>Season</Text>
+              <Text style={styles.batchDetailLabel}>{t('oil_yield.add_batch.list.detail_labels.season')}</Text>
             </View>
             <Text style={styles.batchDetailValue}>{batch.harvest_season}</Text>
           </View>
@@ -286,7 +295,7 @@ export default function AddMaterialBatchScreen() {
                 !isPurchased && styles.sourceToggleBtnTextActive,
               ]}
             >
-              Own Farm
+              {t('oil_yield.add_batch.source.own_farm')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -308,7 +317,7 @@ export default function AddMaterialBatchScreen() {
                 isPurchased && styles.sourceToggleBtnTextActive,
               ]}
             >
-              Purchased
+              {t('oil_yield.add_batch.source.purchased')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -327,8 +336,8 @@ export default function AddMaterialBatchScreen() {
           />
           <Text style={[styles.sourceHintText, { color: isPurchased ? '#7C3AED' : '#15803D' }]}>
             {isPurchased
-              ? 'Bark is already dried by the supplier. Enter the purchased weight below.'
-              : 'You will dry the bark yourself. Raw weight can be recorded after harvest.'}
+              ? t('oil_yield.add_batch.source.hint_purchased')
+              : t('oil_yield.add_batch.source.hint_own_farm')}
           </Text>
         </View>
 
@@ -374,13 +383,13 @@ export default function AddMaterialBatchScreen() {
               </View>
             </View>
             <View style={styles.dropdownGroup}>
-              {cinnamonTypes.map((type) => (
+              {cinnamonTypes.map((item) => (
                 <DropdownOption
-                  key={type}
-                  label={type}
-                  value={type}
-                  selected={cinnamonType === type}
-                  onSelect={() => setCinnamonType(type)}
+                  key={item.value}
+                  label={item.label}
+                  value={item.value}
+                  selected={cinnamonType === item.value}
+                  onSelect={() => setCinnamonType(item.value)}
                   icon="leaf"
                 />
               ))}
@@ -431,13 +440,13 @@ export default function AddMaterialBatchScreen() {
               </View>
             </View>
             <View style={styles.dropdownGroup}>
-              {plantParts.map((part) => (
+              {plantParts.map((item) => (
                 <DropdownOption
-                  key={part}
-                  label={part}
-                  value={part}
-                  selected={plantPart === part}
-                  onSelect={() => setPlantPart(part)}
+                  key={item.value}
+                  label={item.label}
+                  value={item.value}
+                  selected={plantPart === item.value}
+                  onSelect={() => setPlantPart(item.value)}
                   icon="sprout"
                 />
               ))}
@@ -486,13 +495,13 @@ export default function AddMaterialBatchScreen() {
               </View>
             </View>
             <View style={styles.dropdownGroup}>
-              {harvestSeasons.map((season) => (
+              {harvestSeasons.map((item) => (
                 <DropdownOption
-                  key={season}
-                  label={season}
-                  value={season}
-                  selected={harvestSeason === season}
-                  onSelect={() => setHarvestSeason(season)}
+                  key={item.value}
+                  label={item.label}
+                  value={item.value}
+                  selected={harvestSeason === item.value}
+                  onSelect={() => setHarvestSeason(item.value)}
                   icon="weather-sunny"
                 />
               ))}

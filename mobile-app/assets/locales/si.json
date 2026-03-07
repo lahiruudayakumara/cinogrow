@@ -620,7 +620,9 @@
       "save_yield": "සුරකින්න",
       "cancel": "අවලංගු",
       "success": {
-        "yield_added": "අස්වැන්න වාර්තාව සාර්ථකව එකතු කරන ලදී!"
+        "yield_added": "අස්වැන්න වාර්තාව සාර්ථකව එකතු කරන ලදී!",
+        "yield_updated": "අස්වැන්න වාර්තාව සාර්ථකව යාවත්කාලීන කරන ලදී!",
+        "predictions_received": "අස්වැන්න පුරෝකථන සාර්ථකව ලැබුණි!"
       },
       "loading": "අස්වැන්න දත්ත පූරණය වෙමින්...",
       "no_yield_records": "තවම අස්වැන්න වාර්තා නැත",
@@ -642,13 +644,13 @@
       "start_tree_input": "ආරම්භ කරන්න",
       "total_trees": "බිම් කොටසේ මුළු ගස් ගණන",
       "enter_total_trees": "බිම් කොටසේ මුළු ගස් ගණන",
-      "next_enter_tree_data": "ඊළඟ: ගස් දත්ත ඇතුළත් කරන්න",
+      "next_enter_tree_data": "ඊළඟ",
       "tree_of": "ගස {{current}} / {{total}}",
       "tree_code": "ගස් කේතය",
       "stem_circumference": "කඳ වට ප්‍රමාණය (අඟල්)",
       "stem_diameter": "කඳ විෂ්කම්භය (mm)",
       "enter_circumference_placeholder": "අඟල් වලින් කඳ වට ප්‍රමාණය ඇතුළත් කරන්න",
-      "enter_diameter_placeholder": "කඳ විෂ්කම්භය ඇතුළත් කරන්න",
+      "enter_diameter_placeholder": "mm වල විෂ්කම්භය ඇතුළත් කරන්න",
       "number_of_stems": "පවතින කඳ ගණන",
       "fertilizer_used": "පොහොර භාවිතා කළාද?",
       "disease_status": "රෝග තත්ත්වය",
@@ -746,7 +748,6 @@
       "next_steps_title": "ඊළඟ පියවර:",
       "tree_measurement_info": "මුළු ගස් ගණන ඇතුළත් කිරීමෙන් පසුව, ඔබේ බිම් කොටසේ අහඹු ගස් 3 ක විස්තර මිනුම් එකතු කරයි.",
       "tree_code_placeholder": "මෙන්: TREE_1",
-      "enter_diameter_placeholder": "mm වල විෂ්කම්භය ඇතුළත් කරන්න",
       "enter_stems_placeholder": "කඳ ගණන ඇතුළත් කරන්න",
       "fertilizer_used_label": "පොහොර භාවිතා කලාද?",
       "yes": "ඔව්",
@@ -810,7 +811,6 @@
       "canes_per_tree": "ගසකට කටු ගණන",
       "required_title": "අවශ්‍යයි",
       "enter_total_trees_required": "කරුණාකර බිම් කොටසේ මුළු ගස් ගණන ඇතුළත් කරන්න.",
-      "next_enter_tree_data": "ඊළඟ",
       "previous_button": "පෙර",
       "run_prediction_button": "පුරෝකථනය ක්‍රියාත්මක කරන්න",
       "save_next_button": "සුරකින්න & ඊළඟ",
@@ -846,137 +846,12 @@
         "load_failed": "අස්වැන්න වාර්තා පූරණය කිරීමට අසමත් විය",
         "select_plot_farm": "කරුණාකර බිම් කොටසක් තෝරා අස්වැන්න ප්‍රමාණය ඇතුළත් කරන්න",
         "invalid_total_trees": "කරුණාකර වලංගු මුළු ගස් ගණනක් ඇතුළත් කරන්න"
-      },
-      "success": {
-        "yield_added": "අස්වැන්න වාර්තාව සාර්ථකව එකතු කරන ලදී!",
-        "yield_updated": "අස්වැන්න වාර්තාව සාර්ථකව යාවත්කාලීන කරන ලදී!",
-        "predictions_received": "අස්වැන්න පුරෝකථන සාර්ථකව ලැබුණි!"
       }
     },
     "farm_assistance": {
       "title": "ගොවිපල සහාය",
       "subtitle": "තත්‍ය කාලීන කාලගුණය සහ බෝග අදියර මත පදනම්ව ඔබේ කුරුඳු ගොවිපල සඳහා පුද්ගලාරෝපිත නිර්දේශ.",
       "loading": "ගොවිපල සහාය පූරණය වෙමින්...",
-      "recommendations": "නිර්දේශ",
-      "no_recommendations": "නිර්දේශ නොමැත",
-      "no_actions_required": "වත්මන් තත්ත්වයන් මත ආශ්‍රිතව වහාම ක්‍රියා අවශ්‍ය නොවේ.",
-      "add_plots_message": "පුද්ගලාරෝපිත ගොවිතැන් නිර්දේශ ලබා ගැනීමට බිම් කොටස් සහ වගා වාර්තා එකතු කරන්න",
-      "no_farms_found": "ගොවිපල හමු නොවීය. පුද්ගලාරෝපිත කාලගුණ-පාදක නිර්දේශ ලබා ගැනීමට ඔබේ ගොවිපල එකතු කරන්න.",
-      "add_farm": "එකතු කරන්න",
-      "no_plot_data": "බිම් කොටස් දත්ත නොමැත",
-      "no_plot_description": "ඔබේ කුරුඳු බිම් කොටස් සඳහා කාලගුණ-පාදක නිර්දේශ ලබා ගැනීමට ගොවිපල සහ වගා වාර්තා එකතු කරන්න.",
-      "days_old": "දින ගණන",
-      "activity_history": "ක්‍රියාකාරකම් ඉතිහාසය",
-      "recent_activities": "මෑත ක්‍රියාකාරකම්",
-      "no_activities": "තවම ක්‍රියාකාරකම් වාර්තා කර නැත",
-      "record_activities": "ඔබේ ගොවිපල කළමනාකරණය නිරීක්ෂණය කිරීමට ඔබේ ගොවිතැන් ක්‍රියාකාරකම් වාර්තා කරන්න",
-      "growth_timeline": "වර්ධන කාලරේඛාව",
-      "days": "දින",
-      "go_to_module": "මොඩියුලයට",
-      "navigation": {
-        "title": "මොඩියුලයට යන්න",
-        "no_module": "මෙම ක්‍රියාකාරකම සඳහා නිශ්චිත මොඩියුලයක් නොමැත",
-        "unknown_module": "නොදන්නා මොඩියුල වර්ගය"
-      },
-      "progress": "ප්‍රගතිය",
-      "priority": {
-        "high": "ඉහළ ප්‍රමුඛතාවය",
-        "medium": "මධ්‍යම ප්‍රමුඛතාවය",
-        "low": "අඩු ප්‍රමුඛතාවය"
-      },
-      "mark_done": "සම්පූර්ණ",
-      "view_details": "විස්තර",
-      "recommendation_details": "නිර්දේශ විස්තර",
-      "activity": "ක්‍රියාකාරකම",
-      "action": "නිර්දේශිත ක්‍රියාමාර්ගය",
-      "reason": "හේතුව",
-      "suggested": "යෝජනා කළ",
-      "suggested_date": "යෝජිත දිනය",
-      "trigger": "ප්‍රේරකය",
-      "why": "ඇයි",
-      "close": "වසන්න",
-      "partial_success": "අර්ධ සාර්ථකත්වය ⚠️",
-      "partial_success_message": "ක්‍රියාකාරකම සම්පූර්ණ වූ නමුත් සේවාදායකය වෙත සුරැකීමට නොහැකි විය: {{error}}\\n\\nක්‍රියාකාරකම ඔබේ වත්මන් සැසියේ සම්පූර්ණ ලෙස සලකුණු කර ඇත.",
-      "saved_to_history": "සහ ඔබේ ක්‍රියාකාරකම් ඉතිහාසයට සුරකින ලදී",
-      "saved_locally": "(දේශීයව සුරකින ලදී)",
-      "activity_completed": "ක්‍රියාකාරකම සම්පූර්ණයි! ✅",
-      "activity_completed_message": "{{plot}} සඳහා \"{{activity}}\" {{status}} ලෙස සම්පූර්ණ ලෙස සලකුණු කර ඇත.",
-      "need_assistance": "තවදුරටත් සහාය අවශ්‍යද?",
-      "contact_description": "ප්‍රවීණ උපදෙස් සහ සහාය සඳහා කුරුඳු පර්යේෂණ මධ්‍යස්ථානය සම්බන්ධ කර ගන්න",
-      "center_name": "කුරුඳු පර්යේෂණ මධ්‍යස්ථානය - ශ්‍රී ලංකාව",
-      "working_hours": "සඳුදා - සිකුරාදා: පෙ.ව. 8:00 - ප.ව. 4:30",
-      "contact_info": "සම්බන්ධතා තොරතුරු",
-      "contact_details": "ප්‍රවීණ සහාය සඳහා:\\n\\n📞 දුරකථනය: {{phone}}\\n📧 විද්‍යුත් තැපෑල: {{email}}\\n🌐 වෙබ් අඩවිය: {{website}}\\n\\nකාර්යාල පැය: {{hours}}",
-      "default_contact": "දුරකථනය: +94-11-2696734\\nඊ-තැපෑල: info@cinnamonresearch.lk",
-      "view_contact_info": "තොරතුරු",
-      "growth_stages": {
-        "seedling": "බීජ අවධිය",
-        "young": "තරුණ ශාකය",
-        "maturing": "පරිණත වෙමින්",
-        "mature": "පරිණත",
-        "ready_harvest": "අස්වැන්න සඳහා සූදානම්",
-        "nursery_establishment": "තවාන / ස්ථාපිත කිරීම",
-        "vegetative_growth": "ශාකමය වර්ධනය",
-        "harvest_maturity": "අස්වනු / පරිණතභාවය",
-        "unknown": "නොදනී"
-      },
-      "activities": {
-        "soil_ph_testing": "පස් pH පරීක්ෂාව",
-        "soil_analysis": "පස් විශ්ලේෂණය",
-        "climate_shield": "දේශගුණ ආරක්ෂාව",
-        "manual_weeding": "අතින් වල් පැළෑටි ඉවත් කිරීම",
-        "hydration_care": "ජල සැපයුම් රැකවරණය",
-        "deficiency_scan": "ඌනතා ස්කෑන්",
-        "nursery_health": "තවාන සෞඛ්‍යය",
-        "shade_management": "සෙවණැලි කළමනාකරණය",
-        "weed_control": "වල් පැළෑටි පාලනය",
-        "training_pruning": "පුහුණු කිරීම සහ කප්පාදු කිරීම",
-        "organic_mulching": "කාබනික ආවරණය",
-        "support_staking": "ආධාරක කණු",
-        "bark_quality_assessment": "පොතු ගුණාත්මක තක්සේරුව",
-        "canopy_management": "වියන කළමනාකරණය",
-        "harvest_preparation": "අස්වනු සූදානම් කිරීම",
-        "weather_monitoring": "කාලගුණ නිරීක්ෂණය",
-        "critical_irrigation": "තීරණාත්මක ජලාපවහනය",
-        "drainage_management": "ජලාපවහන කළමනාකරණය",
-        "water_monitoring": "ජල නිරීක්ෂණය",
-        "heat_protection": "තාප ආරක්ෂාව",
-        "cold_protection": "සීතල ආරක්ෂාව",
-        "balanced_fertilization": "සමබර පොහොර යෙදීම",
-        "balanced_feeding": "සමබර පෝෂණය",
-        "training_prune": "පුහුණු කප්පාදුව",
-        "plot_clearance": "බිම් කොටස පිරිසිදු කිරීම",
-        "disease_scan": "රෝග ස්කෑන්",
-        "organic_nutrition": "කාබනික පෝෂණය",
-        "disease_prevention": "රෝග වැළැක්වීම",
-        "plant_health_check": "ශාක සෞඛ්‍ය පරීක්ෂාව",
-        "structural_pruning": "ව්‍යුහාත්මක කප්පාදු කිරීම",
-        "bark_harvesting": "පොතු නෙළීම",
-        "growth_forecast": "වර්ධන අනාවැකිය",
-        "canopy_thinning": "වියන තුනීකරණය",
-        "post_harvest_care": "අස්වනු පසු රැකවරණය",
-        "maturity_check": "පරිණත පරීක්ෂාව",
-        "oil_prediction": "තෙල් අනාවැකිය",
-        "drying_support": "වියළීමේ සහාය",
-        "pre_harvest_management": "අස්වනු පෙර කළමනාකරණය",
-        "post_harvest_processing": "අස්වනු පසු සැකසීම",
-        "coppice_management": "පඳුරු කළමනාකරණය",
-        "general_plant_care": "සාමාන්‍ය ශාක රැකවරණය",
-        "routine_monitoring": "නිරන්තර නිරීක්ෂණය",
-        "quality_drying": "අස්වනු පසු සැකසීම",
-        "regeneration": "පඳුරු කළමනාකරණය",
-        "nutrient_deficiency_check": "පෝෂක ඌනතා පරීක්ෂණය",
-        "disease_pest_scan": "රෝග සහ පළිබෝධ ස්කෑන්",
-        "weather_water_advisory": "කාලගුණ මත පදනම් වූ ජල උපදේශන",
-        "growth_yield_projection": "වර්ධන අවධියේ අස්වැන්න අනාවැකිය",
-        "fertilizer_optimization": "පොහොර ප්‍රශස්තිකරණය",
-        "preventive_pest_monitoring": "වැළැක්වීමේ පළිබෝධ නිරීක්ෂණය",
-        "crop_planning_advisory": "කප්පාදු කිරීම සහ බෝග සැල්සුම් උපදේශන",
-        "harvest_readiness_assessment": "අස්වනු සූදානම් තක්සේරුව",
-        "oil_yield_prediction": "කුරුඳු තෙල් අස්වනු අනාවැකිය",
-        "distillation_optimization": "වියළීම සහ ආසවනය ප්‍රශස්තිකරණය",
-        "quality_monitoring": "අස්වනු පසු ගුණාත්මක නිරීක්ෂණය"
-      },
       "recommendations": {
         "soil_ph_testing": {
           "action": "පස් pH මට්ටම් පරීක්ෂා කරන්න - කුරුඳු තරමක් ආම්ලික පසෙහි (pH 6.0-6.8) හොඳින් වර්ධනය වේ",
@@ -1249,6 +1124,125 @@
           "reason": "අස්වනු පසු සැකසීමේ පරිසරයේ ප්‍රශස්තිකරණය."
         }
       },
+      "no_recommendations": "නිර්දේශ නොමැත",
+      "no_actions_required": "වත්මන් තත්ත්වයන් මත ආශ්‍රිතව වහාම ක්‍රියා අවශ්‍ය නොවේ.",
+      "add_plots_message": "පුද්ගලාරෝපිත ගොවිතැන් නිර්දේශ ලබා ගැනීමට බිම් කොටස් සහ වගා වාර්තා එකතු කරන්න",
+      "no_farms_found": "ගොවිපල හමු නොවීය. පුද්ගලාරෝපිත කාලගුණ-පාදක නිර්දේශ ලබා ගැනීමට ඔබේ ගොවිපල එකතු කරන්න.",
+      "add_farm": "එකතු කරන්න",
+      "no_plot_data": "බිම් කොටස් දත්ත නොමැත",
+      "no_plot_description": "ඔබේ කුරුඳු බිම් කොටස් සඳහා කාලගුණ-පාදක නිර්දේශ ලබා ගැනීමට ගොවිපල සහ වගා වාර්තා එකතු කරන්න.",
+      "days_old": "දින ගණන",
+      "activity_history": "ක්‍රියාකාරකම් ඉතිහාසය",
+      "recent_activities": "මෑත ක්‍රියාකාරකම්",
+      "no_activities": "තවම ක්‍රියාකාරකම් වාර්තා කර නැත",
+      "record_activities": "ඔබේ ගොවිපල කළමනාකරණය නිරීක්ෂණය කිරීමට ඔබේ ගොවිතැන් ක්‍රියාකාරකම් වාර්තා කරන්න",
+      "growth_timeline": "වර්ධන කාලරේඛාව",
+      "days": "දින",
+      "go_to_module": "මොඩියුලයට",
+      "navigation": {
+        "title": "මොඩියුලයට යන්න",
+        "no_module": "මෙම ක්‍රියාකාරකම සඳහා නිශ්චිත මොඩියුලයක් නොමැත",
+        "unknown_module": "නොදන්නා මොඩියුල වර්ගය"
+      },
+      "progress": "ප්‍රගතිය",
+      "priority": {
+        "high": "ඉහළ ප්‍රමුඛතාවය",
+        "medium": "මධ්‍යම ප්‍රමුඛතාවය",
+        "low": "අඩු ප්‍රමුඛතාවය"
+      },
+      "mark_done": "සම්පූර්ණ",
+      "view_details": "විස්තර",
+      "recommendation_details": "නිර්දේශ විස්තර",
+      "activity": "ක්‍රියාකාරකම",
+      "action": "නිර්දේශිත ක්‍රියාමාර්ගය",
+      "reason": "හේතුව",
+      "suggested": "යෝජනා කළ",
+      "suggested_date": "යෝජිත දිනය",
+      "trigger": "ප්‍රේරකය",
+      "why": "ඇයි",
+      "close": "වසන්න",
+      "partial_success": "අර්ධ සාර්ථකත්වය ⚠️",
+      "partial_success_message": "ක්‍රියාකාරකම සම්පූර්ණ වූ නමුත් සේවාදායකය වෙත සුරැකීමට නොහැකි විය: {{error}}\\n\\nක්‍රියාකාරකම ඔබේ වත්මන් සැසියේ සම්පූර්ණ ලෙස සලකුණු කර ඇත.",
+      "saved_to_history": "සහ ඔබේ ක්‍රියාකාරකම් ඉතිහාසයට සුරකින ලදී",
+      "saved_locally": "(දේශීයව සුරකින ලදී)",
+      "activity_completed": "ක්‍රියාකාරකම සම්පූර්ණයි! ✅",
+      "activity_completed_message": "{{plot}} සඳහා \"{{activity}}\" {{status}} ලෙස සම්පූර්ණ ලෙස සලකුණු කර ඇත.",
+      "need_assistance": "තවදුරටත් සහාය අවශ්‍යද?",
+      "contact_description": "ප්‍රවීණ උපදෙස් සහ සහාය සඳහා කුරුඳු පර්යේෂණ මධ්‍යස්ථානය සම්බන්ධ කර ගන්න",
+      "center_name": "කුරුඳු පර්යේෂණ මධ්‍යස්ථානය - ශ්‍රී ලංකාව",
+      "working_hours": "සඳුදා - සිකුරාදා: පෙ.ව. 8:00 - ප.ව. 4:30",
+      "contact_info": "සම්බන්ධතා තොරතුරු",
+      "contact_details": "ප්‍රවීණ සහාය සඳහා:\\n\\n📞 දුරකථනය: {{phone}}\\n📧 විද්‍යුත් තැපෑල: {{email}}\\n🌐 වෙබ් අඩවිය: {{website}}\\n\\nකාර්යාල පැය: {{hours}}",
+      "default_contact": "දුරකථනය: +94-11-2696734\\nඊ-තැපෑල: info@cinnamonresearch.lk",
+      "view_contact_info": "තොරතුරු",
+      "growth_stages": {
+        "seedling": "බීජ අවධිය",
+        "young": "තරුණ ශාකය",
+        "maturing": "පරිණත වෙමින්",
+        "mature": "පරිණත",
+        "ready_harvest": "අස්වැන්න සඳහා සූදානම්",
+        "nursery_establishment": "තවාන / ස්ථාපිත කිරීම",
+        "vegetative_growth": "ශාකමය වර්ධනය",
+        "harvest_maturity": "අස්වනු / පරිණතභාවය",
+        "unknown": "නොදනී"
+      },
+      "activities": {
+        "soil_ph_testing": "පස් pH පරීක්ෂාව",
+        "soil_analysis": "පස් විශ්ලේෂණය",
+        "climate_shield": "දේශගුණ ආරක්ෂාව",
+        "manual_weeding": "අතින් වල් පැළෑටි ඉවත් කිරීම",
+        "hydration_care": "ජල සැපයුම් රැකවරණය",
+        "deficiency_scan": "ඌනතා ස්කෑන්",
+        "nursery_health": "තවාන සෞඛ්‍යය",
+        "shade_management": "සෙවණැලි කළමනාකරණය",
+        "weed_control": "වල් පැළෑටි පාලනය",
+        "training_pruning": "පුහුණු කිරීම සහ කප්පාදු කිරීම",
+        "organic_mulching": "කාබනික ආවරණය",
+        "support_staking": "ආධාරක කණු",
+        "bark_quality_assessment": "පොතු ගුණාත්මක තක්සේරුව",
+        "canopy_management": "වියන කළමනාකරණය",
+        "harvest_preparation": "අස්වනු සූදානම් කිරීම",
+        "weather_monitoring": "කාලගුණ නිරීක්ෂණය",
+        "critical_irrigation": "තීරණාත්මක ජලාපවහනය",
+        "drainage_management": "ජලාපවහන කළමනාකරණය",
+        "water_monitoring": "ජල නිරීක්ෂණය",
+        "heat_protection": "තාප ආරක්ෂාව",
+        "cold_protection": "සීතල ආරක්ෂාව",
+        "balanced_fertilization": "සමබර පොහොර යෙදීම",
+        "balanced_feeding": "සමබර පෝෂණය",
+        "training_prune": "පුහුණු කප්පාදුව",
+        "plot_clearance": "බිම් කොටස පිරිසිදු කිරීම",
+        "disease_scan": "රෝග ස්කෑන්",
+        "organic_nutrition": "කාබනික පෝෂණය",
+        "disease_prevention": "රෝග වැළැක්වීම",
+        "plant_health_check": "ශාක සෞඛ්‍ය පරීක්ෂාව",
+        "structural_pruning": "ව්‍යුහාත්මක කප්පාදු කිරීම",
+        "bark_harvesting": "පොතු නෙළීම",
+        "growth_forecast": "වර්ධන අනාවැකිය",
+        "canopy_thinning": "වියන තුනීකරණය",
+        "post_harvest_care": "අස්වනු පසු රැකවරණය",
+        "maturity_check": "පරිණත පරීක්ෂාව",
+        "oil_prediction": "තෙල් අනාවැකිය",
+        "drying_support": "වියළීමේ සහාය",
+        "pre_harvest_management": "අස්වනු පෙර කළමනාකරණය",
+        "post_harvest_processing": "අස්වනු පසු සැකසීම",
+        "coppice_management": "පඳුරු කළමනාකරණය",
+        "general_plant_care": "සාමාන්‍ය ශාක රැකවරණය",
+        "routine_monitoring": "නිරන්තර නිරීක්ෂණය",
+        "quality_drying": "අස්වනු පසු සැකසීම",
+        "regeneration": "පඳුරු කළමනාකරණය",
+        "nutrient_deficiency_check": "පෝෂක ඌනතා පරීක්ෂණය",
+        "disease_pest_scan": "රෝග සහ පළිබෝධ ස්කෑන්",
+        "weather_water_advisory": "කාලගුණ මත පදනම් වූ ජල උපදේශන",
+        "growth_yield_projection": "වර්ධන අවධියේ අස්වැන්න අනාවැකිය",
+        "fertilizer_optimization": "පොහොර ප්‍රශස්තිකරණය",
+        "preventive_pest_monitoring": "වැළැක්වීමේ පළිබෝධ නිරීක්ෂණය",
+        "crop_planning_advisory": "කප්පාදු කිරීම සහ බෝග සැල්සුම් උපදේශන",
+        "harvest_readiness_assessment": "අස්වනු සූදානම් තක්සේරුව",
+        "oil_yield_prediction": "කුරුඳු තෙල් අස්වනු අනාවැකිය",
+        "distillation_optimization": "වියළීම සහ ආසවනය ප්‍රශස්තිකරණය",
+        "quality_monitoring": "අස්වනු පසු ගුණාත්මක නිරීක්ෂණය"
+      },
       "more_activities": "+තව ක්‍රියාකාරකම් {{count}}",
       "select_plot": "බිමක් තෝරන්න",
       "filters": "පෙරහන්",
@@ -1318,7 +1312,7 @@
     "home": {
       "primary_action": {
         "start_badge": "මෙතනින් ආරම්භ කරන්න",
-        "title": "ද්‍රව්‍ය බැච් එක එක් කරන්න",
+        "title": "කුරුඳු තෙල් නිෂ්පාදන තොග එක් කරන්න",
         "subtitle": "තෙල් නිෂ්පාදන විශ්ලේෂණය ආරම්භ කිරීමට ඔබේ වියළි අමුද්‍රව්‍ය පිළිබද සටහන් කරන්න"
       },
       "tools_title": "තෙල් නිෂ්පාදන මෙවලම්",
@@ -1332,19 +1326,19 @@
         "price_predictor_title": "තෙල් මිල අනාවැකිය",
         "price_predictor_subtitle": "වෙළඳපොළ අනාවැකිය"
       },
-      "title": "කුරුඳු තෙල්",
-      "subtitle": "අමු ද්‍රව්‍ය සිට ආසවනය හා විකිණීම දක්වා කුරුඳු තෙල් බැච් නිරීක්ෂණය කරන්න.",
-      "loading_batches": "බැච් පූරණය වෙමින්…",
+      "title": "කුරුඳු තෙල් විශ්ලේෂණය",
+      "subtitle": "අමු ද්‍රව්‍ය සිට ආසවනය හා විකිණීම දක්වා කුරුඳු තෙල් නිෂ්පාදන තොග නිරීක්ෂණය කරන්න.",
+      "loading_batches": "කුරුඳු තෙල් නිෂ්පාදන තොග පූරණය වෙමින්…",
       "retry": "නැවත උත්සාහ",
-      "add_batch_badge": "නව බැච්",
-      "add_batch_title": "බැච් එකතු කරන්න",
-      "add_batch_subtitle": "සැකසීම සඳහා නව ද්‍රව්‍ය\nබැච් ලියාපදිංචි කරන්න.",
+      "add_batch_badge": "නව කුරුඳු තෙල් නිෂ්පාදන තොග",
+      "add_batch_title": "කුරුඳු තෙල් නිෂ්පාදන තොග එකතු කරන්න",
+      "add_batch_subtitle": "සැකසීම සඳහා නව කුරුඳු තෙල් නිෂ්පාදන තොග ලියාපදිංචි කරන්න.",
       "market_badge": "වෙළඳපොළ",
       "price_predictor_title": "මිල අනාවැකිය",
-      "price_predictor_subtitle": "සජීවී වෙළඳ ගාස්තු පරීක්ෂා කර\nතෙල් මිල අනාවැකි කරන්න.",
-      "no_batches_title": "තවම බැච් නැත",
-      "no_batches_desc": "ආරම්භ කිරීමට ඔබේ පළමු ද්‍රව්‍ය බැච් එකතු කරන්න.",
-      "select_batch": "බැච් තෝරන්න",
+      "price_predictor_subtitle": "කුරුඳු තෙල් මිල සදහා අනාවැකි ලබා ගන්න.",
+      "no_batches_title": "තවම කුරුඳු තෙල් නිෂ්පාදන තොග නැත",
+      "no_batches_desc": "ආරම්භ කිරීමට ඔබේ පළමු කුරුඳු තෙල් නිෂ්පාදන තොග එකතු කරන්න.",
+      "select_batch": "කුරුඳු තෙල් නිෂ්පාදන තොග තෝරන්න",
       "purchased": "මිලදී ගත්",
       "own_farm": "ස්වකීය ගොවිපල",
       "kg_raw": "kg අමු",
@@ -1355,35 +1349,45 @@
       "next_step_badge": "ඊළඟ පියවර",
       "go_to_module": "මොඩියුලයට යන්න",
       "mark_done": "සම්පූර්ණ ලෙස සලකුණු කරන්න",
-      "batch_complete_title": "බැච් සම්පූර්ණයි",
-      "batch_complete_subtitle": "සියලු නල මාර්ග අදියර සම්පූර්ණ විය",
-      "batch_name_label": "බැච් නම",
+      "predicted_yield_label": "ලැබාගත් ආදායම",
+      "re_predict": "නැවත ගණන්",
+      "predicted_on": "අනාවැකි කළ",
+      "distill_predicted_time_label": "අනාවැකි ආසවන කාලය",
+      "re_calculate": "නැවත ගණනය",
+      "timer_start": "ගණනය ආරම්භ",
+      "timer_pause": "විරාම",
+      "timer_reset": "යළි සකස්",
+      "quality_label": "තෙල් ගුණාත්මකතා ඇගයීම",
+      "re_assess": "නැවත ඇගයීම",
+      "batch_complete_title": "කුරුඳු තෙල් නිෂ්පාදන තොගය සම්පූර්ණයි",
+      "batch_complete_subtitle": "සියලු ඉදිරි පියවර අදියර සම්පූර්ණ විය",
+      "batch_name_label": "කුරුඳු තෙල් නිෂ්පාදන තොග නම",
       "source_label": "මූලාශ්‍රය",
       "raw_weight_label": "අමු බර",
       "dried_weight_label": "වියළූ බර",
       "added_label": "එකතු කළ",
       "check_market_price": "වෙළඳ මිල පරීක්ෂා කරන්න",
       "recent_activities_title": "මෑත ක්‍රියාකාරකම්",
-      "no_activities": "මෙම බැච් සඳහා තවම ක්‍රියාකාරකම් වාර්තා නැත.",
+      "no_activities": "මෙම කුරුඳු තෙල් නිෂ්පාදන තොගය සඳහා තවම ක්‍රියාකාරකම් වාර්තා නැත.",
       "kg_unit": "Kg",
       "added_prefix": "එකතු කළ:",
       "moisture_label": "ආර්ද්‍රතාව",
       "est_yield_label": "ඇස්. ආදායම",
       "status_label": "තත්ත්වය",
       "dried_weight_pending": "වියළූ බර අපේක්ෂිතයි",
-      "dried_weight_tap": "වියළීම සම්පූර්ණ වූ පසු වියළූ බර වාර්තා කිරීමට ස්පර්ශ කරන්න.",
+      "dried_weight_tap": "වියළීම සම්පූර්ණ වූ පසු වියළූ බර වාර්තා කරන්න.",
       "update": "යාවත්කාලීන කරන්න",
       "dried_weight_prefix": "වියළූ බර:",
       "pre_dried_purchased": "මිලදී ගත්, පෙර-වියළූ",
-      "pipeline_activities": "නල මාර්ග ක්‍රියාකාරකම්",
+      "pipeline_activities": "ඉදිරි පියවර ක්‍රියාකාරකම්",
       "modules_title": "මොඩියුල",
       "invalid_weight_title": "අවලංගු බර",
       "invalid_weight_msg": "කරුණාකර කිලෝග්‍රෑම් වලින් සාධු බරක් ඇතුළු කරන්න.",
       "error_title": "දෝෂය",
       "failed_update_dried": "වියළූ බර යාවත්කාලීන කිරීමට අසමත් විය.",
-      "failed_advance": "බැච් අදියර ඉදිරියට ගෙනයාමට අසමත් විය.",
+      "failed_advance": "කුරුඳු තෙල් නිෂ්පාදන තොගය ඉදිරියට ගෙනයාමට අසමත් විය.",
       "record_dried_title": "වියළූ බර වාර්තා කරන්න",
-      "record_dried_subtitle": "{{name}} සඳහා වියළූ බර (kg) ඇතුළු කරන්න. බැච් ස්වයංක්‍රීයව ආසවනයට ඉදිරියට යයි.",
+      "record_dried_subtitle": "{{name}} සඳහා වියළූ බර (kg) ඇතුළු කරන්න. කුරුඳු තෙල් නිෂ්පාදන තොගය ස්වයංක්‍රීයව ආසවනයට ඉදිරියට යයි.",
       "dried_weight_placeholder": "උදා: 42.5",
       "cancel": "අවලංගු",
       "confirm_advance": "තහවුරු කර ඉදිරියට යන්න",
@@ -1403,7 +1407,7 @@
       },
       "modules": {
         "yield_predictor_label": "ප්‍රමාණ අනාවැකිය",
-        "yield_predictor_sub": "පොතු බරෙන් තෙල් ප්‍රතිදානය ඇස්තමේන්තු කරන්න",
+        "yield_predictor_sub": "අමුද්‍රව්‍ය බරෙන් තෙල් ප්‍රතිදානය ඇස්තමේන්තු කරන්න",
         "distillation_label": "ආසවනය",
         "distillation_sub": "ඔබේ නිස්සාරණ සැසිය කළමනාකරණය කරන්න",
         "quality_label": "ගුණාත්මකභාව මාර්ගෝපදේශය",
@@ -1413,13 +1417,13 @@
       },
       "activities": {
         "collect_raw_title": "අමු ද්‍රව්‍ය එකතු කරන්න",
-        "collect_raw_desc": "නැවුම් කුරුඳු පොතු සෙවනැලි, හොඳ වාතාශ්‍රය ඇති ස්ථානයක නඟා ඇති වියළීමේ රාක්ක මත සමකව පතුරු කරන්න. ආරම්භක බර වාර්තා කර කෙදිලිලීම වළකීමට සෘජු හිරු ආලෝකය මඟ හරින්න.",
-        "sun_dry_title": "පොතු හිරු එළියේ වියළන්න",
-        "sun_dry_desc": "දිනපතා පොතු නාරු හරවා රවුම් කරන්න. ආසවනයට පෙර ආර්ද්‍රතාව ≤ 15% ලෙස ඉලක්ක කරන්න. ඒ ළඟා වූ පසු ආසවනයට ඉදිරියට යාමට වියළූ බර වාර්තා කරන්න.",
+        "collect_raw_desc": "නැවුම් කුරුඳු අමුද්‍රව්‍ය සෙවනැලි, හොඳ වාතාශ්‍රය ඇති ස්ථානයක නඟා ඇති වියළීමේ රාක්ක මත සමකව පතුරු කරන්න. ආරම්භක බර වාර්තා කර කෙදිලිලීම වළකීමට සෘජු හිරු ආලෝකය මඟ හරින්න.",
+        "sun_dry_title": "අමුද්‍රව්‍ය හිරු එළියේ වියළන්න",
+        "sun_dry_desc": "දිනපතා අමුද්‍රව්‍ය නාරු හරවා රවුම් කරන්න. ආසවනයට පෙර ආර්ද්‍රතාව ≤ 15% ලෙස ඉලක්ක කරන්න. ඒ ළඟා වූ පසු ආසවනයට ඉදිරියට යාමට වියළූ බර වාර්තා කරන්න.",
         "predict_before_distill_title": "තෙල් ආදායම අනාවැකි කරන්න",
-        "predict_before_distill_desc": "ශෝධකයට පූරණය කිරීමට පෙර පොතු බරෙහි සහ ප්‍රභේදය මත පදනම් ව ලැබෙන ශීඝ්‍ර ඇස්තමේන්තු ලබා ගන්න.",
+        "predict_before_distill_desc": "ශෝධකයට පූරණය කිරීමට පෙර අමුද්‍රව්‍ය බරෙහි සහ ප්‍රභේදය මත පදනම් ව ලැබෙන ශීඝ්‍ර ඇස්තමේන්තු ලබා ගන්න.",
         "distillation_title": "ආසවන සැසිය ක්‍රියාත්මක කරන්න",
-        "distillation_desc": "වියළූ පොතු ශෝධකයට ලදුරු කරන්න. 98–102°C වාෂ්ප උෂ්ණත්වය පවත්වා ගන්න. සෑම පැයකටම සිදු කළ තෙල් නිෂ්කාශනය ලොග් කරන්න — ප්‍රවාහ වේගය 2 ml/min ට පහළ ගිය විට නවත්වන්න. සැසිය සම්පූර්ණ වූ විට Mark Done ක්ලික් කරන්න.",
+        "distillation_desc": "වියළූ අමුද්‍රව්‍ය ශෝධකයට ලදුරු කරන්න. 98–102°C වාෂ්ප උෂ්ණත්වය පවත්වා ගන්න. සෑම පැයකටම සිදු කළ තෙල් නිෂ්කාශනය ලොග් කරන්න — ප්‍රවාහ වේගය 2 ml/min ට පහළ ගිය විට නවත්වන්න. සැසිය සම්පූර්ණ වූ විට Mark Done ක්ලික් කරන්න.",
         "predict_during_distill_title": "අවසාන තෙල් ප්‍රමාණය අනාවැකි කරන්න",
         "predict_during_distill_desc": "තාත්කාලික ප්‍රතිදාන ඇස්තමේන්තු ලබා ගැනීමට වත්මන් බැච් බර සහ ආසවන පැය ප්‍රමාණ අනාවැකිකාරකයට ඇතුළු කරන්න.",
         "quality_check_title": "තෙල් ගුණ ලකුණු පරීක්ෂා කරන්න",
@@ -1435,12 +1439,12 @@
     "predictor": {
       "header": {
         "title": "තෙල් ප්‍රමාණ අනාවැකිය",
-        "subtitle": "ඔබගේ දාලචීනි තෙල් ලැබීම සඳහා නිවැරදි අනාවැකියක් ලබාගන්න"
+        "subtitle": "ඔබගේ කුරුඳු තෙල් ලැබීම සඳහා නිවැරදි අනාවැකියක් ලබාගන්න"
       },
       "batch": {
-        "title": "ද්‍රව්‍ය බැච්",
+        "title": "කුරුඳු තෙල් නිෂ්පාදන තොග",
         "select_batch": "බැච් එක තෝරන්න",
-        "select_batch_subtext": "අනාවැකිය සඳහා ද්‍රව්‍ය බැච් එක තෝරන්න",
+        "select_batch_subtext": "අනාවැකිය සඳහා කුරුඳු තෙල් නිෂ්පාදන තොග එක තෝරන්න",
         "no_batches": "බැච් කිසිවක් හමු නොවීය"
       },
       "buttons": {
@@ -1472,8 +1476,9 @@
       "alerts": {
         "load_error": "ලෝඩ් කිරීමේ දෝෂයක්",
         "missing_info": "තොරතුරු අසම්පූර්ණයි",
-        "select_batch_prompt": "කරුණාකර ද්‍රව්‍ය බැච් එකක් තෝරන්න.",
-        "prediction_failed": "අනාවැකි කිරීම අසාර්ථකයි"
+        "select_batch_prompt": "කරුණාකර කුරුඳු තෙල් නිෂ්පාදන තොග එකක් තෝරන්න.",
+        "prediction_failed": "අනාවැකි කිරීම අසාර්ථකයි",
+        "dried_weight_required": "තෝරාගත් කණ්ඩායමේ වියළි බර සටහන් කර නොමැත. කරුණාකර පළමුව වියළීමේ අදියර සම්පූර්ණ කරන්න."
       }
     },
     "distillation": {
@@ -1482,9 +1487,9 @@
         "subtitle": "තෙල් නිස්සාරණ ක්‍රියාවලිය නිරීක්ෂණය කරන්න"
       },
       "batch": {
-        "title": "ද්‍රව්‍ය බැච්",
+        "title": "කුරුඳු තෙල් නිෂ්පාදන තොග",
         "select_batch": "බැච් එක තෝරන්න",
-        "select_batch_subtext": "ආසවනය සඳහා ද්‍රව්‍ය බැච් එක තෝරන්න",
+        "select_batch_subtext": "ආසවනය සඳහා කුරුඳු තෙල් නිෂ්පාදන තොග එක තෝරන්න",
         "no_batches": "බැච් කිසිවක් හමු නොවීය"
       },
       "capacity": {
@@ -1566,7 +1571,7 @@
         "pungent_sub": "තද හා කඩුළු සුවඳක්"
       },
       "batch": {
-        "title": "ද්‍රව්‍ය බැච්",
+        "title": "කුරුඳු තෙල් නිෂ්පාදන තොග",
         "subtitle": "සටහන් කර ඇති බැච් වලින් තෝරන්න",
         "no_batches": "බැච් කිසිවක් නැත. තෙල් ප්‍රමාණ කොටසෙන් එකක් සාදන්න."
       },
@@ -1596,7 +1601,7 @@
     "price": {
       "header": {
         "title": "පත්‍ර තෙල් මිල අනාවැකිය",
-        "subtitle": "දාලචීනි පත්‍ර තෙල් මිල සඳහා ML අනාවැකිය"
+        "subtitle": "කුරුඳු පත්‍ර තෙල් මිල සඳහා ML අනාවැකිය"
       },
       "view": {
         "title": "දර්ශනය",
@@ -1622,8 +1627,8 @@
     },
     "add_batch": {
       "header": {
-        "title": "ද්‍රව්‍ය බැච්",
-        "subtitle": "දාලචීනි ද්‍රව්‍ය බැච් සාදන්න හා කළමනාකරණය කරන්න"
+        "title": "කුරුඳු තෙල් නිෂ්පාදන තොග",
+        "subtitle": "කුරුඳු තෙල් නිෂ්පාදන තොග සාදන්න හා කළමනාකරණය කරන්න"
       },
       "section_new": {
         "title": "නව බැච්"
@@ -1635,9 +1640,12 @@
           "placeholder": "බැච් A - පත්‍ර"
         },
         "cinnamon_type": {
-          "label": "දාලචීනි වර්ගය",
+          "label": "කුරුඳු වර්ගය",
           "subtitle": "වර්ගය තෝරන්න",
-          "options": ["ශ්‍රී ගැමුණු", "ශ්‍රී විජය"]
+          "options": [
+            "ශ්‍රී ගැමුණු",
+            "ශ්‍රී විජය"
+          ]
         },
         "mass": {
           "label": "බර (කි.ග්‍රෑ.)",
@@ -1648,7 +1656,10 @@
         "plant_part": {
           "label": "ශාක කොටස",
           "subtitle": "කොටස තෝරන්න",
-          "options": ["පත්‍ර සහ කුඩු කඳන්", "පොතු සහ චිප්ස්"]
+          "options": [
+            "පත්‍ර සහ ළපටි කඳන්",
+            "පොතු සහ චිප්ස්"
+          ]
         },
         "plant_age": {
           "label": "ශාක වයස",
@@ -1659,7 +1670,30 @@
         "harvest_season": {
           "label": "අස්වැන්න කාලය",
           "subtitle": "කාලය තෝරන්න",
-          "options": ["මැයි–අගෝස්තු", "ජනවාරි–අප්‍රේල්"]
+          "options": [
+            "මැයි–අගෝස්තු",
+            "ජනවාරි–අප්‍රේල්"
+          ]
+        }
+      },
+      "source": {
+        "own_farm": "ස්වකීය ගොවිපල",
+        "purchased": "මිලදී ගත්",
+        "hint_own_farm": "ඔබ ස්වයංව පොතු වියළනු ඇත. අස්වැන්නෙන් පසු අමු බර සටහන් කළ හැක.",
+        "hint_purchased": "සැපයුම්කරු විසින් පොතු දැනටමත් වියළා ඇත. පහත මිලදී ගත් බර ඇතුළත් කරන්න."
+      },
+      "options": {
+        "cinnamon_types": {
+          "sri_gemunu": "ශ්‍රී ගැමුණු",
+          "sri_vijaya": "ශ්‍රී විජය"
+        },
+        "plant_parts": {
+          "leaves_twigs": "පත්‍ර සහ කුඩු කඳන්",
+          "featherings_chips": "පොතු සහ චිප්ස්"
+        },
+        "harvest_seasons": {
+          "may_august": "මැයි–අගෝස්තු",
+          "october_january": "ඔක්තෝබර්–දෙසැම්බර්/ජනවාරි"
         }
       },
       "buttons": {

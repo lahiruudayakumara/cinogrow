@@ -1462,7 +1462,7 @@ export default function OilScreen() {
                           {selectedBatch.driedWeightKg} kg
                         </Text>
                         {selectedBatch.source === "purchased" && (
-                          <Text style={styles.driedWeightSourceTag}>  ’ Purchased, pre-dried</Text>
+                          <Text style={styles.driedWeightSourceTag}></Text>
                         )}
                       </Text>
                     </View>

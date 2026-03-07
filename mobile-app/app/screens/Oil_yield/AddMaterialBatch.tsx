@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F7',
   },
   scrollContainer: {
-    paddingTop: 60,
+    paddingTop: 10,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -580,10 +580,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   headerIconContainer: {
-    marginBottom: 16,
+    // marginBottom: 16,
   },
   headerIconCircle: {
-    width: 64,
+    // width: 64,
     height: 64,
     borderRadius: 32,
     backgroundColor: 'rgba(55, 255, 48, 0.15)',

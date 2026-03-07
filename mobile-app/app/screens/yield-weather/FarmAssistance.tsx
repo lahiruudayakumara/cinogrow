@@ -785,6 +785,18 @@ const FarmAssistance = () => {
           moduleType: 'yield-predictor',
         });
       }
+
+      // MANDATORY: Routine Pest Monitoring (always needed for young seedlings)
+      recommendations.push({
+        id: `routine-pest-check-${plot.id}`,
+        activityName: t('yield_weather.farm_assistance.activities.routine_pest_monitoring'),
+        recommendedAction: t('yield_weather.farm_assistance.recommendations.routine_pest_monitoring.action'),
+        triggerCondition: t('yield_weather.farm_assistance.recommendations.routine_pest_monitoring.trigger'),
+        reason: t('yield_weather.farm_assistance.recommendations.routine_pest_monitoring.reason'),
+        suggestedDate: new Date().toISOString().split('T')[0],
+        priority: 'medium',
+        moduleType: 'pest-disease',
+      });
     }
     
     // STAGE 2: Vegetative Growth (181-540 days) - DEVELOPMENT PERIOD

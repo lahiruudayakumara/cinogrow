@@ -928,6 +928,7 @@
         "growth_yield_projection": "Growth Stage Yield Projection",
         "fertilizer_optimization": "Fertilizer Optimization",
         "preventive_pest_monitoring": "Preventive Pest Monitoring",
+        "routine_pest_monitoring": "Routine Pest Monitoring",
         "crop_planning_advisory": "Pruning & Crop Planning Advisory",
         "harvest_readiness_assessment": "Harvest Readiness Assessment",
         "oil_yield_prediction": "Cinnamon Oil Yield Prediction",
@@ -1094,6 +1095,11 @@
           "action": "Capture leaf and soil images to detect nutrient deficiencies before fertilizer application.",
           "trigger": "Active growth period with adequate moisture",
           "reason": "Prevents over-fertilization and reduces cost."
+        },
+        "routine_pest_monitoring": {
+          "action": "Inspect leaves, stems, and soil for pests or early disease signs. Check for leaf discoloration, holes, or webbing.",
+          "trigger": "Regular weekly monitoring for nursery seedlings",
+          "reason": "Early detection of pests in young seedlings prevents major damage and ensures healthy establishment."
         },
         "preventive_pest_monitoring": {
           "action": "Perform a routine disease scan even if no visible symptoms.",
@@ -1503,5 +1509,13 @@
         "batch_created": "Batch created successfully"
       }
     }
+  },
+  "notifications": {
+    "high_priority_alerts": "High Priority Alerts",
+    "loading_alerts": "Loading alerts...",
+    "all_clear": "All Clear!",
+    "no_high_priority": "No high priority activities at the moment",
+    "suggested": "Suggested",
+    "view_all_activities": "View All Activities"
   }
 }

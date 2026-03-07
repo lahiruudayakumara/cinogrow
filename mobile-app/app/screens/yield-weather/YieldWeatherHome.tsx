@@ -22,6 +22,7 @@ import { farmAPI } from '../../../services/yield_weather/farmAPI';
 import { plantingRecordsAPI } from '../../../services/yield_weather/plantingRecordsAPI';
 import locationService from '../../../services/locationService';
 import LocationInputModal from '../../../components/LocationInputModal';
+import NotificationBell from '../../../components/NotificationBell';
 import APIDebugger from '../../../services/apiDebugger';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -343,11 +344,14 @@ const YieldWeatherHome = () => {
               {t('yield_weather.home.subtitle')}
             </Text>
           </View>
-          <TouchableOpacity onPress={handleLocationSettings} style={styles.locationButton}>
-            <Ionicons name="location" size={16} color="#4CAF50" />
-            <Text style={styles.locationText}>{location}</Text>
-            <Ionicons name="chevron-down" size={14} color="#4CAF50" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <NotificationBell />
+            <TouchableOpacity onPress={handleLocationSettings} style={styles.locationButton}>
+              <Ionicons name="location" size={16} color="#4CAF50" />
+              <Text style={styles.locationText}>{location}</Text>
+              <Ionicons name="chevron-down" size={14} color="#4CAF50" />
+            </TouchableOpacity>
+          </View>
         </View>
         
         {error && (
@@ -681,6 +685,11 @@ const styles = StyleSheet.create({
   },
   welcomeSection: {
     marginBottom: 16,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   greeting: {
     fontSize: 22,

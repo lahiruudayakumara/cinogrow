@@ -33,6 +33,9 @@ import {
   loadPredictions,
   loadDistillationPredictions,
   loadQualityPredictions,
+  savePrediction,
+  saveDistillationPrediction,
+  saveQualityPrediction,
   type OilYieldPrediction,
   type PredictionsMap,
   type DistillationPrediction,
@@ -40,6 +43,11 @@ import {
   type QualityPrediction,
   type QualityPredictionsMap,
 } from "@/services/oilYieldPredictionStore";
+import apiConfig from "@/config/api";
+
+const API_BASE_URL = Platform.OS === "web"
+  ? "http://localhost:8000/api/v1"
+  : apiConfig.API_BASE_URL;
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -62,6 +70,10 @@ interface MaterialBatch {
   plotName?: string;
   moisturePercent?: number;
   expectedYieldPercent?: number;
+  cinnamonType?: string;
+  plantPart?: string;
+  plantAgeYears?: number;
+  harvestSeason?: string;
 }
 
 // ─── Pipeline Activity ────────────────────────────────────────────────────────
@@ -78,6 +90,10 @@ interface PipelineActivity {
   advancesTo?: BatchStatus;      // stage after Mark Done
   requiresDriedWeight?: boolean; // prompt for dried_mass_kg before advancing
   showsSummary?: boolean;        // show BatchCompleteSummary after marking done
+  buttonLabel?: string;          // override button label
+  callsPredict?: boolean;        // call API directly instead of navigating
+  callsDistillPredict?: boolean; // call distillation time API directly
+  callsQualityPredict?: boolean; // call quality API directly
 }
 
 // ─── API → UI mapper ─────────────────────────────────────────────────────────
@@ -90,7 +106,10 @@ function mapApiBatch(b: ApiBatch): MaterialBatch {
     driedWeightKg:        b.dried_mass_kg ?? undefined,
     addedDate:            b.created_at.split("T")[0],
     status:               b.process_stage as BatchStatus,
-    // plotName / moisturePercent / expectedYieldPercent not yet in DB
+    cinnamonType:         b.cinnamon_type,
+    plantPart:            b.plant_part,
+    plantAgeYears:        b.plant_age_years,
+    harvestSeason:        b.harvest_season,
   };
 }
 
@@ -129,10 +148,10 @@ function getPipelineActivities(batch: MaterialBatch, t: (k: string) => string): 
   const activities: PipelineActivity[] = [];
 
   switch (batch.status) {
-    // ── Stage 1: Raw ──────────────────────────────────────────────────────────
+    // ── Stage 1 & 2: Raw / Drying ─────────────────────────────────────────────
     case "raw":
       activities.push({
-        id: `collect-raw-${batch.id}`,
+        id: `sun-drying-${batch.id}`,
         stage: "raw",
         kind: "primary",
         title: t("oil_yield.home.activities.collect_raw_title"),
@@ -141,7 +160,6 @@ function getPipelineActivities(batch: MaterialBatch, t: (k: string) => string): 
       });
       break;
 
-    // ── Stage 2: Drying ───────────────────────────────────────────────────────
     case "drying":
       activities.push({
         id: `sun-drying-${batch.id}`,
@@ -159,6 +177,8 @@ function getPipelineActivities(batch: MaterialBatch, t: (k: string) => string): 
         title: t("oil_yield.home.activities.predict_before_distill_title"),
         description: t("oil_yield.home.activities.predict_before_distill_desc"),
         moduleType: "yield-predictor",
+        buttonLabel: "Predict",
+        callsPredict: true,
       });
       break;
 
@@ -170,9 +190,30 @@ function getPipelineActivities(batch: MaterialBatch, t: (k: string) => string): 
         kind: "primary",
         title: t("oil_yield.home.activities.distillation_title"),
         description: t("oil_yield.home.activities.distillation_desc"),
-        moduleType: "distillation",
         advancesTo: "quality_check",
       });
+      activities.push({
+        id: `predict-during-distill-${batch.id}`,
+        stage: "distilling",
+        kind: "secondary",
+        title: t("oil_yield.home.activities.predict_during_distill_title"),
+        description: t("oil_yield.home.activities.predict_during_distill_desc"),
+        moduleType: "distillation",
+        buttonLabel: "Predict",
+        callsDistillPredict: true,
+      });
+      if (batch.source === "purchased") {
+        activities.push({
+          id: `predict-before-distill-${batch.id}`,
+          stage: "distilling",
+          kind: "secondary",
+          title: t("oil_yield.home.activities.predict_before_distill_title"),
+          description: t("oil_yield.home.activities.predict_before_distill_desc"),
+          moduleType: "yield-predictor",
+          buttonLabel: "Predict",
+          callsPredict: true,
+        });
+      }
       break;
 
     // ── Stage 4: Quality Check ────────────────────────────────────────────────
@@ -186,6 +227,8 @@ function getPipelineActivities(batch: MaterialBatch, t: (k: string) => string): 
         moduleType: "quality",
         advancesTo: "complete",
         showsSummary: true,
+        buttonLabel: "Predict",
+        callsQualityPredict: true,
       });
       break;
 
@@ -322,11 +365,9 @@ function BatchSelector({
                 </Text>
               </View>
               {/* Show dried weight indicator */}
-              {batch.source === "own_farm" && !batch.driedWeightKg ? (
-                <Text style={styles.selectorWeightPending}>⏳ {batch.rawWeightKg} {t("oil_yield.home.kg_raw")}</Text>
-              ) : (
+              {batch.status !== "raw" && batch.driedWeightKg && (
                 <Text style={styles.selectorWeight}>
-                  {batch.driedWeightKg ?? batch.rawWeightKg} {t("oil_yield.home.kg_dried")}
+                  {batch.driedWeightKg} {t("oil_yield.home.kg_dried")}
                 </Text>
               )}
             </TouchableOpacity>
@@ -511,19 +552,17 @@ function DistillationInlineCard({
       </View>
 
       {/* Info chips */}
-      <View style={styles.predictionChipRow}>
-        <View style={styles.predictionChip}>
-          <Text style={styles.predictionChipLabel}>Capacity</Text>
-          <Text style={styles.predictionChipValue}>{prediction.distillationCapacityLiters} L</Text>
-        </View>
-        <View style={styles.predictionChip}>
-          <Text style={styles.predictionChipLabel}>Part</Text>
-          <Text style={styles.predictionChipValue} numberOfLines={1}>{prediction.plantPart}</Text>
-        </View>
-        <View style={styles.predictionChip}>
-          <Text style={styles.predictionChipLabel}>Type</Text>
-          <Text style={styles.predictionChipValue} numberOfLines={1}>{prediction.cinnamonType}</Text>
-        </View>
+      <View style={{ flexDirection: "column", gap: 6, marginTop: 8 }}>
+        {[
+          { label: "Capacity", value: `${prediction.distillationCapacityLiters} L` },
+          { label: "Part",     value: prediction.plantPart },
+          { label: "Type",     value: prediction.cinnamonType },
+        ].map(({ label, value }) => (
+          <View key={label} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={styles.predictionChipLabel}>{label}</Text>
+            <Text style={styles.predictionChipValue} numberOfLines={1}>{value}</Text>
+          </View>
+        ))}
       </View>
 
       {/* Timer display */}
@@ -567,14 +606,14 @@ function DistillationInlineCard({
       </View>
 
       {/* Re-calculate button */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.rePredictButtonAmber}
         onPress={onNavigate}
         activeOpacity={0.85}
       >
         <Ionicons name="calculator-outline" size={14} color="#F59E0B" />
         <Text style={styles.rePredictButtonTextAmber}>{t("oil_yield.home.re_calculate")}</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }
@@ -646,13 +685,13 @@ function QualityInlineCard({
       </View>
 
       {/* Attribute chips */}
-      <View style={styles.predictionChipRow}>
+      <View style={{ flexDirection: "column", gap: 6, marginTop: 8 }}>
         {[
           { label: "Color",   value: prediction.color },
           { label: "Clarity", value: prediction.clarity },
           { label: "Aroma",   value: prediction.aroma },
         ].map(({ label: chipLabel, value }) => (
-          <View key={chipLabel} style={[styles.predictionChip, { borderColor: `${qColor}44` }]}>
+          <View key={chipLabel} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={styles.predictionChipLabel}>{chipLabel}</Text>
             <Text style={[styles.predictionChipValue, { color: qColor }]} numberOfLines={1}>{value}</Text>
           </View>
@@ -669,7 +708,7 @@ function QualityInlineCard({
       )}
 
       {/* Re-assess button */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[styles.rePredictButton, { backgroundColor: `${qColor}18`, borderColor: `${qColor}44` }]}
         onPress={onNavigate}
         activeOpacity={0.85}
@@ -678,7 +717,7 @@ function QualityInlineCard({
         <Text style={[styles.rePredictButtonText, { color: qColor }]}>
           {t("oil_yield.home.re_assess")}
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }
@@ -689,6 +728,12 @@ function PipelineActivityCard({
   activity,
   onMarkDone,
   onNavigate,
+  onPredict,
+  isPredicting,
+  onDistillPredict,
+  isDistillPredicting,
+  onQualityPredict,
+  isQualityPredicting,
   stageAdvancing,
   prediction,
   distillationPrediction,
@@ -698,6 +743,12 @@ function PipelineActivityCard({
   activity: PipelineActivity;
   onMarkDone: (a: PipelineActivity) => void;
   onNavigate: (m: ModuleType) => void;
+  onPredict?: () => Promise<void>;
+  isPredicting?: boolean;
+  onDistillPredict?: () => void;
+  isDistillPredicting?: boolean;
+  onQualityPredict?: () => void;
+  isQualityPredicting?: boolean;
   stageAdvancing: boolean;
   prediction?: OilYieldPrediction;
   distillationPrediction?: DistillationPrediction;
@@ -769,36 +820,28 @@ function PipelineActivityCard({
             </View>
 
             {/* Summary chips */}
-            <View style={styles.predictionChipRow}>
-              <View style={styles.predictionChip}>
-                <Text style={styles.predictionChipLabel}>Species</Text>
-                <Text style={styles.predictionChipValue} numberOfLines={1}>
-                  {prediction!.inputSummary.species_variety}
-                </Text>
-              </View>
-              <View style={styles.predictionChip}>
-                <Text style={styles.predictionChipLabel}>Dried</Text>
-                <Text style={styles.predictionChipValue}>
-                  {prediction!.inputSummary.dried_mass_kg} kg
-                </Text>
-              </View>
-              <View style={styles.predictionChip}>
-                <Text style={styles.predictionChipLabel}>Part</Text>
-                <Text style={styles.predictionChipValue} numberOfLines={1}>
-                  {prediction!.inputSummary.plant_part}
-                </Text>
-              </View>
+            <View style={{ flexDirection: "column", gap: 6, marginTop: 8 }}>
+              {[
+                { label: "Species", value: prediction!.inputSummary.species_variety },
+                { label: "Dried",   value: `${prediction!.inputSummary.dried_mass_kg} kg` },
+                { label: "Part",    value: prediction!.inputSummary.plant_part },
+              ].map(({ label, value }) => (
+                <View key={label} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text style={styles.predictionChipLabel}>{label}</Text>
+                  <Text style={styles.predictionChipValue} numberOfLines={1}>{value}</Text>
+                </View>
+              ))}
             </View>
 
             {/* Re-predict button */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.rePredictButton}
               onPress={() => onNavigate(activity.moduleType!)}
               activeOpacity={0.85}
             >
               <Ionicons name="refresh" size={14} color="#3B82F6" />
               <Text style={styles.rePredictButtonText}>{t("oil_yield.home.re_predict")}</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         ) : showInlineDistillation ? (
           <DistillationInlineCard
@@ -820,11 +863,18 @@ function PipelineActivityCard({
             </View>
             <TouchableOpacity
               style={[styles.goButton, { backgroundColor: moduleColor }]}
-              onPress={() => onNavigate(activity.moduleType!)}
+              onPress={() => activity.callsDistillPredict ? onDistillPredict?.() : activity.callsQualityPredict ? onQualityPredict?.() : activity.callsPredict ? onPredict?.() : onNavigate(activity.moduleType!)}
+              disabled={isPredicting || isDistillPredicting || isQualityPredicting}
               activeOpacity={0.85}
             >
-              <Text style={styles.goButtonText}>{t("oil_yield.home.go_to_module")}</Text>
-              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+              {(isPredicting && activity.callsPredict) || (isDistillPredicting && activity.callsDistillPredict) || (isQualityPredicting && activity.callsQualityPredict) ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Text style={styles.goButtonText}>{activity.buttonLabel ?? t("oil_yield.home.go_to_module")}</Text>
+                  <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                </>
+              )}
             </TouchableOpacity>
           </View>
         )
@@ -923,6 +973,15 @@ export default function OilScreen() {
   const [distillationPredictions, setDistillationPredictions] = useState<DistillationPredictionsMap>({});
   const [qualityPredictions, setQualityPredictions]           = useState<QualityPredictionsMap>({});
   const [viewingStage, setViewingStage]                        = useState<BatchStatus | null>(null);
+  const [isPredicting, setIsPredicting]                         = useState(false);
+  const [showCapacityModal, setShowCapacityModal]               = useState(false);
+  const [capacityInput, setCapacityInput]                       = useState("");
+  const [isDistillPredicting, setIsDistillPredicting]           = useState(false);
+  const [showQualityModal, setShowQualityModal]                 = useState(false);
+  const [qualityColor, setQualityColor]                         = useState("");
+  const [qualityClarity, setQualityClarity]                     = useState("");
+  const [qualityAroma, setQualityAroma]                         = useState("");
+  const [isQualityPredicting, setIsQualityPredicting]           = useState(false);
 
   const fetchBatches = async () => {
     try {
@@ -952,9 +1011,10 @@ export default function OilScreen() {
   // Initial load
   useEffect(() => { fetchBatches(); }, []);
 
-  // Reload predictions whenever screen regains focus (e.g. returning from predictor)
+  // Reload batches and predictions whenever screen regains focus (e.g. returning from add batch)
   useFocusEffect(
     React.useCallback(() => {
+      fetchBatches();
       loadPredictions().then(setPredictions).catch(() => {});
       loadDistillationPredictions().then(setDistillationPredictions).catch(() => {});
       loadQualityPredictions().then(setQualityPredictions).catch(() => {});
@@ -975,10 +1035,218 @@ export default function OilScreen() {
 
   const handleNavigateToModule = (moduleType: ModuleType) => {
     switch (moduleType) {
-      case "yield-predictor": router.push("/oil-yield/predictor-second"); break;
+      case "yield-predictor": router.push({ pathname: "/oil-yield/predictor-second", params: { batchId: selectedBatchId ?? "" } }); break;
       case "distillation":    router.push("/oil-yield/distillation-process"); break;
       case "quality":         router.push("/oil-yield/quality-guide"); break;
       case "price":           router.push("/oil-yield/price-predictor"); break;
+    }
+  };
+
+  // ─ Call predict API inline for drying stage ──────────────────────────────────
+  const handlePredictBatch = async () => {
+    if (!selectedBatch) return;
+    const driedMass = selectedBatch.driedWeightKg ?? selectedBatch.rawWeightKg;
+    if (!driedMass || driedMass <= 0) {
+      Alert.alert(t("oil_yield.home.invalid_weight_title"), t("oil_yield.predictor.alerts.dried_weight_required"));
+      return;
+    }
+    const normalizeSeasonForAPI = (v?: string): string => {
+      const s = (v || "").toLowerCase();
+      return (s.includes("may") || s.includes("jun") || s.includes("jul") || s.includes("aug"))
+        ? "May\u2013August"
+        : "October\u2013December/January";
+    };
+    setIsPredicting(true);
+    try {
+      const body = {
+        dried_mass_kg:     driedMass,
+        species_variety:   selectedBatch.cinnamonType ?? "",
+        plant_part:        selectedBatch.plantPart ?? "",
+        age_years:         selectedBatch.plantAgeYears ?? 0,
+        harvesting_season: normalizeSeasonForAPI(selectedBatch.harvestSeason),
+      };
+      const res = await fetch(`${API_BASE_URL}/oil_yield/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const data = await res.json();
+      const yieldMl = parseFloat((data.predicted_yield_liters * 1000).toFixed(2));
+      const prediction: OilYieldPrediction = {
+        batchId:              selectedBatch.id,
+        predictedYieldMl:     yieldMl,
+        predictedYieldLiters: data.predicted_yield_liters,
+        inputSummary:         data.input_summary,
+        recommendation:       data.recommendation ?? { primary: "", tips: [], quality: "" },
+        predictedAt:          new Date().toISOString(),
+      };
+      await savePrediction(prediction);
+      setPredictions((prev) => ({ ...prev, [selectedBatch.id]: prediction }));
+    } catch (e: any) {
+      Alert.alert(t("oil_yield.home.error_title"), e.message ?? t("oil_yield.home.failed_advance"));
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
+  // ─ Distillation time predict inline ─────────────────────────────────────────────
+  const handleDistillPredictBatch = () => {
+    if (!selectedBatch) return;
+    setCapacityInput("");
+    setShowCapacityModal(true);
+  };
+
+  const commitDistillPredict = async () => {
+    if (!selectedBatch) return;
+    const capacity = parseFloat(capacityInput);
+    if (isNaN(capacity) || capacity <= 0) {
+      Alert.alert(t("oil_yield.home.invalid_weight_title"), t("oil_yield.home.invalid_capacity_msg"));
+      return;
+    }
+    setShowCapacityModal(false);
+    setCapacityInput("");
+    setIsDistillPredicting(true);
+    const cinnamonTypeMap: Record<string, string> = { "Sri Gemunu": "Sri Gamunu", "Sri Vijaya": "Sri Wijaya" };
+    try {
+      const body = {
+        plant_part: selectedBatch.plantPart ?? "",
+        cinnamon_type: cinnamonTypeMap[selectedBatch.cinnamonType ?? ""] ?? selectedBatch.cinnamonType ?? "",
+        distillation_capacity_liters: capacity,
+      };
+      const res = await fetch(`${API_BASE_URL}/oil_yield/predict_distillation_time`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const data = await res.json();
+      const roundedTime = parseFloat(data.predicted_time_hours.toFixed(1));
+      const prediction: DistillationPrediction = {
+        batchId: selectedBatch.id,
+        predictedTimeHours: roundedTime,
+        distillationCapacityLiters: capacity,
+        plantPart: selectedBatch.plantPart ?? "",
+        cinnamonType: selectedBatch.cinnamonType ?? "",
+        predictedAt: new Date().toISOString(),
+      };
+      await saveDistillationPrediction(prediction);
+      setDistillationPredictions((prev) => ({ ...prev, [selectedBatch.id]: prediction }));
+    } catch (e: any) {
+      Alert.alert(t("oil_yield.home.error_title"), e.message ?? t("oil_yield.home.failed_advance"));
+    } finally {
+      setIsDistillPredicting(false);
+    }
+  };
+
+  // ─ Quality predict inline ────────────────────────────────────────────────────
+  const handleQualityPredictBatch = () => {
+    if (!selectedBatch) return;
+    setQualityColor("");
+    setQualityClarity("");
+    setQualityAroma("");
+    setShowQualityModal(true);
+  };
+
+  const commitQualityPredict = async () => {
+    if (!selectedBatch) return;
+    if (!qualityColor || !qualityClarity || !qualityAroma) {
+      Alert.alert(t("oil_yield.home.invalid_weight_title"), t("oil_yield.home.quality_missing_fields"));
+      return;
+    }
+    setShowQualityModal(false);
+    setIsQualityPredicting(true);
+
+    const normCinnamonType = (v?: string) => {
+      const s = (v || "").trim().toLowerCase();
+      if (s.includes("gamunu")) return "Sri Gamunu";
+      if (s.includes("wijaya") || s.includes("vijaya")) return "Sri Wijaya";
+      return "Sri Gamunu";
+    };
+    const normPlantPart = (v?: string) => {
+      const s = (v || "").trim().toLowerCase();
+      if (s.includes("leaf") || s.includes("leave") || s.includes("twig")) return "Leaves & Twigs";
+      if (s.includes("feather") || s.includes("chip")) return "Featherings & Chips";
+      return "Leaves & Twigs";
+    };
+    const normHarvestSeason = (v?: string) => {
+      const s = (v || "").trim().toLowerCase();
+      const allowed = ["january", "april", "july", "october"];
+      if (allowed.includes(s)) return s.charAt(0).toUpperCase() + s.slice(1);
+      if (s.includes("may") || s.includes("jun") || s.includes("aug")) return "July";
+      if (s.includes("oct") || s.includes("nov") || s.includes("dec")) return "October";
+      if (s.includes("jan")) return "January";
+      return "January";
+    };
+
+    try {
+      const body = {
+        cinnamon_type: normCinnamonType(selectedBatch.cinnamonType),
+        plant_part: normPlantPart(selectedBatch.plantPart),
+        mass_kg: selectedBatch.driedWeightKg ?? selectedBatch.rawWeightKg,
+        plant_age_years: selectedBatch.plantAgeYears ?? 0,
+        harvest_season: normHarvestSeason(selectedBatch.harvestSeason),
+        color: qualityColor,
+        clarity: qualityClarity,
+        aroma: qualityAroma,
+      };
+      const res = await fetch(`${API_BASE_URL}/oil_yield/quality`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const data = await res.json();
+      const finalScore = Math.round(data.predicted_quality_score ?? 0);
+
+      let qualityLabel = "";
+      let priceRange = "";
+      const recs: string[] = [];
+      let labAdvice = "";
+
+      if (finalScore >= 85) {
+        qualityLabel = "Excellent"; priceRange = "$120 – $200 / L";
+        recs.push("Suitable for premium markets and export preparation");
+        recs.push("Highly recommended for laboratory certification");
+        recs.push("Maintain controlled storage to preserve volatile compounds");
+        labAdvice = "Proceed with full laboratory analysis for certification and export.";
+      } else if (finalScore >= 70) {
+        qualityLabel = "Good"; priceRange = "$70 – $120 / L";
+        recs.push("Minor purification may improve market value");
+        recs.push("Recommended to refine distillation parameters");
+        labAdvice = "Improve quality slightly before investing in laboratory testing.";
+      } else if (finalScore >= 50) {
+        qualityLabel = "Fair"; priceRange = "$30 – $70 / L";
+        recs.push("Filtering or redistillation is advised");
+        recs.push("Review raw material handling and drying process");
+        labAdvice = "Laboratory testing not cost-effective at this stage.";
+      } else {
+        qualityLabel = "Poor"; priceRange = "$5 – $30 / L";
+        recs.push("Do not proceed with laboratory testing");
+        recs.push("Investigate contamination or processing failures");
+        labAdvice = "Resolve quality issues before any certification attempts.";
+      }
+
+      const prediction: QualityPrediction = {
+        batchId: selectedBatch.id,
+        score: finalScore,
+        label: qualityLabel,
+        priceRange,
+        recommendations: recs,
+        labAdvice,
+        color: qualityColor,
+        clarity: qualityClarity,
+        aroma: qualityAroma,
+        cinnamonType: normCinnamonType(selectedBatch.cinnamonType),
+        plantPart: normPlantPart(selectedBatch.plantPart),
+        predictedAt: new Date().toISOString(),
+      };
+      await saveQualityPrediction(prediction);
+      setQualityPredictions((prev) => ({ ...prev, [selectedBatch.id]: prediction }));
+    } catch (e: any) {
+      Alert.alert(t("oil_yield.home.error_title"), e.message ?? t("oil_yield.home.failed_advance"));
+    } finally {
+      setIsQualityPredicting(false);
     }
   };
 
@@ -997,15 +1265,6 @@ export default function OilScreen() {
       const updated = await updateMaterialBatch(selectedBatch.id, { dried_mass_kg: kg });
       const mapped  = mapApiBatch(updated);
       setBatches((prev) => prev.map((b) => (b.id === mapped.id ? mapped : b)));
-      setActivities((prev) => [
-        {
-          id: Date.now(),
-          batch_id: selectedBatch.id,
-          activity_name: `${t("oil_yield.home.activities.sun_dry_title")} — ${t("oil_yield.home.dried_weight_prefix")} ${kg}\u202fkg`,
-          activity_date: new Date().toISOString(),
-        },
-        ...prev,
-      ]);
       setViewingStage(null);
     } catch (e: any) {
       Alert.alert(t("oil_yield.home.error_title"), e.message ?? t("oil_yield.home.failed_update_dried"));
@@ -1031,15 +1290,6 @@ export default function OilScreen() {
       const updated = await updateMaterialBatch(selectedBatch.id, { process_stage: activity.advancesTo });
       const mapped  = mapApiBatch(updated);
       setBatches((prev) => prev.map((b) => (b.id === mapped.id ? mapped : b)));
-      setActivities((prev) => [
-        {
-          id: Date.now(),
-          batch_id: selectedBatch.id,
-          activity_name: activity.title,
-          activity_date: new Date().toISOString(),
-        },
-        ...prev,
-      ]);
       setViewingStage(null);
     } catch (e: any) {
       Alert.alert(t("oil_yield.home.error_title"), e.message ?? t("oil_yield.home.failed_advance"));
@@ -1105,7 +1355,7 @@ export default function OilScreen() {
                 <Text style={[styles.startBadgeText, { color: "#065F46" }]}>{t("oil_yield.home.add_batch_badge")}</Text>
               </View> */}
               <Text style={styles.addBatchTitle}>{t("oil_yield.home.add_batch_title")}</Text>
-              <Text style={styles.addBatchSubtitle}>{t("oil_yield.home.add_batch_subtitle")}</Text>
+              {/* <Text style={styles.addBatchSubtitle}>{t("oil_yield.home.add_batch_subtitle")}</Text> */}
             </View>
           </TouchableOpacity>
 
@@ -1124,7 +1374,7 @@ export default function OilScreen() {
                 <Text style={[styles.startBadgeText, { color: "#5B21B6" }]}>{t("oil_yield.home.market_badge")}</Text>
               </View> */}
               <Text style={styles.addBatchTitle}>{t("oil_yield.home.price_predictor_title")}</Text>
-              <Text style={styles.addBatchSubtitle}>{t("oil_yield.home.price_predictor_subtitle")}</Text>
+              {/* <Text style={styles.addBatchSubtitle}>{t("oil_yield.home.price_predictor_subtitle")}</Text> */}
             </View>
           </TouchableOpacity>
         </View>
@@ -1157,7 +1407,7 @@ export default function OilScreen() {
                       <Text style={styles.weightLabel}>{t("oil_yield.home.kg_unit")}</Text>
                     </View> */}
                     <View style={styles.detailMeta}>
-                      <Text style={styles.detailStage}>{getStatusLabel(selectedBatch.status, t)}</Text>
+                      {/* <Text style={styles.detailStage}>{getStatusLabel(selectedBatch.status, t)}</Text> */}
                       {selectedBatch.plotName && (
                         <Text style={styles.detailPlot}>📍 {selectedBatch.plotName}</Text>
                       )}
@@ -1168,7 +1418,7 @@ export default function OilScreen() {
                   </View>
 
                   {/* Stats row */}
-                  <View style={styles.statsRow}>
+                  {/* <View style={styles.statsRow}> */}
                     {/* <View style={styles.statChip}>
                       <Text style={styles.statLabel}>{t("oil_yield.home.moisture_label")}</Text>
                       <Text style={styles.statValue}>{selectedBatch.moisturePercent ?? "—"}%</Text>
@@ -1177,13 +1427,13 @@ export default function OilScreen() {
                       <Text style={styles.statLabel}>{t("oil_yield.home.est_yield_label")}</Text>
                       <Text style={styles.statValue}>{selectedBatch.expectedYieldPercent ?? "—"}%</Text>
                     </View> */}
-                    <View style={styles.statChip}>
+                    {/* <View style={styles.statChip}>
                       <Text style={styles.statLabel}>{t("oil_yield.home.status_label")}</Text>
                       <Text style={[styles.statValue, { color: getStatusColor(selectedBatch.status) }]}>
                         {getStatusLabel(selectedBatch.status, t)}
                       </Text>
                     </View>
-                  </View>
+                  </View> */}
 
                   {/* ── Dried Weight Banner ── */}
                   {selectedBatch.source === "own_farm" && !selectedBatch.driedWeightKg ? (
@@ -1265,6 +1515,12 @@ export default function OilScreen() {
                         activity={activity}
                         onMarkDone={handleMarkActivityDone}
                         onNavigate={handleNavigateToModule}
+                        onPredict={activity.callsPredict ? handlePredictBatch : undefined}
+                        isPredicting={activity.callsPredict ? isPredicting : undefined}
+                        onDistillPredict={activity.callsDistillPredict ? handleDistillPredictBatch : undefined}
+                        isDistillPredicting={activity.callsDistillPredict ? isDistillPredicting : undefined}
+                        onQualityPredict={activity.callsQualityPredict ? handleQualityPredictBatch : undefined}
+                        isQualityPredicting={activity.callsQualityPredict ? isQualityPredicting : undefined}
                         stageAdvancing={stageAdvancing}
                         prediction={
                           activity.moduleType === "yield-predictor"
@@ -1293,7 +1549,7 @@ export default function OilScreen() {
         )}
 
       {/* ── Modules section ── */}
-        {/* <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>{t("oil_yield.home.modules_title")}</Text>
+        <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>{t("oil_yield.home.modules_title")}</Text>
         <View style={styles.toolsCard}>
           {[
             { icon: "flask-outline",           color: "#10B981", bg: "#F0FDF4", label: t("oil_yield.home.modules.yield_predictor_label"),  sub: t("oil_yield.home.modules.yield_predictor_sub"),  route: "/oil-yield/predictor-second"     },
@@ -1321,7 +1577,7 @@ export default function OilScreen() {
           ))}
         </View>
 
-        <View style={{ height: 40 }} /> */}
+        <View style={{ height: 40 }} />
       </ScrollView>
 
       {/* ── Dried Weight Modal (cross-platform) ── */}
@@ -1371,6 +1627,160 @@ export default function OilScreen() {
                 ) : (
                   <Text style={styles.modalConfirmBtnText}>{t("oil_yield.home.confirm_advance")}</Text>
                 )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ── Distillation Capacity Modal ── */}
+      <Modal
+        visible={showCapacityModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCapacityModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Ionicons name="flask-outline" size={24} color="#F59E0B" />
+              <Text style={styles.modalTitle}>{t("oil_yield.home.distill_capacity_title")}</Text>
+            </View>
+            <Text style={styles.modalSubtitle}>
+              {t("oil_yield.home.distill_capacity_subtitle", { name: selectedBatch?.name ?? "" })}
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder={t("oil_yield.home.distill_capacity_placeholder")}
+              placeholderTextColor="#9CA3AF"
+              keyboardType="decimal-pad"
+              value={capacityInput}
+              onChangeText={setCapacityInput}
+              autoFocus
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => { setShowCapacityModal(false); setCapacityInput(""); }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelBtnText}>{t("oil_yield.home.cancel")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirmBtn}
+                onPress={commitDistillPredict}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.modalConfirmBtnText}>{t("oil_yield.home.predict")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ── Quality Predict Modal ── */}
+      <Modal
+        visible={showQualityModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowQualityModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={[styles.modalCard, { maxHeight: "85%" }]}>
+            <View style={styles.modalHeader}>
+              <MaterialCommunityIcons name="clipboard-check-outline" size={24} color="#8B5CF6" />
+              <Text style={styles.modalTitle}>{t("oil_yield.home.quality_modal_title")}</Text>
+            </View>
+            <Text style={styles.modalSubtitle}>
+              {t("oil_yield.home.quality_modal_subtitle", { name: selectedBatch?.name ?? "" })}
+            </Text>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 360 }}>
+              {/* Color */}
+              <Text style={styles.qualityModalSectionLabel}>{t("oil_yield.quality.color.title")}</Text>
+              <View style={styles.qualityModalOptions}>
+                {[
+                  { value: "pale_yellow", label: t("oil_yield.quality.color.pale_yellow") },
+                  { value: "golden",      label: t("oil_yield.quality.color.golden") },
+                  { value: "amber",       label: t("oil_yield.quality.color.amber") },
+                  { value: "dark",        label: t("oil_yield.quality.color.dark") },
+                ].map((opt) => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.qualityModalChip, qualityColor === opt.value && styles.qualityModalChipSelected]}
+                    onPress={() => setQualityColor(opt.value)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.qualityModalChipText, qualityColor === opt.value && styles.qualityModalChipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Clarity */}
+              <Text style={styles.qualityModalSectionLabel}>{t("oil_yield.quality.clarity.title")}</Text>
+              <View style={styles.qualityModalOptions}>
+                {[
+                  { value: "clear",          label: t("oil_yield.quality.clarity.clear") },
+                  { value: "slightly_cloudy", label: t("oil_yield.quality.clarity.slightly_cloudy") },
+                  { value: "cloudy",         label: t("oil_yield.quality.clarity.cloudy") },
+                ].map((opt) => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.qualityModalChip, qualityClarity === opt.value && styles.qualityModalChipSelected]}
+                    onPress={() => setQualityClarity(opt.value)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.qualityModalChipText, qualityClarity === opt.value && styles.qualityModalChipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Aroma */}
+              <Text style={styles.qualityModalSectionLabel}>{t("oil_yield.quality.aroma.title")}</Text>
+              <View style={styles.qualityModalOptions}>
+                {[
+                  { value: "mild",     label: t("oil_yield.quality.aroma.mild") },
+                  { value: "aromatic", label: t("oil_yield.quality.aroma.aromatic") },
+                  { value: "pungent",  label: t("oil_yield.quality.aroma.pungent") },
+                ].map((opt) => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.qualityModalChip, qualityAroma === opt.value && styles.qualityModalChipSelected]}
+                    onPress={() => setQualityAroma(opt.value)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.qualityModalChipText, qualityAroma === opt.value && styles.qualityModalChipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            <View style={[styles.modalActions, { marginTop: 12 }]}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setShowQualityModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelBtnText}>{t("oil_yield.home.cancel")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirmBtn}
+                onPress={commitQualityPredict}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.modalConfirmBtnText}>{t("oil_yield.home.predict")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1438,7 +1848,7 @@ const styles = StyleSheet.create({
   selectorScroll:       { paddingVertical: 8 },
   selectorCard:         {
     backgroundColor: "#FFFFFF", borderRadius: 16, padding: 14,
-    marginRight: 12, minWidth: 110, alignItems: "center",
+    marginRight: 12, width: 120, alignItems: "center",
     borderWidth: 2, borderColor: "#E5E7EB",
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
@@ -1655,6 +2065,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
   },
   modalConfirmBtnText:  { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
+
+  // Quality modal chips
+  qualityModalSectionLabel: { fontSize: 13, fontWeight: "600", color: "#374151", marginTop: 12, marginBottom: 6 },
+  qualityModalOptions:      { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  qualityModalChip:         {
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+    borderWidth: 1.5, borderColor: "#D1D5DB", backgroundColor: "#F9FAFB",
+  },
+  qualityModalChipSelected: { borderColor: "#8B5CF6", backgroundColor: "#F5F3FF" },
+  qualityModalChipText:     { fontSize: 13, fontWeight: "500", color: "#6B7280" },
+  qualityModalChipTextSelected: { color: "#7C3AED", fontWeight: "700" },
 
   // Modules
   sectionTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },

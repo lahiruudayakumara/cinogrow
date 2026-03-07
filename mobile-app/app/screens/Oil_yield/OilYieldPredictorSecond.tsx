@@ -14,6 +14,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 import { savePrediction } from '@/services/oilYieldPredictionStore';
@@ -26,6 +27,7 @@ const API_BASE_URL = Platform.OS === 'web'
 export default function OilYieldPredictorSecond() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  const { batchId } = useLocalSearchParams<{ batchId?: string }>();
   type MaterialBatch = {
     id: number;
     batch_name?: string | null;
@@ -55,6 +57,10 @@ export default function OilYieldPredictorSecond() {
         }
         const data: MaterialBatch[] = await res.json();
         setBatches(data);
+        if (batchId) {
+          const id = parseInt(batchId, 10);
+          if (!isNaN(id)) setSelectedBatchId(id);
+        }
       } catch (e: any) {
         console.error('❌ Failed to fetch batches', e);
         Alert.alert(t('oil_yield.predictor.alerts.load_error'), e.message || t('yield_weather.common.unknown_error'));

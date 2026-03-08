@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ScrollView, Pressable, Text, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,16 @@ import SettingsGrid from "@/components/profile/SettingsGrid";
 import { SubscriptionModal } from "@/components/profile/SubscriptionModal";
 import { LanguageModal } from "@/components/profile/LanguageModal";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+interface UserData {
+  access_token: string;
+  token_type: string;
+  user_id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  member_since: string;
+}
 
 const languages = [
   { code: "en", label: "English" },
@@ -46,6 +56,33 @@ export default function ProfileScreen() {
   const [subscriptionModalVisible, setSubscriptionModalVisible] =
     useState(false);
   const [currentPlan, setCurrentPlan] = useState("free");
+  const [userData, setUserData] = useState<UserData | null>(null);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userJson = await AsyncStorage.getItem('user');
+        if (userJson) {
+          const user: UserData = JSON.parse(userJson);
+          setUserData(user);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+    loadUserData();
+  }, []);
+
+  const formatMemberSince = (dateString: string | undefined) => {
+    if (!dateString) return 'Member';
+    try {
+      const date = new Date(dateString);
+      const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short' };
+      return `Member since ${date.toLocaleDateString('en-US', options)}`;
+    } catch {
+      return 'Member';
+    }
+  };
 
   const changeLanguage = (lang: string) => {
     i18n.changeLanguage(lang);
@@ -60,9 +97,9 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ProfileHeader
-          name="John Doe"
-          email="johndoe@example.com"
-          memberSince="Member since Jan 2024"
+          name={userData?.full_name || "User"}
+          email={userData?.email || ""}
+          memberSince={formatMemberSince(userData?.member_since)}
         />
         <SubscriptionCard
           currentPlan={currentPlan}
@@ -88,19 +125,6 @@ export default function ProfileScreen() {
           onSelectPlan={(id) => setCurrentPlan(id)}
         />
 
-        {/* Logout Button */}
-        <Pressable
-          style={[styles.navButton, { backgroundColor: '#c62828' }]}
-          onPress={async () => {
-            await AsyncStorage.removeItem('user');
-            router.replace('/login');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Logout"
-        >
-          <Text style={[styles.navButtonText, { color: '#fff' }]}>Logout</Text>
-        </Pressable>
-
         {/* Navigate to Home Screen */}
         <Pressable
           style={styles.navButton}
@@ -109,6 +133,19 @@ export default function ProfileScreen() {
           accessibilityLabel="Go to Home"
         >
           <Text style={styles.navButtonText}>Go to Home</Text>
+        </Pressable>
+
+        {/* Logout Button */}
+        <Pressable
+          style={[styles.navButton, { backgroundColor: "#c62828" }]}
+          onPress={async () => {
+            await AsyncStorage.removeItem("user");
+            router.replace("/login");
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Logout"
+        >
+          <Text style={[styles.navButtonText, { color: "#fff" }]}>Logout</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

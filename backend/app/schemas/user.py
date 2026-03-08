@@ -14,6 +14,7 @@ class UserCreate(UserBase):
 class UserRead(UserBase):
     id: uuid.UUID
     is_active: bool
+    created_at: Optional[str]  # Member since
 
     model_config = {"from_attributes": True}
 

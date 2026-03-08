@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ImageBackground,
   StatusBar,
   ScrollView,
   Animated,
@@ -266,10 +265,8 @@ export default function OilScreen() {
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      <ImageBackground
-        source={require('../../assets/images/img/1.jpg')}
+      <View
         style={styles.background}
-        imageStyle={{ opacity: 0.05 }}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
@@ -442,7 +439,7 @@ export default function OilScreen() {
             </Text>
           </View> */}
         </ScrollView>
-      </ImageBackground>
+      </View>
     </>
   );
 }

@@ -61,6 +61,59 @@ export interface RoboflowAnalysisResponse {
   };
 }
 
+export interface SoilAnalysisResponse {
+  success: boolean;
+  message: string;
+  analysis_flow: string;
+  soil_type: string;
+  confidence: number;
+  soil_characteristics?: any;
+  soil_improvement_actions?: string[];
+  recommendations?: any;
+  recommend_soil_lab_test: boolean;
+  option_to_proceed?: string;
+  history_id?: number;
+  roboflow_output?: any;
+  metadata?: any;
+}
+
+export interface CombinedAnalysisResponse {
+  success: boolean;
+  message: string;
+  analysis_flow: string;
+  leaf_analysis: {
+    detected_deficiency: string;
+    confidence: number;
+    severity: string;
+    recommendations: FertilizerRecommendation;
+  };
+  soil_analysis: {
+    soil_type: string;
+    confidence: number;
+    confidence_level: string;
+    characteristics?: string[];
+    common_issues?: string[];
+    improvement_actions?: string[];
+    recommendations?: any;
+    message?: string;
+  };
+  combined_confidence: number;
+  cross_validated_recommendation: any;
+  fertilizer_and_soil_amendment_plan: any;
+  soil_lab_test_recommendation: any;
+  history_id?: number;
+  metadata?: any;
+}
+
+export interface AnalysisOption {
+  id: string;
+  name: string;
+  description: string;
+  endpoint: string;
+  outputs: string[];
+  requires: string[];
+}
+
 class FertilizerAPI {
   /**
    * Test Roboflow service health
@@ -183,6 +236,132 @@ class FertilizerAPI {
    */
   async isServiceAvailable(): Promise<boolean> {
     return this.testConnection();
+  }
+
+  /**
+   * Analyze soil image using Roboflow soil detection workflow
+   */
+  async analyzeSoilWithRoboflow(imageUri: string): Promise<SoilAnalysisResponse> {
+    const analyzeUrl = `${ROBOFLOW_ENDPOINT}/analyze-soil`;
+    
+    try {
+      console.log('🌍 Starting soil analysis via backend...');
+      console.log(`📡 Soil analysis endpoint: ${analyzeUrl}`);
+      console.log(`🖼️ Image URI: ${imageUri}`);
+      
+      const formData = new FormData();
+      formData.append('file', {
+        uri: imageUri,
+        name: 'soil.jpg',
+        type: 'image/jpeg',
+      } as any);
+      
+      console.log('📤 Uploading soil image...');
+      
+      const response = await fetch(analyzeUrl, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      console.log(`📊 Response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Soil analysis failed with status ${response.status}`);
+        console.error(`📄 Error body: ${errorText}`);
+        throw new Error(`Soil analysis failed: ${response.status} - ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Soil analysis completed:', result);
+      
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Soil analysis failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Perform combined leaf + soil analysis
+   */
+  async analyzeCombined(leafImageUri: string, soilImageUri: string, plantAge: number): Promise<CombinedAnalysisResponse> {
+    const analyzeUrl = `${ROBOFLOW_ENDPOINT}/analyze-combined?plant_age=${plantAge}`;
+    
+    try {
+      console.log('🔬 Starting combined analysis via backend...');
+      console.log(`📡 Combined analysis endpoint: ${analyzeUrl}`);
+      console.log(`🍃 Leaf image URI: ${leafImageUri}`);
+      console.log(`🌍 Soil image URI: ${soilImageUri}`);
+      
+      const formData = new FormData();
+      formData.append('leaf_file', {
+        uri: leafImageUri,
+        name: 'leaf.jpg',
+        type: 'image/jpeg',
+      } as any);
+      formData.append('soil_file', {
+        uri: soilImageUri,
+        name: 'soil.jpg',
+        type: 'image/jpeg',
+      } as any);
+      
+      console.log('📤 Uploading leaf and soil images...');
+      
+      const response = await fetch(analyzeUrl, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      console.log(`📊 Response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Combined analysis failed with status ${response.status}`);
+        console.error(`📄 Error body: ${errorText}`);
+        throw new Error(`Combined analysis failed: ${response.status} - ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Combined analysis completed:', result);
+      
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Combined analysis failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get available analysis options
+   */
+  async getAnalysisOptions(): Promise<{ success: boolean; analysis_options: AnalysisOption[] }> {
+    const optionsUrl = `${ROBOFLOW_ENDPOINT}/analysis-options`;
+    
+    try {
+      console.log('📋 Fetching analysis options...');
+      
+      const response = await fetch(optionsUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get analysis options: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Analysis options retrieved:', result);
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Failed to get analysis options:', error);
+      throw error;
+    }
   }
 }
 

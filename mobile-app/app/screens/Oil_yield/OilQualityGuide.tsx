@@ -13,7 +13,9 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import apiConfig from '../../config/api';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import apiConfig from '../../../config/api';
 
 // Use localhost for web platform, otherwise use the configured API URL
 const API_BASE_URL = Platform.OS === 'web'
@@ -21,6 +23,8 @@ const API_BASE_URL = Platform.OS === 'web'
   : apiConfig.API_BASE_URL;
 
 export default function PreliminaryOilQualityAssessment() {
+  const { t } = useTranslation();
+  const navigation = useNavigation<any>();
   const [color, setColor] = useState('');
   const [clarity, setClarity] = useState('');
   const [aroma, setAroma] = useState('');
@@ -53,13 +57,44 @@ export default function PreliminaryOilQualityAssessment() {
         const data = await response.json();
         setBatches(Array.isArray(data) ? data : []);
       } catch (e: any) {
-        Alert.alert('Failed to load batches', e?.message || 'Unknown error');
+        Alert.alert(t('oil_yield.quality.messages.failed_load_batches'), e?.message || t('yield_weather.common.unknown_error'));
       }
     };
     fetchBatches();
   }, []);
 
-  const calculateQuality = () => {
+  // Normalize batch fields to match backend accepted literals
+  const normalizeCinnamonType = (value?: string) => {
+    const v = (value || '').trim().toLowerCase();
+    if (v.includes('gamunu')) return 'Sri Gamunu';
+    if (v.includes('wijaya') || v.includes('vijaya')) return 'Sri Wijaya';
+    // default fallback
+    return 'Sri Gamunu';
+  };
+
+  const normalizePlantPart = (value?: string) => {
+    const v = (value || '').trim().toLowerCase();
+    if (v.includes('leaf') || v.includes('leaves') || v.includes('twig')) {
+      return 'Leaves & Twigs';
+    }
+    if (v.includes('feather') || v.includes('chip')) {
+      return 'Featherings & Chips';
+    }
+    return 'Leaves & Twigs';
+  };
+
+  const normalizeHarvestSeason = (value?: string) => {
+    const v = (value || '').trim().toLowerCase();
+    const allowed = ['january', 'april', 'july', 'october'];
+    if (allowed.includes(v)) return v.charAt(0).toUpperCase() + v.slice(1);
+    if (v.includes('may') || v.includes('jun') || v.includes('aug')) return 'July';
+    if (v.includes('oct')) return 'October';
+    if (v.includes('nov') || v.includes('dec')) return 'October';
+    if (v.includes('jan')) return 'January';
+    return 'January';
+  };
+
+  const calculateQuality = async () => {
     if (!selectedBatch || !color || !clarity || !aroma) {
       Alert.alert(
         'Missing Information',
@@ -68,73 +103,76 @@ export default function PreliminaryOilQualityAssessment() {
       return;
     }
 
-    const colorScoreMap: Record<string, number> = {
-      pale_yellow: 90,
-      golden: 80,
-      amber: 75,
-      dark: 50,
+    const payload = {
+      cinnamon_type: normalizeCinnamonType(selectedBatch.cinnamon_type),
+      plant_part: normalizePlantPart(selectedBatch.plant_part),
+      mass_kg: selectedBatch.mass_kg,
+      plant_age_years: selectedBatch.plant_age_years,
+      harvest_season: normalizeHarvestSeason(selectedBatch.harvest_season),
+      color,
+      clarity,
+      aroma,
     };
 
-    const clarityScoreMap: Record<string, number> = {
-      clear: 90,
-      slightly_cloudy: 70,
-      cloudy: 40,
-    };
+    try {
+      const resp = await fetch(`${API_BASE_URL}/oil_yield/quality`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    const aromaScoreMap: Record<string, number> = {
-      mild: 60,
-      aromatic: 90,
-      pungent: 75,
-    };
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(`Quality API failed (HTTP ${resp.status}): ${text}`);
+      }
 
-    const finalScore = Math.round(
-      (colorScoreMap[color] +
-        clarityScoreMap[clarity] +
-        aromaScoreMap[aroma]) / 3
-    );
+      const result = await resp.json();
+      const finalScore = Math.round(result?.predicted_quality_score ?? 0);
 
-    let qualityLabel = '';
-    let priceRange = '';
-    const recs: string[] = [];
+      let qualityLabel = '';
+      let priceRange = '';
+      const recs: string[] = [];
 
-    if (finalScore >= 85) {
-      qualityLabel = 'Excellent';
-      priceRange = '$120 – $200 / L';
-      recs.push('Suitable for premium markets and export preparation');
-      recs.push('Highly recommended for laboratory certification');
-      recs.push('Maintain controlled storage to preserve volatile compounds');
-      setLabAdvice('Proceed with full laboratory analysis for certification and export.');
-    } else if (finalScore >= 70) {
-      qualityLabel = 'Good';
-      priceRange = '$70 – $120 / L';
-      recs.push('Minor purification may improve market value');
-      recs.push('Recommended to refine distillation parameters');
-      setLabAdvice('Improve quality slightly before investing in laboratory testing.');
-    } else if (finalScore >= 50) {
-      qualityLabel = 'Fair';
-      priceRange = '$30 – $70 / L';
-      recs.push('Filtering or redistillation is advised');
-      recs.push('Review raw material handling and drying process');
-      setLabAdvice('Laboratory testing not cost-effective at this stage.');
-    } else {
-      qualityLabel = 'Poor';
-      priceRange = '$5 – $30 / L';
-      recs.push('Do not proceed with laboratory testing');
-      recs.push('Investigate contamination or processing failures');
-      setLabAdvice('Resolve quality issues before any certification attempts.');
+      if (finalScore >= 85) {
+        qualityLabel = 'Excellent';
+        priceRange = '$120 – $200 / L';
+        recs.push('Suitable for premium markets and export preparation');
+        recs.push('Highly recommended for laboratory certification');
+        recs.push('Maintain controlled storage to preserve volatile compounds');
+        setLabAdvice('Proceed with full laboratory analysis for certification and export.');
+      } else if (finalScore >= 70) {
+        qualityLabel = 'Good';
+        priceRange = '$70 – $120 / L';
+        recs.push('Minor purification may improve market value');
+        recs.push('Recommended to refine distillation parameters');
+        setLabAdvice('Improve quality slightly before investing in laboratory testing.');
+      } else if (finalScore >= 50) {
+        qualityLabel = 'Fair';
+        priceRange = '$30 – $70 / L';
+        recs.push('Filtering or redistillation is advised');
+        recs.push('Review raw material handling and drying process');
+        setLabAdvice('Laboratory testing not cost-effective at this stage.');
+      } else {
+        qualityLabel = 'Poor';
+        priceRange = '$5 – $30 / L';
+        recs.push('Do not proceed with laboratory testing');
+        recs.push('Investigate contamination or processing failures');
+        setLabAdvice('Resolve quality issues before any certification attempts.');
+      }
+
+      if (selectedBatch?.plant_part?.toLowerCase().includes('leave')) {
+        recs.push('Leaves & Twigs often show higher eugenol; expect stronger aroma.');
+      } else if (selectedBatch?.plant_part) {
+        recs.push('Featherings & Chips tend to have higher cinnamaldehyde; color may be richer.');
+      }
+
+      setScore(finalScore);
+      setLabel(qualityLabel);
+      setRecommendations(recs);
+      setPredictedPrice(priceRange);
+    } catch (e: any) {
+      Alert.alert('Quality Prediction Error', e?.message || 'Failed to predict quality.');
     }
-
-    // Add plant-part contextual note from selected batch
-    if (selectedBatch?.plant_part?.toLowerCase().includes('leave')) {
-      recs.push('Leaves & Twigs often show higher eugenol; expect stronger aroma.');
-    } else if (selectedBatch?.plant_part) {
-      recs.push('Featherings & Chips tend to have higher cinnamaldehyde; color may be richer.');
-    }
-
-    setScore(finalScore);
-    setLabel(qualityLabel);
-    setRecommendations(recs);
-    setPredictedPrice(priceRange);
   };
 
   const clearForm = () => {
@@ -180,7 +218,7 @@ export default function PreliminaryOilQualityAssessment() {
           <MaterialCommunityIcons 
             name={icon as any} 
             size={20} 
-            color={selected ? '#5E5CE6' : '#8E8E93'} 
+            color={selected ? '#4aab4e' : '#8E8E93'} 
           />
         </View>
         <View style={styles.radioTextContainer}>
@@ -192,8 +230,8 @@ export default function PreliminaryOilQualityAssessment() {
           )}
         </View>
       </View>
-      <View style={[styles.radioCircle, selected && { borderColor: '#5E5CE6' }]}>
-        {selected && <View style={[styles.radioInner, { backgroundColor: '#5E5CE6' }]} />}
+      <View style={[styles.radioCircle, selected && { borderColor: '#4aab4e' }]}>
+        {selected && <View style={[styles.radioInner, { backgroundColor: '#4aab4e' }]} />}
       </View>
     </TouchableOpacity>
   );
@@ -248,7 +286,7 @@ export default function PreliminaryOilQualityAssessment() {
             <MaterialCommunityIcons 
               name={icon as any} 
               size={20} 
-              color={disabled ? '#C7C7CC' : (isPrimary ? '#FFFFFF' : '#5E5CE6')} 
+              color={disabled ? '#C7C7CC' : (isPrimary ? '#FFFFFF' : '#4aab4e')} 
             />
             <Text style={[
               styles.controlButtonText,
@@ -274,19 +312,22 @@ export default function PreliminaryOilQualityAssessment() {
       >
         {/* Header with Icon */}
         <View style={styles.headerContainer}>
-          <View style={styles.headerIconContainer}>
-            <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="flask-outline" size={28} color="#5E5CE6" />
-            </View>
-          </View>
-          <Text style={styles.header}>Preliminary Oil Quality Assessment</Text>
+          <TouchableOpacity
+            style={styles.backButtonInline}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={20} color="#4aab4e" />
+          </TouchableOpacity>
+          
+          <Text style={styles.header}>{t('oil_yield.quality.header.title')}</Text>
           <Text style={styles.headerSubtitle}>
-            Field & sensory evaluation for cinnamon oil (non-laboratory)
+            {t('oil_yield.quality.header.subtitle')}
           </Text>
         </View>
 
         {/* Scientific Context Card */}
-        <View style={styles.infoCard}>
+        {/* <View style={styles.infoCard}>
           <BlurView intensity={70} tint="light" style={styles.infoCardBlur}>
             <View style={styles.infoCardHeader}>
               <MaterialCommunityIcons name="flask-outline" size={20} color="#5E5CE6" />
@@ -297,14 +338,12 @@ export default function PreliminaryOilQualityAssessment() {
               in preliminary screening of essential oils before laboratory confirmation.
             </Text>
           </BlurView>
-        </View>
+        </View> */}
 
         {/* Input Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Quality Attributes</Text>
-          <View style={styles.requiredBadge}>
-            <Text style={styles.requiredText}>Required</Text>
-          </View>
+          <Text style={styles.sectionTitle}>{t('oil_yield.quality.attributes_section.title')}</Text>
+          
         </View>
 
         {/* Color Card */}
@@ -312,45 +351,45 @@ export default function PreliminaryOilQualityAssessment() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="palette" size={24} color="#FF9F0A" />
+                <MaterialCommunityIcons name="palette" size={24} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Color</Text>
-                <Text style={styles.labelSubtext}>Visual appearance</Text>
+                <Text style={styles.label}>{t('oil_yield.quality.color.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.color.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Pale Yellow"
+                label={t('oil_yield.quality.color.pale_yellow')}
                 value="pale_yellow"
                 selected={color === 'pale_yellow'}
                 onSelect={() => setColor('pale_yellow')}
                 icon="circle"
-                subtitle="Premium quality indicator"
+                subtitle={t('oil_yield.quality.color.pale_yellow_sub')}
               />
               <RadioOption
-                label="Golden"
+                label={t('oil_yield.quality.color.golden')}
                 value="golden"
                 selected={color === 'golden'}
                 onSelect={() => setColor('golden')}
                 icon="circle"
-                subtitle="High quality standard"
+                subtitle={t('oil_yield.quality.color.golden_sub')}
               />
               <RadioOption
-                label="Amber"
+                label={t('oil_yield.quality.color.amber')}
                 value="amber"
                 selected={color === 'amber'}
                 onSelect={() => setColor('amber')}
                 icon="circle"
-                subtitle="Good quality range"
+                subtitle={t('oil_yield.quality.color.amber_sub')}
               />
               <RadioOption
-                label="Dark"
+                label={t('oil_yield.quality.color.dark')}
                 value="dark"
                 selected={color === 'dark'}
                 onSelect={() => setColor('dark')}
                 icon="circle"
-                subtitle="May indicate issues"
+                subtitle={t('oil_yield.quality.color.dark_sub')}
               />
             </View>
           </BlurView>
@@ -361,37 +400,37 @@ export default function PreliminaryOilQualityAssessment() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="water" size={24} color="#0A84FF" />
+                <MaterialCommunityIcons name="water" size={24} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Clarity</Text>
-                <Text style={styles.labelSubtext}>Transparency level</Text>
+                <Text style={styles.label}>{t('oil_yield.quality.clarity.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.clarity.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Clear"
+                label={t('oil_yield.quality.clarity.clear')}
                 value="clear"
                 selected={clarity === 'clear'}
                 onSelect={() => setClarity('clear')}
                 icon="water"
-                subtitle="Excellent transparency"
+                subtitle={t('oil_yield.quality.clarity.clear_sub')}
               />
               <RadioOption
-                label="Slightly Cloudy"
+                label={t('oil_yield.quality.clarity.slightly_cloudy')}
                 value="slightly_cloudy"
                 selected={clarity === 'slightly_cloudy'}
                 onSelect={() => setClarity('slightly_cloudy')}
                 icon="water-opacity"
-                subtitle="Minor impurities present"
+                subtitle={t('oil_yield.quality.clarity.slightly_cloudy_sub')}
               />
               <RadioOption
-                label="Cloudy"
+                label={t('oil_yield.quality.clarity.cloudy')}
                 value="cloudy"
                 selected={clarity === 'cloudy'}
                 onSelect={() => setClarity('cloudy')}
                 icon="water-off"
-                subtitle="Requires filtration"
+                subtitle={t('oil_yield.quality.clarity.cloudy_sub')}
               />
             </View>
           </BlurView>
@@ -402,37 +441,37 @@ export default function PreliminaryOilQualityAssessment() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="flower" size={24} color="#FF2D55" />
+                <MaterialCommunityIcons name="flower" size={24} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Aroma</Text>
-                <Text style={styles.labelSubtext}>Scent intensity</Text>
+                <Text style={styles.label}>{t('oil_yield.quality.aroma.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.aroma.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               <RadioOption
-                label="Mild"
+                label={t('oil_yield.quality.aroma.mild')}
                 value="mild"
                 selected={aroma === 'mild'}
                 onSelect={() => setAroma('mild')}
                 icon="flower-outline"
-                subtitle="Subtle fragrance"
+                subtitle={t('oil_yield.quality.aroma.mild_sub')}
               />
               <RadioOption
-                label="Aromatic"
+                label={t('oil_yield.quality.aroma.aromatic')}
                 value="aromatic"
                 selected={aroma === 'aromatic'}
                 onSelect={() => setAroma('aromatic')}
                 icon="flower"
-                subtitle="Strong pleasant scent"
+                subtitle={t('oil_yield.quality.aroma.aromatic_sub')}
               />
               <RadioOption
-                label="Pungent"
+                label={t('oil_yield.quality.aroma.pungent')}
                 value="pungent"
                 selected={aroma === 'pungent'}
                 onSelect={() => setAroma('pungent')}
                 icon="flower-pollen"
-                subtitle="Intense sharp odor"
+                subtitle={t('oil_yield.quality.aroma.pungent_sub')}
               />
             </View>
           </BlurView>
@@ -443,16 +482,16 @@ export default function PreliminaryOilQualityAssessment() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="database" size={24} color="#34C759" />
+                <MaterialCommunityIcons name="database" size={24} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Material Batch</Text>
-                <Text style={styles.labelSubtext}>Select from recorded batches</Text>
+                <Text style={styles.label}>{t('oil_yield.quality.batch.title')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.batch.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.radioGroup}>
               {batches.length === 0 ? (
-                <Text style={styles.labelSubtext}>No batches found. Create one in Oil Yield.</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.quality.batch.no_batches')}</Text>
               ) : (
                 batches.map((b) => (
                   <RadioOption
@@ -476,7 +515,7 @@ export default function PreliminaryOilQualityAssessment() {
             onPress={calculateQuality}
             isPrimary={true}
             icon="check-decagram"
-            text="Evaluate Preliminary Quality"
+            text={t('oil_yield.quality.buttons.evaluate')}
             disabled={!selectedBatch || !color || !clarity || !aroma}
           />
         </View>
@@ -485,10 +524,10 @@ export default function PreliminaryOilQualityAssessment() {
         {score !== null && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Assessment Results</Text>
+              <Text style={styles.sectionTitle}>{t('oil_yield.quality.results.title')}</Text>
               <View style={styles.successBadge}>
-                <MaterialCommunityIcons name="check-circle" size={14} color="#30D158" />
-                <Text style={styles.successText}>Complete</Text>
+                <MaterialCommunityIcons name="check-circle" size={14} color="#4aab4e" />
+                <Text style={styles.successText}>{t('oil_yield.quality.results.status_complete')}</Text>
               </View>
             </View>
 
@@ -505,12 +544,12 @@ export default function PreliminaryOilQualityAssessment() {
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.resultTitle}>Quality Score</Text>
+                <Text style={styles.resultTitle}>{t('oil_yield.quality.results.quality_score')}</Text>
                 <View style={styles.resultValueRow}>
                   <Text style={[styles.resultValue, { color: getQualityColor() }]}>
                     {score}
                   </Text>
-                  <Text style={styles.resultValueUnit}>/100</Text>
+                  <Text style={styles.resultValueUnit}>{t('oil_yield.quality.results.unit_over_100')}</Text>
                 </View>
                 <View style={styles.resultDivider} />
                 <View style={styles.resultMeta}>
@@ -548,136 +587,33 @@ export default function PreliminaryOilQualityAssessment() {
             </View>
 
             {/* Price Estimation Card */}
-            <View style={styles.priceCard}>
-              <BlurView intensity={70} tint="light" style={styles.priceBlur}>
-                <View style={styles.priceHeader}>
-                  <View style={styles.priceIconCircle}>
-                    <MaterialCommunityIcons name="cash-multiple" size={24} color="#34C759" />
-                  </View>
-                  <View style={styles.priceHeaderText}>
-                    <Text style={styles.priceLabel}>Market Value Estimate</Text>
-                    <Text style={styles.priceSubtext}>Global price range</Text>
-                  </View>
-                </View>
-                <Text style={styles.priceValue}>{predictedPrice}</Text>
-                <View style={styles.priceFooter}>
-                  <View style={styles.priceInfoItem}>
-                    <MaterialCommunityIcons name="chart-line" size={16} color="#34C759" />
-                    <Text style={styles.priceInfoText}>Market rate</Text>
-                  </View>
-                  <View style={styles.priceInfoItem}>
-                    <MaterialCommunityIcons name="nature" size={16} color="#8E8E93" />
-                    <Text style={styles.priceInfoText}>
-                      {selectedBatch?.plant_part || '—'}
-                    </Text>
-                  </View>
-                </View>
-              </BlurView>
-            </View>
+           
 
             {/* Lab Decision Card */}
             <View style={styles.decisionCard}>
               <BlurView intensity={70} tint="light" style={styles.decisionBlur}>
                 <View style={styles.decisionHeader}>
                   <View style={styles.decisionIconCircle}>
-                    <MaterialCommunityIcons name="clipboard-check-outline" size={24} color="#5E5CE6" />
+                    <MaterialCommunityIcons name="clipboard-check-outline" size={24} color="#4aab4e" />
                   </View>
-                  <Text style={styles.decisionTitle}>Laboratory Testing Recommendation</Text>
+                  <Text style={styles.decisionTitle}>{t('oil_yield.quality.results.lab_recommendation_title')}</Text>
                 </View>
                 <Text style={styles.decisionText}>{labAdvice}</Text>
               </BlurView>
             </View>
 
             {/* Recommendations Card */}
-            <View style={styles.recommendationCard}>
-              <BlurView intensity={70} tint="light" style={styles.recommendationBlur}>
-                <View style={styles.recommendationHeader}>
-                  <View style={styles.recommendationIconCircle}>
-                    <MaterialCommunityIcons name="lightbulb-on" size={20} color="#FF9F0A" />
-                  </View>
-                  <Text style={styles.recommendationTitle}>Quality Recommendations</Text>
-                </View>
-                
-                <View style={styles.recommendationSection}>
-                  <Text style={styles.recommendationSectionTitle}>Action Items</Text>
-                  {recommendations.map((rec, index) => (
-                    <View key={index} style={styles.recommendationTip}>
-                      <View style={styles.tipBullet}>
-                        <View style={styles.tipBulletDot} />
-                      </View>
-                      <Text style={styles.tipText}>{rec}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                {/* Quality Badge */}
-                <View style={styles.qualityBadgeContainer}>
-                  <View style={[styles.qualityBadge, { backgroundColor: `${getQualityColor()}15` }]}>
-                    <MaterialCommunityIcons name="certificate" size={16} color={getQualityColor()} />
-                    <Text style={[styles.qualityBadgeText, { color: getQualityColor() }]}>
-                      {label} Grade Classification
-                    </Text>
-                  </View>
-                </View>
-              </BlurView>
-            </View>
+           
 
             {/* Lab Parameters Card */}
-            <View style={styles.labCard}>
-              <BlurView intensity={70} tint="light" style={styles.labBlur}>
-                <View style={styles.labHeader}>
-                  <View style={styles.labIconCircle}>
-                    <MaterialCommunityIcons name="microscope" size={24} color="#FF9F0A" />
-                  </View>
-                  <Text style={styles.labTitle}>Laboratory Parameters (Not Included)</Text>
-                </View>
-                {[
-                  'Cinnamaldehyde percentage',
-                  'Eugenol percentage',
-                  'Moisture content',
-                  'Specific gravity',
-                  'Optical rotation',
-                  'GC–MS chemical profile',
-                ].map((p, i) => (
-                  <View key={i} style={styles.labItem}>
-                    <View style={styles.labItemBullet} />
-                    <Text style={styles.labItemText}>{p}</Text>
-                  </View>
-                ))}
-              </BlurView>
-            </View>
+          
 
             {/* Disclaimer Card */}
-            <View style={styles.disclaimerCard}>
-              <BlurView intensity={70} tint="light" style={styles.disclaimerBlur}>
-                <View style={styles.disclaimerHeader}>
-                  <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#FF9F0A" />
-                  <Text style={styles.disclaimerTitle}>Important Notice</Text>
-                </View>
-                <Text style={styles.disclaimerText}>
-                  This assessment does not replace certified laboratory analysis.
-                  Official grading and export approval require accredited laboratory testing.
-                </Text>
-              </BlurView>
-            </View>
-
-            {/* Contact Button */}
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={() => Linking.openURL('tel:+94XXXXXXXXX')}
-              activeOpacity={0.7}
-            >
-              <BlurView intensity={100} tint="dark" style={styles.contactBlur}>
-                <MaterialCommunityIcons name="office-building" size={20} color="#FFFFFF" />
-                <Text style={styles.contactButtonText}>
-                  Contact Cinnamon Research Center
-                </Text>
-              </BlurView>
-            </TouchableOpacity>
+           
 
             {/* Clear Button */}
             <TouchableOpacity onPress={clearForm} style={styles.clearButton} activeOpacity={0.7}>
-              <Text style={styles.clearText}>Clear Assessment</Text>
+              <Text style={styles.clearText}>{t('oil_yield.quality.buttons.clear')}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -709,11 +645,20 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(94, 92, 230, 0.15)',
+    backgroundColor: 'rgba(92, 230, 101, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 0.5,
-    borderColor: 'rgba(94, 92, 230, 0.2)',
+    borderColor: 'rgba(92, 230, 122, 0.2)',
+  },
+  backButtonInline: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   header: {
     fontSize: 34,
@@ -742,7 +687,7 @@ const styles = StyleSheet.create({
   infoCardBlur: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 0.5,
-    borderColor: 'rgba(94, 92, 230, 0.15)',
+    borderColor: 'rgba(92, 230, 99, 0.15)',
     padding: 16,
   },
   infoCardHeader: {
@@ -800,7 +745,7 @@ const styles = StyleSheet.create({
   successText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#30D158',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   inputCard: {
@@ -862,8 +807,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 0, 0, 0.08)',
   },
   radioOptionSelected: {
-    borderColor: 'rgba(94, 92, 230, 0.3)',
-    backgroundColor: 'rgba(94, 92, 230, 0.05)',
+    borderColor: 'rgba(92, 230, 113, 0.3)',
+    backgroundColor: 'rgba(92, 230, 113, 0.05)',
   },
   radioContent: {
     flexDirection: 'row',
@@ -928,7 +873,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   primaryButton: {
-    shadowColor: '#5E5CE6',
+    shadowColor: '#4aab4e',
   },
   secondaryButton: {
     shadowColor: '#000',
@@ -949,7 +894,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   secondaryButtonText: {
-    color: '#5E5CE6',
+    color: '#4aab4e',
   },
   disabledButtonText: {
     color: '#C7C7CC',
@@ -963,7 +908,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#5E5CE6',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -972,7 +917,7 @@ const styles = StyleSheet.create({
   resultBlur: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 0.5,
-    borderColor: 'rgba(94, 92, 230, 0.2)',
+    borderColor: 'rgba(92, 230, 131, 0.2)',
     padding: 20,
   },
   resultHeader: {
@@ -1023,7 +968,7 @@ const styles = StyleSheet.create({
   },
   resultDivider: {
     height: 0.5,
-    backgroundColor: 'rgba(60, 60, 67, 0.18)',
+    backgroundColor: 'rgba(60, 67, 60, 0.18)',
     marginVertical: 12,
   },
   resultMeta: {
@@ -1063,7 +1008,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#34C759',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
@@ -1107,7 +1052,7 @@ const styles = StyleSheet.create({
   priceValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#34C759',
+    color: '#4aab4e',
     letterSpacing: 0.36,
     marginBottom: 16,
     textAlign: 'center',
@@ -1118,7 +1063,7 @@ const styles = StyleSheet.create({
     gap: 20,
     paddingTop: 16,
     borderTopWidth: 0.5,
-    borderTopColor: 'rgba(60, 60, 67, 0.18)',
+    borderTopColor: 'rgba(60, 67, 62, 0.18)',
   },
   priceInfoItem: {
     flexDirection: 'row',
@@ -1154,7 +1099,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(60, 60, 67, 0.18)',
+    borderBottomColor: 'rgba(61, 67, 60, 0.18)',
   },
   recommendationIconCircle: {
     width: 32,
@@ -1197,7 +1142,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#0A84FF',
+    backgroundColor: '#4aab4e',
   },
   tipText: {
     flex: 1,
@@ -1209,7 +1154,7 @@ const styles = StyleSheet.create({
   qualityBadgeContainer: {
     paddingTop: 12,
     borderTopWidth: 0.5,
-    borderTopColor: 'rgba(60, 60, 67, 0.18)',
+    borderTopColor: 'rgba(60, 67, 61, 0.18)',
   },
   qualityBadge: {
     flexDirection: 'row',
@@ -1229,7 +1174,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#5E5CE6',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -1238,7 +1183,7 @@ const styles = StyleSheet.create({
   decisionBlur: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 0.5,
-    borderColor: 'rgba(94, 92, 230, 0.2)',
+    borderColor: 'rgba(92, 230, 133, 0.2)',
     padding: 20,
   },
   decisionHeader: {
@@ -1248,13 +1193,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(60, 60, 67, 0.18)',
+    borderBottomColor: 'rgba(60, 67, 62, 0.18)',
   },
   decisionIconCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(94, 92, 230, 0.15)',
+    backgroundColor: 'rgba(92, 230, 115, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1294,7 +1239,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(60, 60, 67, 0.18)',
+    borderBottomColor: 'rgba(60, 67, 61, 0.18)',
   },
   labIconCircle: {
     width: 40,
@@ -1370,7 +1315,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#5E5CE6',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 16,
@@ -1396,7 +1341,7 @@ const styles = StyleSheet.create({
   clearText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#5E5CE6',
+    color: '#4aab4e',
     letterSpacing: -0.24,
   },
 });

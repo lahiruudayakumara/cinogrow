@@ -14,7 +14,9 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import apiConfig from '../../config/api';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import apiConfig from '../../../config/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -34,6 +36,8 @@ interface MaterialBatch {
 }
 
 export default function AddMaterialBatchScreen() {
+  const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const [batchName, setBatchName] = useState('');
   const [cinnamonType, setCinnamonType] = useState('');
   const [massKg, setMassKg] = useState('');
@@ -71,7 +75,7 @@ export default function AddMaterialBatchScreen() {
       setBatches(data);
     } catch (error: any) {
       console.error('Error fetching batches:', error);
-      Alert.alert('Error', 'Failed to load batches');
+      Alert.alert(t('oil_yield.add_batch.alerts.error'), t('oil_yield.add_batch.alerts.failed_load'));
     } finally {
       setLoadingBatches(false);
     }
@@ -90,7 +94,7 @@ export default function AddMaterialBatchScreen() {
       };
 
       if (!payload.cinnamon_type || !payload.plant_part || !payload.harvest_season || isNaN(payload.mass_kg) || isNaN(payload.plant_age_years)) {
-        Alert.alert('Validation', 'Please fill all fields correctly.');
+        Alert.alert(t('oil_yield.add_batch.alerts.validation'), t('oil_yield.add_batch.alerts.fill_fields'));
         setLoading(false);
         return;
       }
@@ -108,7 +112,7 @@ export default function AddMaterialBatchScreen() {
       }
 
       const result = await response.json();
-      Alert.alert('Success', `Batch created successfully (ID: ${result.id})`);
+      Alert.alert(t('oil_yield.add_batch.alerts.success'), `${t('oil_yield.add_batch.alerts.batch_created')} (ID: ${result.id})`);
       
       // Reset form
       setCinnamonType('');
@@ -147,12 +151,12 @@ export default function AddMaterialBatchScreen() {
     >
       <View style={styles.dropdownContent}>
         <View style={styles.dropdownIconCircle}>
-          <MaterialCommunityIcons name={icon as any} size={18} color={selected ? '#FF3B30' : '#8E8E93'} />
+          <MaterialCommunityIcons name={icon as any} size={18} color={selected ? '#4aab4e' : '#8E8E93'} />
         </View>
         <Text style={[styles.dropdownLabel, selected && styles.dropdownLabelSelected]}>{label}</Text>
       </View>
-      <View style={[styles.radioCircle, selected && { borderColor: '#FF3B30' }]}>
-        {selected && <View style={[styles.radioInner, { backgroundColor: '#FF3B30' }]} />}
+      <View style={[styles.radioCircle, selected && { borderColor: '#4aab4e' }]}>
+        {selected && <View style={[styles.radioInner, { backgroundColor: '#4aab4e' }]} />}
       </View>
     </TouchableOpacity>
   );
@@ -162,7 +166,7 @@ export default function AddMaterialBatchScreen() {
       <BlurView intensity={70} tint="light" style={styles.batchBlur}>
         <View style={styles.batchHeader}>
           <View style={styles.batchIconContainer}>
-            <MaterialCommunityIcons name="package-variant" size={24} color="#FF3B30" />
+            <MaterialCommunityIcons name="package-variant" size={24} color="#4aab4e" />
           </View>
           <View style={styles.batchHeaderText}>
             <Text style={styles.batchId}>{batch.batch_name || `Batch ${batch.id}`}</Text>
@@ -228,20 +232,23 @@ export default function AddMaterialBatchScreen() {
       >
         {/* Header */}
         <View style={styles.headerContainer}>
-          <View style={styles.headerIconContainer}>
-            <View style={styles.headerIconCircle}>
-              <MaterialCommunityIcons name="package-variant-closed" size={28} color="#FF3B30" />
-            </View>
-          </View>
-          <Text style={styles.header}>Material Batch</Text>
+          <TouchableOpacity
+            style={styles.backButtonInline}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={20} color="#4aab4e" />
+          </TouchableOpacity>
+          
+          <Text style={styles.header}>{t('oil_yield.add_batch.header.title')}</Text>
           <Text style={styles.headerSubtitle}>
-            Create and manage cinnamon material batches
+            {t('oil_yield.add_batch.header.subtitle')}
           </Text>
         </View>
 
         {/* Form Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>New Batch</Text>
+          <Text style={styles.sectionTitle}>{t('oil_yield.add_batch.section_new.title')}</Text>
         </View>
 
           {/* Batch Name */}
@@ -249,11 +256,11 @@ export default function AddMaterialBatchScreen() {
             <BlurView intensity={70} tint="light" style={styles.cardBlur}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardIconCircle}>
-                  <MaterialCommunityIcons name="package-variant" size={20} color="#FF3B30" />
+                  <MaterialCommunityIcons name="package-variant" size={20} color="#4aab4e" />
                 </View>
                 <View style={styles.cardHeaderText}>
-                  <Text style={styles.label}>Batch Name</Text>
-                  <Text style={styles.labelSubtext}>Enter batch name</Text>
+                  <Text style={styles.label}>{t('oil_yield.add_batch.form.batch_name.label')}</Text>
+                  <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.batch_name.subtitle')}</Text>
                 </View>
               </View>
               <View style={styles.inputWrapper}>
@@ -261,7 +268,7 @@ export default function AddMaterialBatchScreen() {
                   style={styles.input}
                   value={batchName}
                   onChangeText={setBatchName}
-                  placeholder="Batch A - Leaves"
+                  placeholder={t('oil_yield.add_batch.form.batch_name.placeholder')}
                   placeholderTextColor="#C7C7CC"
                 />
               </View>
@@ -273,11 +280,11 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="leaf" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="leaf" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Cinnamon Type</Text>
-                <Text style={styles.labelSubtext}>Select variety</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.cinnamon_type.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.cinnamon_type.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.dropdownGroup}>
@@ -300,11 +307,11 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="weight-kilogram" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="weight-kilogram" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Mass (kg)</Text>
-                <Text style={styles.labelSubtext}>Enter weight</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.mass.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.mass.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.inputWrapper}>
@@ -317,7 +324,7 @@ export default function AddMaterialBatchScreen() {
                 placeholderTextColor="#C7C7CC"
               />
               <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>kg</Text>
+                <Text style={styles.inputSuffixText}>{t('oil_yield.add_batch.form.mass.suffix')}</Text>
               </View>
             </View>
           </BlurView>
@@ -328,11 +335,11 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="sprout" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="sprout" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Plant Part</Text>
-                <Text style={styles.labelSubtext}>Select part</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.plant_part.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.plant_part.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.dropdownGroup}>
@@ -355,11 +362,11 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="clock-outline" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="clock-outline" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Plant Age</Text>
-                <Text style={styles.labelSubtext}>Enter age</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.plant_age.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.plant_age.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.inputWrapper}>
@@ -368,11 +375,11 @@ export default function AddMaterialBatchScreen() {
                 value={plantAgeYears}
                 onChangeText={setPlantAgeYears}
                 keyboardType="decimal-pad"
-                placeholder="3.2"
+                placeholder={t('oil_yield.add_batch.form.plant_age.placeholder')}
                 placeholderTextColor="#C7C7CC"
               />
               <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>years</Text>
+                <Text style={styles.inputSuffixText}>{t('oil_yield.add_batch.form.plant_age.suffix')}</Text>
               </View>
             </View>
           </BlurView>
@@ -383,11 +390,11 @@ export default function AddMaterialBatchScreen() {
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
             <View style={styles.cardHeader}>
               <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="weather-sunny" size={20} color="#FF3B30" />
+                <MaterialCommunityIcons name="weather-sunny" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>Harvest Season</Text>
-                <Text style={styles.labelSubtext}>Select season</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.harvest_season.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.harvest_season.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.dropdownGroup}>
@@ -416,12 +423,12 @@ export default function AddMaterialBatchScreen() {
             {loading ? (
               <>
                 <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text style={styles.submitButtonText}>Creating Batch...</Text>
+                <Text style={styles.submitButtonText}>{t('oil_yield.add_batch.buttons.creating')}</Text>
               </>
             ) : (
               <>
                 <MaterialCommunityIcons name="plus-circle" size={20} color="#FFFFFF" />
-                <Text style={styles.submitButtonText}>Create Batch</Text>
+                <Text style={styles.submitButtonText}>{t('oil_yield.add_batch.buttons.create')}</Text>
               </>
             )}
           </BlurView>
@@ -429,7 +436,7 @@ export default function AddMaterialBatchScreen() {
 
         {/* Batches List Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>All Batches</Text>
+          <Text style={styles.sectionTitle}>{t('oil_yield.add_batch.list.title')}</Text>
           {batches.length > 0 && (
             <View style={styles.countBadge}>
               <Text style={styles.countBadgeText}>{batches.length}</Text>
@@ -439,16 +446,16 @@ export default function AddMaterialBatchScreen() {
 
         {loadingBatches ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF3B30" />
-            <Text style={styles.loadingText}>Loading batches...</Text>
+            <ActivityIndicator size="large" color="#4aab4e" />
+            <Text style={styles.loadingText}>{t('oil_yield.add_batch.list.loading')}</Text>
           </View>
         ) : batches.length === 0 ? (
           <View style={styles.emptyCard}>
             <BlurView intensity={70} tint="light" style={styles.emptyBlur}>
               <MaterialCommunityIcons name="package-variant" size={48} color="#C7C7CC" />
-              <Text style={styles.emptyTitle}>No Batches Yet</Text>
+              <Text style={styles.emptyTitle}>{t('oil_yield.add_batch.list.empty_title')}</Text>
               <Text style={styles.emptySubtext}>
-                Create your first material batch using the form above
+                {t('oil_yield.add_batch.list.empty_subtitle')}
               </Text>
             </BlurView>
           </View>
@@ -482,11 +489,20 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    backgroundColor: 'rgba(55, 255, 48, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 0.5,
-    borderColor: 'rgba(255, 59, 48, 0.2)',
+    borderColor: 'rgba(48, 255, 55, 0.2)',
+  },
+  backButtonInline: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   header: {
     fontSize: 34,
@@ -519,12 +535,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 59, 48, 0.12)',
+    backgroundColor: 'rgba(48, 255, 72, 0.12)',
   },
   countBadgeText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FF3B30',
+    color: '#4aab4e',
     letterSpacing: 0.2,
   },
   inputCard: {
@@ -586,8 +602,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 0, 0, 0.06)',
   },
   dropdownOptionSelected: {
-    backgroundColor: 'rgba(255, 59, 48, 0.08)',
-    borderColor: 'rgba(255, 59, 48, 0.3)',
+    backgroundColor: 'rgba(48, 255, 62, 0.08)',
+    borderColor: 'rgba(51, 255, 48, 0.3)',
   },
   dropdownContent: {
     flex: 1,
@@ -599,7 +615,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    backgroundColor: 'rgba(66, 197, 66, 0.04)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -610,7 +626,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.24,
   },
   dropdownLabelSelected: {
-    color: '#FF3B30',
+    color: '#4aab4e',
   },
   radioCircle: {
     width: 22,
@@ -658,7 +674,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     marginBottom: 32,
-    shadowColor: '#FF3B30',
+    shadowColor: '#4aab4e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -709,7 +725,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    backgroundColor: 'rgba(48, 255, 72, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },

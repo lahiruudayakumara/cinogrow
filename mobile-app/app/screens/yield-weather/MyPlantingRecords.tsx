@@ -11,6 +11,7 @@ import {
   TextInput,
   Modal,
   FlatList,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ import type { YieldWeatherStackParamList } from '../../../navigation/YieldWeathe
 import { plantingRecordsAPI, PlantingRecord, Plot } from '../../../services/yield_weather/plantingRecordsAPI';
 import { farmAPI } from '../../../services/yield_weather/farmAPI';
 import DatePicker from '../../../components/ui/DatePicker';
+import CustomDropdown from '../../../components/ui/CustomDropdown';
 import { CinnamonVarietyPicker } from '../../../components/CinnamonVarietyPicker';
 import { DEFAULT_CINNAMON_VARIETY } from '../../../constants/CinnamonVarieties';
 
@@ -40,7 +42,6 @@ const MyPlantingRecords = () => {
   const [plantingRecords, setPlantingRecords] = useState<PlantingRecord[]>([]);
   const [plots, setPlots] = useState<Plot[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingRecord, setEditingRecord] = useState<PlantingRecord | null>(null);
   const [backendAvailable, setBackendAvailable] = useState(false);
@@ -153,10 +154,13 @@ const MyPlantingRecords = () => {
     setPlantedDate(null);
   };
 
-  const handlePlotSelect = (plot: DropdownItem) => {
-    setSelectedPlot(plot);
+  const handlePlotSelect = (value: number | string) => {
+    const plot = plots.find(p => p.id === value);
+    if (!plot) return;
+
+    const dropdownItem = { id: plot.id, name: plot.name, area: plot.area };
+    setSelectedPlot(dropdownItem);
     setPlotArea(plot.area.toString());
-    setDropdownVisible(false);
 
     // Check if there's already a record for this plot
     const existingRecord = plantingRecords.find(record => record.plot_id === plot.id);
@@ -506,7 +510,15 @@ const MyPlantingRecords = () => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>{t('yield_weather.planting_records.title')}</Text>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#1F2937" />
+            </TouchableOpacity>
+            <Text style={styles.title}>{t('yield_weather.planting_records.title')}</Text>
+          </View>
           <TouchableOpacity
             style={styles.addButton}
             onPress={handleAddRecord}
@@ -568,16 +580,18 @@ const MyPlantingRecords = () => {
           <ScrollView style={styles.modalContent}>
             {/* Plot Dropdown */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>{t('yield_weather.planting_records.select_plot')} *</Text>
-              <TouchableOpacity
-                style={styles.dropdown}
-                onPress={() => setDropdownVisible(true)}
-              >
-                <Text style={[styles.dropdownText, !selectedPlot && styles.placeholderText]}>
-                  {selectedPlot ? selectedPlot.name : t('yield_weather.planting_records.choose_plot')}
-                </Text>
-                <Ionicons name="chevron-down" size={20} color="#6B7280" />
-              </TouchableOpacity>
+              <CustomDropdown
+                options={plots.map(plot => ({
+                  label: plot.name,
+                  value: plot.id,
+                  subtitle: `${plot.area} ${t('yield_weather.common.ha')}`,
+                }))}
+                selectedValue={selectedPlot?.id || null}
+                onValueChange={handlePlotSelect}
+                label={t('yield_weather.planting_records.select_plot')}
+                placeholder={t('yield_weather.planting_records.choose_plot')}
+                modalTitle={t('yield_weather.planting_records.select_plot')}
+              />
             </View>
 
             {/* Plot Area */}
@@ -631,37 +645,6 @@ const MyPlantingRecords = () => {
           </ScrollView>
         </SafeAreaView>
       </Modal>
-
-      {/* Plot Dropdown Modal */}
-      <Modal
-        visible={dropdownVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setDropdownVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.dropdownOverlay}
-          activeOpacity={1}
-          onPress={() => setDropdownVisible(false)}
-        >
-          <View style={styles.dropdownModal}>
-            <Text style={styles.dropdownTitle}>{t('yield_weather.planting_records.select_plot')}</Text>
-            <FlatList
-              data={plots.map(plot => ({ id: plot.id, name: plot.name, area: plot.area }))}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.dropdownItem}
-                  onPress={() => handlePlotSelect(item)}
-                >
-                  <Text style={styles.dropdownItemText}>{item.name}</Text>
-                  <Text style={styles.dropdownItemSubtext}>{item.area} {t('yield_weather.common.ha')}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -692,8 +675,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 24,
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '700',
     color: '#111827',
   },

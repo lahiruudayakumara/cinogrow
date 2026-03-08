@@ -4,11 +4,13 @@ from .schemas import (
     OilYieldInput, OilYieldOutput, 
     DistillationTimeInput, DistillationTimeOutput,
     PriceForecastInput, PriceForecastOutput,
-    MaterialBatchCreate, MaterialBatchRead
+    MaterialBatchCreate, MaterialBatchRead,
+    OilQualityInput, OilQualityOutput
 )
 from .model import load_model
 from .distillation_time_model import load_model as load_distillation_model
 from .price_forecast_model import forecast_prices
+from .oil_quality_model import load_model as load_quality_model
 import numpy as np
 import logging
 from sqlmodel import Session, select
@@ -21,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Global variable to cache the model
 _cached_model = None
 _cached_distillation_model = None
+_cached_quality_model = None
 
 def get_model():
     """
@@ -43,6 +46,16 @@ def get_distillation_model():
         _cached_distillation_model = load_distillation_model()
     return _cached_distillation_model
 
+def get_quality_model():
+    """
+    Get the oil quality prediction model, loading it if not already cached.
+    """
+    global _cached_quality_model
+    if _cached_quality_model is None:
+        logger.info("🔧 Loading oil quality model...")
+        _cached_quality_model = load_quality_model()
+    return _cached_quality_model
+
 @router.post("/predict", response_model=OilYieldOutput)
 def predict_yield(data: OilYieldInput):
     """
@@ -58,21 +71,39 @@ def predict_yield(data: OilYieldInput):
     Returns predicted oil yield in liters.
     """
     model = get_model()
-    
+
     # Encode categorical features
     species_encoded = 0 if data.species_variety == "Sri Gemunu" else 1
     plant_part_encoded = 0 if data.plant_part == "Featherings & Chips" else 1
     season_encoded = 0 if data.harvesting_season == "May–August" else 1
-    
-    # Prepare feature array
-    X = np.array([[
-        data.dried_mass_kg,
-        species_encoded,
-        plant_part_encoded,
-        data.age_years,
-        season_encoded
-    ]])
-    
+
+    # Build features based on model expectation to avoid shape mismatch
+    try:
+        n_features = getattr(model, "n_features_in_", None)
+    except Exception:
+        n_features = None
+
+    if n_features == 4:
+        # Older model without season feature: [mass, species, part, age]
+        X = np.array([[
+            data.dried_mass_kg,
+            species_encoded,
+            plant_part_encoded,
+            data.age_years,
+        ]])
+        logger.info("Using 4-feature input vector for oil yield model (season excluded)")
+    else:
+        # Default/newer model with season feature: [mass, species, part, age, season]
+        X = np.array([[
+            data.dried_mass_kg,
+            species_encoded,
+            plant_part_encoded,
+            data.age_years,
+            season_encoded
+        ]])
+        if n_features is not None and n_features != 5:
+            logger.warning(f"Model expects {n_features} features; attempting with 5-feature vector.")
+
     # Make prediction
     prediction = model.predict(X)[0]
     
@@ -124,6 +155,57 @@ def predict_distillation_time(data: DistillationTimeInput):
         }
     }
 
+@router.post("/quality", response_model=OilQualityOutput)
+def predict_oil_quality(data: OilQualityInput):
+    """
+    Predict oil quality score based on batch characteristics.
+
+    Inputs include cinnamon type, plant part, mass, plant age, season,
+    and observed sensory properties (color, clarity, aroma).
+    """
+    model = get_quality_model()
+
+    # Encode categorical features consistent with training
+    cinnamon_type_encoded = 0 if data.cinnamon_type == "Sri Gamunu" else 1
+    plant_part_encoded = 0 if data.plant_part == "Featherings & Chips" else 1
+    season_map = {"January": 0, "April": 1, "July": 2, "October": 3}
+    color_map = {"pale_yellow": 0, "golden": 1, "amber": 2, "dark": 3}
+    clarity_map = {"clear": 0, "slightly_cloudy": 1, "cloudy": 2}
+    aroma_map = {"mild": 0, "aromatic": 1, "pungent": 2}
+
+    season_encoded = season_map[data.harvest_season]
+    color_encoded = color_map[data.color]
+    clarity_encoded = clarity_map[data.clarity]
+    aroma_encoded = aroma_map[data.aroma]
+
+    # Feature order must match training
+    X = np.array([[
+        data.mass_kg,
+        data.plant_age_years,
+        cinnamon_type_encoded,
+        plant_part_encoded,
+        season_encoded,
+        color_encoded,
+        clarity_encoded,
+        aroma_encoded,
+    ]])
+
+    prediction = float(model.predict(X)[0])
+
+    return {
+        "predicted_quality_score": round(prediction, 2),
+        "input_summary": {
+            "cinnamon_type": data.cinnamon_type,
+            "plant_part": data.plant_part,
+            "mass_kg": data.mass_kg,
+            "plant_age_years": data.plant_age_years,
+            "harvest_season": data.harvest_season,
+            "color": data.color,
+            "clarity": data.clarity,
+            "aroma": data.aroma,
+        }
+    }
+
 @router.post("/price_forecast", response_model=PriceForecastOutput)
 def get_price_forecast(data: PriceForecastInput):
     """
@@ -146,8 +228,9 @@ def get_price_forecast(data: PriceForecastInput):
                 detail="Only Leaf oil forecasting is currently supported"
             )
         
-        # Generate forecast
-        result = forecast_prices(data.time_range)
+        # Generate forecast with optional steps override
+        steps_override = getattr(data, 'steps', None)
+        result = forecast_prices(data.time_range, steps_override)
         
         return result
         

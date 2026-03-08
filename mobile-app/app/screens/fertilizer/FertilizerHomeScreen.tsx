@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import {
     fetchFertilizerHistory,
     formatAnalysisDate,
@@ -27,6 +28,7 @@ import { FertilizerHomeParams } from '../../fertilizer/types';
 const Fertilizer: React.FC = () => {
     const router = useRouter();
     const params = useLocalSearchParams<FertilizerHomeParams>();
+    const { t } = useTranslation();
     const [leafImage, setLeafImage] = useState<string | null>(null);
     const [soilImage, setSoilImage] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
@@ -100,35 +102,71 @@ const Fertilizer: React.FC = () => {
     };
 
     const handleHistoryPress = (item: FertilizerHistoryRecord) => {
-        // Navigate to result screen with history data
-        router.push({
-            pathname: '/fertilizer/result',
-            params: {
-                roboflowAnalysis: JSON.stringify({
-                    success: true,
-                    primary_deficiency: item.primary_deficiency,
+        // Navigate to result screen with history data based on analysis type
+        const baseParams: any = {
+            plantAge: item.plant_age || 1,
+        };
+
+        if (item.analysis_flow === 'combined') {
+            // Combined analysis - pass both leaf and soil data
+            baseParams.analysisType = 'comprehensive';
+            baseParams.combinedAnalysis = JSON.stringify({
+                leaf_analysis: {
+                    detected_deficiency: item.primary_deficiency,
                     confidence: item.confidence,
                     severity: item.severity,
-                    plant_age: item.plant_age,
-                    recommendations: item.recommendations,
-                    history_id: item.id,
-                    detections: [{
-                        class: item.primary_deficiency || 'Unknown',
-                        confidence: item.confidence || 0,
-                        deficiency: item.primary_deficiency || 'Unknown',
-                        severity: item.severity || 'Low'
-                    }],
-                    roboflow_output: [{
-                        predictions: {
-                            predictions: [{
-                                class: item.primary_deficiency || 'Unknown',
-                                confidence: item.confidence || 0
-                            }]
-                        }
-                    }]
-                }),
-                plantAge: item.plant_age || 1,
-            }
+                    recommendations: item.recommendations
+                },
+                soil_analysis: {
+                    soil_type: item.soil_type,
+                    confidence: item.soil_confidence,
+                    characteristics: item.soil_characteristics?.key_properties || [],
+                    improvement_actions: item.soil_characteristics?.improvement_actions || [],
+                    recommendations: item.recommendations?.soil_recommendations || {}
+                }
+            });
+        } else if (item.analysis_flow === 'soil_only') {
+            // Soil only analysis
+            baseParams.analysisType = 'soil-only';
+            baseParams.soilAnalysis = JSON.stringify({
+                success: true,
+                soil_detected: !!item.soil_type,
+                soil_type: item.soil_type,
+                confidence: item.soil_confidence,
+                soil_characteristics: item.soil_characteristics || {},
+                recommendations: item.recommendations
+            });
+        } else {
+            // Leaf only analysis (default)
+            baseParams.analysisType = 'leaf-only';
+            baseParams.roboflowAnalysis = JSON.stringify({
+                success: true,
+                primary_deficiency: item.primary_deficiency,
+                confidence: item.confidence,
+                severity: item.severity,
+                plant_age: item.plant_age,
+                recommendations: item.recommendations,
+                history_id: item.id,
+                detections: [{
+                    class: item.primary_deficiency || 'Unknown',
+                    confidence: item.confidence || 0,
+                    deficiency: item.primary_deficiency || 'Unknown',
+                    severity: item.severity || 'Low'
+                }],
+                roboflow_output: [{
+                    predictions: {
+                        predictions: [{
+                            class: item.primary_deficiency || 'Unknown',
+                            confidence: item.confidence || 0
+                        }]
+                    }
+                }]
+            });
+        }
+
+        router.push({
+            pathname: '/fertilizer/result',
+            params: baseParams
         });
     };
 
@@ -174,7 +212,7 @@ const Fertilizer: React.FC = () => {
                     <View style={styles.completedOverlay}>
                         <View style={styles.completedBadge}>
                             <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                            <Text style={styles.completedText}>Uploaded</Text>
+                            <Text style={styles.completedText}>{t('fertilizer.home.uploaded')}</Text>
                         </View>
                     </View>
                 )}
@@ -186,6 +224,49 @@ const Fertilizer: React.FC = () => {
         const severityColor = getSeverityColor(item.severity);
         const confidence = formatConfidence(item.confidence);
         const date = formatAnalysisDate(item.analyzed_at);
+        
+        // Determine analysis type display
+        const getAnalysisTypeInfo = () => {
+            switch (item.analysis_flow) {
+                case 'combined':
+                    return {
+                        icon: 'fitness' as const,
+                        label: 'Comprehensive',
+                        color: '#0EA5E9',
+                        bgColor: '#E0F2FE'
+                    };
+                case 'soil_only':
+                    return {
+                        icon: 'earth' as const,
+                        label: 'Soil Analysis',
+                        color: '#8B7355',
+                        bgColor: '#FEF7ED'
+                    };
+                case 'leaf_only':
+                default:
+                    return {
+                        icon: 'leaf' as const,
+                        label: 'Leaf Analysis',
+                        color: '#4CAF50',
+                        bgColor: '#F0FDF4'
+                    };
+            }
+        };
+        
+        const analysisType = getAnalysisTypeInfo();
+        
+        // Determine primary result to display
+        const getPrimaryResult = () => {
+            if (item.analysis_flow === 'combined') {
+                return item.primary_deficiency 
+                    ? `${item.primary_deficiency}${item.soil_type ? ` • ${item.soil_type}` : ''}` 
+                    : item.soil_type || 'Analysis Complete';
+            } else if (item.analysis_flow === 'soil_only') {
+                return item.soil_type || 'Soil Analyzed';
+            } else {
+                return item.primary_deficiency || 'Leaf Analyzed';
+            }
+        };
 
         return (
             <TouchableOpacity
@@ -196,23 +277,37 @@ const Fertilizer: React.FC = () => {
             >
                 <View style={styles.recommendationHeader}>
                     <View style={styles.recommendationTitleRow}>
-                        <Text style={styles.recommendationType}>
-                            {item.primary_deficiency || 'Unknown Deficiency'}
-                        </Text>
+                        <View style={[styles.analysisTypeBadge, { backgroundColor: analysisType.bgColor }]}>
+                            <Ionicons name={analysisType.icon} size={14} color={analysisType.color} />
+                            <Text style={[styles.analysisTypeText, { color: analysisType.color }]}>
+                                {analysisType.label}
+                            </Text>
+                        </View>
                         {item.severity && (
                             <View style={[styles.severityBadge, { backgroundColor: severityColor }]}>
                                 <Text style={styles.severityText}>{item.severity}</Text>
                             </View>
                         )}
                     </View>
+                    <Text style={styles.recommendationType}>
+                        {getPrimaryResult()}
+                    </Text>
                     <Text style={styles.recommendationDate}>{date}</Text>
                 </View>
 
                 <View style={styles.actionRow}>
-                    <View style={styles.actionContent}>
-                        <Ionicons name="analytics-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
-                        <Text style={styles.actionText}>Confidence: {confidence}</Text>
-                    </View>
+                    {(item.confidence || item.soil_confidence) && (
+                        <View style={styles.actionContent}>
+                            <Ionicons name="analytics-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
+                            <Text style={styles.actionText}>
+                                {item.analysis_flow === 'combined' 
+                                    ? `${formatConfidence(item.confidence)}${item.soil_confidence ? ` • ${formatConfidence(item.soil_confidence)}` : ''}` 
+                                    : item.analysis_flow === 'soil_only'
+                                    ? formatConfidence(item.soil_confidence)
+                                    : confidence}
+                            </Text>
+                        </View>
+                    )}
                     {item.plant_age && (
                         <View style={styles.actionContent}>
                             <Ionicons name="leaf-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
@@ -248,9 +343,9 @@ const Fertilizer: React.FC = () => {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.welcomeSection}>
-                        <Text style={styles.title}>Fertilizer Analysis</Text>
+                        <Text style={styles.title}>{t('fertilizer.home.title')}</Text>
                         <Text style={styles.subtitle}>
-                            Get AI-powered fertilizer recommendations for your cinnamon crops
+                            {t('fertilizer.home.subtitle')}
                         </Text>
                     </View>
 
@@ -259,12 +354,12 @@ const Fertilizer: React.FC = () => {
                         <View style={styles.instructionCard}>
                             <View style={styles.instructionHeader}>
                                 <Ionicons name="information-circle" size={20} color="#4CAF50" />
-                                <Text style={styles.instructionTitle}>Quick Start Guide</Text>
+                                <Text style={styles.instructionTitle}>{t('fertilizer.home.quick_start_guide')}</Text>
                             </View>
                             <Text style={styles.instructionText}>
-                                1. Start with a <Text style={styles.highlightText}>leaf sample</Text> for instant recommendations{'\n'}
-                                2. Optionally add a <Text style={styles.highlightText}>soil sample</Text> for enhanced results{'\n'}
-                                3. Get personalized fertilizer advice in seconds
+                                1. {t('fertilizer.home.step_1')}{'\n'}
+                                2. {t('fertilizer.home.step_2')}{'\n'}
+                                3. {t('fertilizer.home.step_3')}
                             </Text>
                         </View>
                     )}
@@ -272,21 +367,21 @@ const Fertilizer: React.FC = () => {
 
                 {/* Upload Section */}
                 <View style={styles.uploadSection}>
-                    <Text style={styles.sectionTitle}>Sample Analysis</Text>
+                    <Text style={styles.sectionTitle}>{t('fertilizer.home.sample_analysis')}</Text>
 
                     <View style={styles.uploadRow}>
                         {renderUploadCard(
                             'leaf-outline',
-                            'Leaf Sample',
-                            'Detect nutrient deficiencies',
+                            t('fertilizer.home.leaf_sample'),
+                            t('fertilizer.home.leaf_sample_subtitle'),
                             handleUploadLeafSample,
                             ['#4CAF50', '#45A049'],
                             !!leafImage
                         )}
                         {renderUploadCard(
                             'earth-outline',
-                            'Soil Sample',
-                            'Analyze soil conditions',
+                            t('fertilizer.home.soil_sample'),
+                            t('fertilizer.home.soil_sample_subtitle'),
                             handleUploadSoilSample,
                             ['#8B7355', '#7A5F47'],
                             !!soilImage
@@ -305,8 +400,7 @@ const Fertilizer: React.FC = () => {
                             />
                         </View>
                         <Text style={styles.progressText}>
-                            {leafImage && soilImage ? 'Ready for Analysis' :
-                                leafImage || soilImage ? '1 of 2 samples uploaded' : 'Upload samples to begin analysis'}
+                            {leafImage || soilImage ? t('fertilizer.home.samples_uploaded') : t('fertilizer.home.upload_to_begin')}
                         </Text>
                     </View>
                 </View>
@@ -316,13 +410,13 @@ const Fertilizer: React.FC = () => {
                     <View style={styles.sectionHeader}>
                         <View style={styles.sectionTitleContainer}>
                             <Ionicons name="time-outline" size={20} color="#4CAF50" />
-                            <Text style={styles.sectionTitle}>Recent Analysis</Text>
+                            <Text style={styles.sectionTitle}>{t('fertilizer.home.recent_analysis')}</Text>
                         </View>
                         <TouchableOpacity
                             style={styles.viewAllButton}
                             onPress={handleViewAllHistory}
                         >
-                            <Text style={styles.viewAllText}>View All</Text>
+                            <Text style={styles.viewAllText}>{t('fertilizer.home.view_all')}</Text>
                             <Ionicons name="chevron-forward" size={16} color="#4CAF50" />
                         </TouchableOpacity>
                     </View>
@@ -330,16 +424,16 @@ const Fertilizer: React.FC = () => {
                     {loadingHistory ? (
                         <View style={styles.historyLoadingContainer}>
                             <ActivityIndicator size="small" color="#4CAF50" />
-                            <Text style={styles.historyLoadingText}>Loading recent analyses...</Text>
+                            <Text style={styles.historyLoadingText}>{t('fertilizer.home.loading_analyses')}</Text>
                         </View>
                     ) : recentAnalyses.length > 0 ? (
                         recentAnalyses.map((item) => renderHistoryCard(item))
                     ) : (
                         <View style={styles.emptyHistoryContainer}>
                             <Ionicons name="flask-outline" size={48} color="#D1D5DB" />
-                            <Text style={styles.emptyHistoryText}>No analysis history yet</Text>
+                            <Text style={styles.emptyHistoryText}>{t('fertilizer.home.no_history')}</Text>
                             <Text style={styles.emptyHistorySubtext}>
-                                Start by analyzing a leaf sample
+                                {t('fertilizer.home.start_analyzing')}
                             </Text>
                         </View>
                     )}
@@ -430,11 +524,13 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         textAlign: 'center',
         marginBottom: 4,
+        flexWrap: 'wrap',
     },
     cardSubtitle: {
         fontSize: 13,
         color: 'rgba(255,255,255,0.8)',
         textAlign: 'center',
+        flexWrap: 'wrap',
     },
     completedOverlay: {
         position: 'absolute',
@@ -515,12 +611,27 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 6,
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    analysisTypeBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+        gap: 4,
+    },
+    analysisTypeText: {
+        fontSize: 12,
+        fontWeight: '600',
     },
     recommendationType: {
         fontSize: 16,
         fontWeight: '700',
         color: '#111827',
         flex: 1,
+        marginTop: 4,
     },
     severityBadge: {
         paddingHorizontal: 8,

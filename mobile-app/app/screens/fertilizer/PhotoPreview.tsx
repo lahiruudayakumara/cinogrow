@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -11,17 +11,20 @@ import {
     Platform,
     ActivityIndicator,
     Alert,
+    Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { fertilizerAPI, RoboflowAnalysisResponse } from '../../../services/fertilizerAPI';
 import PlantAgeSelector from '../../../components/PlantAgeSelector';
 import { deserializePhotoPreviewParams, serializeResultParams } from '../../fertilizer/types';
 
 const PhotoPreview: React.FC = () => {
     const router = useRouter();
+    const { t } = useTranslation();
     const rawParams = useLocalSearchParams();
     const { imageUri, imageType, leafImage, soilImage, leafMetadata } = deserializePhotoPreviewParams(rawParams as any);
     const insets = useSafeAreaInsets();
@@ -32,20 +35,27 @@ const PhotoPreview: React.FC = () => {
     const [showAgeSelectorModal, setShowAgeSelectorModal] = useState(false);
     const [selectedPlantAge, setSelectedPlantAge] = useState<number>(1);
 
-    const detectedIssues = [
-        {
-            icon: imageType === 'leaf' ? 'leaf' : 'earth',
-            issue: imageType === 'leaf' ? 'Analyzing leaf condition...' : 'Soil pH imbalance identified',
-            severity: 'Analyzing',
-            color: '#D97706'
-        },
-        {
-            icon: imageType === 'leaf' ? 'water' : 'nutrition',
-            issue: imageType === 'leaf' ? 'Checking for deficiencies...' : 'Low organic matter content',
-            severity: 'Analyzing',
-            color: '#16A34A'
+    // Animation for loading spinner
+    const spinValue = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        if (isAnalyzing) {
+            Animated.loop(
+                Animated.timing(spinValue, {
+                    toValue: 1,
+                    duration: 2000,
+                    useNativeDriver: true,
+                })
+            ).start();
+        } else {
+            spinValue.setValue(0);
         }
-    ];
+    }, [isAnalyzing]);
+
+    const spin = spinValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg'],
+    });
 
     const handleRetakePhoto = () => {
         router.back();
@@ -56,46 +66,70 @@ const PhotoPreview: React.FC = () => {
             // Show age selector first, then perform analysis after age is selected
             setShowAgeSelectorModal(true);
         } else if (imageType === 'soil') {
-            // For now, go to results with basic soil analysis
-            // TODO: Implement soil analysis API
-            router.push({
-                pathname: '/fertilizer/result',
-                params: serializeResultParams({
-                    leafImage: leafImage,
-                    soilImage: imageUri,
-                    analysisType: 'comprehensive'
-                })
-            });
+            // If there's a leaf image, show age selector for combined analysis
+            // Otherwise, perform soil-only analysis
+            if (leafImage) {
+                setShowAgeSelectorModal(true);
+            } else {
+                performSoilAnalysis();
+            }
         }
     };
 
     const performLeafAnalysis = async (plantAge: number) => {
         try {
             setIsAnalyzing(true);
-            setAnalysisProgress('🔍 Detecting deficiencies with Roboflow AI...');
+            setAnalysisProgress(t('fertilizer.photo_preview.analysis.progress_detecting'));
 
-            console.log('🚀 Starting leaf analysis with Roboflow via backend...');
-            console.log(`🖼️ Image URI: ${imageUri}`);
-            console.log(`🌱 Plant Age: ${plantAge} years`);
+            // If we have both leaf and soil images, perform combined analysis
+            if (soilImage) {
+                console.log('🔬 Performing combined leaf + soil analysis...');
+                console.log(`🍃 Leaf Image: ${imageUri}`);
+                console.log(`🌍 Soil Image: ${soilImage}`);
+                console.log(`🌱 Plant Age: ${plantAge} years`);
 
-            // Step 1: Use backend API to call Roboflow with plant age
-            console.log('🤖 Step 1: Calling backend Roboflow API...');
-            const roboflowResult = await fertilizerAPI.analyzeLeafWithRoboflow(imageUri, plantAge);
+                const combinedResult = await fertilizerAPI.analyzeCombined(imageUri, soilImage, plantAge);
 
-            console.log('✅ Roboflow detection completed:', roboflowResult);
+                console.log('✅ Combined analysis completed:', combinedResult);
 
-            setIsAnalyzing(false);
+                setIsAnalyzing(false);
 
-            // Navigate directly to results with the analysis data
-            router.push({
-                pathname: '/fertilizer/result',
-                params: serializeResultParams({
-                    leafImage: imageUri,
-                    analysisType: 'leaf-only' as const,
-                    roboflowAnalysis: roboflowResult,
-                    plantAge: plantAge
-                })
-            });
+                // Navigate to results with combined analysis data
+                router.push({
+                    pathname: '/fertilizer/result',
+                    params: serializeResultParams({
+                        leafImage: imageUri,
+                        soilImage: soilImage,
+                        analysisType: 'comprehensive',
+                        combinedAnalysis: combinedResult,
+                        plantAge: plantAge
+                    })
+                });
+            } else {
+                // Leaf-only analysis
+                console.log('🚀 Starting leaf-only analysis with Roboflow via backend...');
+                console.log(`🖼️ Image URI: ${imageUri}`);
+                console.log(`🌱 Plant Age: ${plantAge} years`);
+
+                // Step 1: Use backend API to call Roboflow with plant age
+                console.log('🤖 Step 1: Calling backend Roboflow API...');
+                const roboflowResult = await fertilizerAPI.analyzeLeafWithRoboflow(imageUri, plantAge);
+
+                console.log('✅ Roboflow detection completed:', roboflowResult);
+
+                setIsAnalyzing(false);
+
+                // Navigate directly to results with the analysis data
+                router.push({
+                    pathname: '/fertilizer/result',
+                    params: serializeResultParams({
+                        leafImage: imageUri,
+                        analysisType: 'leaf-only' as const,
+                        roboflowAnalysis: roboflowResult,
+                        plantAge: plantAge
+                    })
+                });
+            }
 
         } catch (error) {
             console.error('❌ Leaf analysis error:', error);
@@ -110,15 +144,15 @@ const PhotoPreview: React.FC = () => {
             });
 
             Alert.alert(
-                'Analysis Failed',
-                `Failed to analyze leaf image: ${errorMessage}. Would you like to continue with basic analysis?`,
+                t('fertilizer.photo_preview.alerts.analysis_failed'),
+                t('fertilizer.photo_preview.alerts.failed_message', { error: errorMessage }),
                 [
                     {
-                        text: 'Try Again',
+                        text: t('fertilizer.photo_preview.alerts.try_again'),
                         onPress: () => performLeafAnalysis(plantAge)
                     },
                     {
-                        text: 'Basic Analysis',
+                        text: t('fertilizer.photo_preview.alerts.basic_analysis'),
                         onPress: () => {
                             console.log('👤 User chose basic analysis fallback');
                             // Continue with basic analysis if ML fails
@@ -126,7 +160,103 @@ const PhotoPreview: React.FC = () => {
                                 pathname: '/fertilizer/result',
                                 params: serializeResultParams({
                                     leafImage: imageUri,
-                                    analysisType: 'leaf-only'
+                                    soilImage: soilImage,
+                                    analysisType: soilImage ? 'comprehensive' : 'leaf-only'
+                                })
+                            });
+                        }
+                    }
+                ]
+            );
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const performSoilAnalysis = async (plantAge?: number) => {
+        try {
+            setIsAnalyzing(true);
+            setAnalysisProgress(t('fertilizer.photo_preview.analysis.progress_detecting'));
+
+            console.log('🚀 Starting soil analysis with Roboflow via backend...');
+            console.log(`🖼️ Image URI: ${imageUri}`);
+
+            // If we have both leaf and soil images, perform combined analysis
+            if (leafImage && plantAge) {
+                console.log('🔬 Performing combined leaf + soil analysis...');
+                console.log(`🍃 Leaf Image: ${leafImage}`);
+                console.log(`🌍 Soil Image: ${imageUri}`);
+                console.log(`🌱 Plant Age: ${plantAge} years`);
+
+                const combinedResult = await fertilizerAPI.analyzeCombined(leafImage, imageUri, plantAge);
+
+                console.log('✅ Combined analysis completed:', combinedResult);
+
+                setIsAnalyzing(false);
+
+                // Navigate to results with combined analysis data
+                router.push({
+                    pathname: '/fertilizer/result',
+                    params: serializeResultParams({
+                        leafImage: leafImage,
+                        soilImage: imageUri,
+                        analysisType: 'comprehensive',
+                        combinedAnalysis: combinedResult,
+                        plantAge: plantAge
+                    })
+                });
+            } else {
+                // Soil-only analysis
+                console.log('🤖 Step 1: Calling backend Roboflow Soil API...');
+                const soilResult = await fertilizerAPI.analyzeSoilWithRoboflow(imageUri);
+
+                console.log('✅ Soil detection completed:', soilResult);
+
+                setIsAnalyzing(false);
+
+                // Navigate to results with soil analysis data
+                router.push({
+                    pathname: '/fertilizer/result',
+                    params: serializeResultParams({
+                        leafImage: leafImage,
+                        soilImage: imageUri,
+                        analysisType: leafImage ? 'comprehensive' : 'soil-only',
+                        soilAnalysis: soilResult
+                    })
+                });
+            }
+
+        } catch (error) {
+            console.error('❌ Soil analysis error:', error);
+            setIsAnalyzing(false);
+
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+
+            console.error('🚨 Soil analysis failed with details:', {
+                error: errorMessage,
+                imageUri: imageUri,
+                timestamp: new Date().toISOString()
+            });
+
+            Alert.alert(
+                t('fertilizer.photo_preview.alerts.analysis_failed'),
+                t('fertilizer.photo_preview.alerts.failed_message', { error: errorMessage }),
+                [
+                    {
+                        text: t('fertilizer.photo_preview.alerts.try_again'),
+                        onPress: () => performSoilAnalysis(plantAge)
+                    },
+                    {
+                        text: t('fertilizer.photo_preview.alerts.basic_analysis'),
+                        onPress: () => {
+                            console.log('👤 User chose basic analysis fallback');
+                            // Continue without ML analysis if it fails
+                            router.push({
+                                pathname: '/fertilizer/result',
+                                params: serializeResultParams({
+                                    leafImage: leafImage,
+                                    soilImage: imageUri,
+                                    analysisType: 'comprehensive'
                                 })
                             });
                         }
@@ -143,8 +273,12 @@ const PhotoPreview: React.FC = () => {
         setShowAgeSelectorModal(false);
         setSelectedPlantAge(plantAge);
 
-        // Perform analysis with the selected plant age
-        performLeafAnalysis(plantAge);
+        // Perform analysis based on image type
+        if (imageType === 'leaf') {
+            performLeafAnalysis(plantAge);
+        } else if (imageType === 'soil') {
+            performSoilAnalysis(plantAge);
+        }
     };
 
     const handleAddSoilAnalysis = () => {
@@ -158,58 +292,56 @@ const PhotoPreview: React.FC = () => {
         });
     };
 
-    const getSeverityColor = (severity: string) => {
-        switch (severity) {
-            case 'Critical': return '#DC2626';
-            case 'High': return '#EA580C';
-            case 'Moderate': return '#D97706';
-            case 'Low': return '#16A34A';
-            default: return '#6B7280';
-        }
+    const handleAddLeafAnalysis = () => {
+        // Navigate to leaf upload to enhance the analysis
+        router.push({
+            pathname: '/fertilizer/upload-leaf',
+            params: {
+                fromSoil: 'true',
+                soilImage: imageUri
+            }
+        });
     };
 
-    const renderIssueCard = (issue: any, index: number) => (
-        <View key={index} style={styles.issueCard}>
-            <View style={styles.issueHeader}>
-                <View style={[styles.issueIconContainer, { backgroundColor: `${issue.color}20` }]}>
-                    <Ionicons name={issue.icon} size={20} color={issue.color} />
-                </View>
-                <View style={styles.issueContent}>
-                    <Text style={styles.issueText}>{issue.issue}</Text>
-                    <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(issue.severity) }]}>
-                        <Text style={styles.severityText}>{issue.severity}</Text>
+    const renderProcessFlowCard = () => {
+        return (
+            <View style={styles.processFlowCard}>
+                <Text style={styles.processFlowTitle}>{t('fertilizer.photo_preview.process_flow.title')}</Text>
+                <View style={styles.processStepsContainer}>
+                    <View style={styles.processStep}>
+                        <View style={styles.processStepIcon}>
+                            <Ionicons name="cloud-upload" size={20} color="#4CAF50" />
+                        </View>
+                        <View style={styles.processStepContent}>
+                            <Text style={styles.processStepLabel}>{t('fertilizer.photo_preview.process_flow.upload')}</Text>
+
+                        </View>
+                    </View>
+
+                    <Ionicons name="chevron-forward" size={16} color="#D1D5DB" style={styles.processArrow} />
+
+                    <View style={styles.processStep}>
+                        <View style={styles.processStepIcon}>
+                            <Ionicons name="analytics" size={20} color="#4CAF50" />
+                        </View>
+                        <View style={styles.processStepContent}>
+                            <Text style={styles.processStepLabel}>{t('fertilizer.photo_preview.process_flow.analyze')}</Text>
+
+                        </View>
+                    </View>
+
+                    <Ionicons name="chevron-forward" size={16} color="#D1D5DB" style={styles.processArrow} />
+
+                    <View style={styles.processStep}>
+                        <View style={styles.processStepIcon}>
+                            <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+                        </View>
+                        <View style={styles.processStepContent}>
+                            <Text style={styles.processStepLabel}>{t('fertilizer.photo_preview.process_flow.results')}</Text>
+
+                        </View>
                     </View>
                 </View>
-            </View>
-        </View >
-    );
-
-    const renderProgressIndicator = () => {
-        const hasLeafImage = leafImage || imageType === 'leaf';
-        const hasSoilImage = soilImage || imageType === 'soil';
-        const isCompleted = hasLeafImage && hasSoilImage;
-
-        let progress = 0;
-        let progressText = '';
-
-        if (imageType === 'leaf') {
-            progress = 100; // Leaf analysis is complete for recommendations
-            progressText = 'Ready for recommendations';
-        } else if (imageType === 'soil') {
-            progress = 100; // Enhanced analysis ready
-            progressText = 'Enhanced analysis ready';
-        }
-
-        return (
-            <View style={styles.progressContainer}>
-                <Text style={styles.progressTitle}>Analysis Progress</Text>
-                <View style={styles.progressBar}>
-                    <LinearGradient
-                        colors={['#4CAF50', '#45A049']}
-                        style={[styles.progressFill, { width: `${progress}%` }]}
-                    />
-                </View>
-                <Text style={styles.progressText}>{progressText}</Text>
             </View>
         );
     };
@@ -229,161 +361,258 @@ const PhotoPreview: React.FC = () => {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>
-                        {imageType === 'leaf' ? 'Leaf Sample Preview' : 'Soil Sample Preview'}
-                    </Text>
+                    <View style={styles.headerTop}>
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={styles.backButton}
+                        >
+                            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle}>
+                            {imageType === 'leaf' ? t('fertilizer.photo_preview.header.title_leaf') : t('fertilizer.photo_preview.header.title_soil')}
+                        </Text>
+                    </View>
                     <Text style={styles.headerSubtitle}>
-                        Review your {imageType} sample before proceeding
+                        {t('fertilizer.photo_preview.header.subtitle', { type: imageType })}
                     </Text>
                 </View>
 
-                {/* Progress Indicator */}
-                {renderProgressIndicator()}
+                {/* Processing Note */}
+                {renderProcessFlowCard()}
 
                 {/* Photo Preview Card */}
-                <View style={[styles.photoCard, {
-                    borderLeftWidth: 4,
-                    borderLeftColor: imageType === 'leaf' ? '#4CAF50' : '#8B7355',
-                }]}>
-                    <View style={styles.photoHeader}>
-                        <View style={[styles.photoIconContainer, {
-                            backgroundColor: imageType === 'leaf' ? '#4CAF5020' : '#8B735520',
-                        }]}>
-                            <Ionicons
-                                name={imageType === 'leaf' ? 'leaf' : 'earth'}
-                                size={24}
-                                color={imageType === 'leaf' ? '#4CAF50' : '#8B7355'}
+                {leafImage && soilImage ? (
+                    <View style={styles.dualPhotoCard}>
+                        <View style={styles.dualPhotoHeader}>
+                            <Text style={styles.dualPhotoTitle}>{t('fertilizer.photo_preview.dual_photo.title')}</Text>
+                            <Text style={styles.dualPhotoSubtitle}>{t('fertilizer.photo_preview.dual_photo.subtitle')}</Text>
+                        </View>
+
+                        <View style={styles.dualImagesContainer}>
+                            {/* Leaf Image */}
+                            <View style={styles.singleImageWrapper}>
+                                <View style={styles.singleImageHeader}>
+                                    <Ionicons name="leaf" size={16} color="#4CAF50" />
+                                    <Text style={styles.singleImageLabel}>{t('fertilizer.photo_preview.dual_photo.leaf_sample')}</Text>
+                                </View>
+                                <Image
+                                    source={{ uri: leafImage }}
+                                    style={styles.dualPreviewImage}
+                                    resizeMode="cover"
+                                />
+                            </View>
+
+                            {/* Soil Image */}
+                            <View style={styles.singleImageWrapper}>
+                                <View style={styles.singleImageHeader}>
+                                    <Ionicons name="earth" size={16} color="#8B7355" />
+                                    <Text style={styles.singleImageLabel}>{t('fertilizer.photo_preview.dual_photo.soil_sample')}</Text>
+                                </View>
+                                <Image
+                                    source={{ uri: soilImage }}
+                                    style={styles.dualPreviewImage}
+                                    resizeMode="cover"
+                                />
+                            </View>
+                        </View>
+
+                        {/* Retake Button */}
+                        <TouchableOpacity
+                            style={styles.retakeButtonBelowImage}
+                            onPress={handleRetakePhoto}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="camera-reverse-outline" size={20} color="#6B7280" />
+                            <Text style={styles.retakeBelowImageText}>{t('fertilizer.photo_preview.dual_photo.retake_images')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View style={styles.photoCard}>
+                        <View style={styles.photoHeader}>
+                            <View style={[styles.photoIconContainer, {
+                                backgroundColor: imageType === 'leaf' ? '#4CAF5020' : '#8B735520',
+                            }]}>
+                                <Ionicons
+                                    name={imageType === 'leaf' ? 'leaf' : 'earth'}
+                                    size={24}
+                                    color={imageType === 'leaf' ? '#4CAF50' : '#8B7355'}
+                                />
+                            </View>
+                            <Text style={styles.photoTitle}>
+                                {imageType === 'leaf' ? t('fertilizer.photo_preview.sample.leaf') : t('fertilizer.photo_preview.sample.soil')}
+                            </Text>
+                        </View>
+
+                        <View style={styles.imageContainer}>
+                            <Image
+                                source={{ uri: imageUri }}
+                                style={styles.previewImage}
+                                resizeMode="cover"
                             />
-                        </View>
-                        <Text style={styles.photoTitle}>
-                            {imageType === 'leaf' ? 'Leaf Sample' : 'Soil Sample'}
-                        </Text>
-                    </View>
-
-                    <View style={styles.imageContainer}>
-                        <Image
-                            source={{ uri: imageUri }}
-                            style={styles.previewImage}
-                            resizeMode="cover"
-                        />
-                        <View style={styles.imageOverlay}>
-                            <View style={styles.imageQualityBadge}>
-                                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                                <Text style={styles.imageQualityText}>Good Quality</Text>
+                            <View style={styles.imageOverlay}>
+                                <View style={styles.imageQualityBadge}>
+                                    <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                                    <Text style={styles.imageQualityText}>{t('fertilizer.photo_preview.sample.quality_good')}</Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                </View>
 
-                {/* AI Analysis Preview */}
-                <View style={styles.analysisSection}>
-                    <View style={styles.analysisTitleContainer}>
-                        <Ionicons name="analytics" size={20} color="#4CAF50" />
-                        <Text style={styles.analysisTitle}>AI Quick Analysis</Text>
-                        {isAnalyzing ? (
-                            <View style={styles.aiProcessingBadge}>
-                                <ActivityIndicator size="small" color="#D97706" />
-                                <Text style={styles.aiProcessingText}>Analyzing</Text>
-                            </View>
-                        ) : (
-                            <View style={styles.aiProcessingBadge}>
-                                <Text style={styles.aiProcessingText}>Ready</Text>
-                            </View>
-                        )}
+                        {/* Retake Button - Right below image */}
+                        <TouchableOpacity
+                            style={styles.retakeButtonBelowImage}
+                            onPress={handleRetakePhoto}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="camera-reverse-outline" size={20} color="#4CAF50" />
+                            <Text style={styles.retakeBelowImageText}>{t('fertilizer.photo_preview.buttons.retake')}</Text>
+                        </TouchableOpacity>
                     </View>
+                )}
 
-                    {isAnalyzing && (
-                        <View style={styles.mlProgressContainer}>
-                            <Text style={styles.mlProgressText}>{analysisProgress}</Text>
+                {/* Clear Instructions */}
+                {!isAnalyzing && (
+                    <View style={styles.instructionsCard}>
+                        <View style={styles.instructionIconContainer}>
+                            <Ionicons name="bulb-outline" size={24} color="#3B82F6" />
                         </View>
-                    )}
-
-                    <View style={styles.issuesContainer}>
-                        {detectedIssues.map((issue, index) => renderIssueCard(issue, index))}
+                        <View style={styles.instructionContent}>
+                            <Text style={styles.instructionTitle}>{t('fertilizer.photo_preview.instructions.title')}</Text>
+                            <Text style={styles.instructionText}>
+                                {leafImage && soilImage
+                                    ? t('fertilizer.photo_preview.instructions.both_samples')
+                                    : imageType === 'leaf'
+                                        ? t('fertilizer.photo_preview.instructions.leaf_only')
+                                        : t('fertilizer.photo_preview.instructions.soil_only')}
+                            </Text>
+                        </View>
                     </View>
+                )}
 
-                    <View style={styles.analysisNote}>
-                        <Ionicons name="information-circle-outline" size={16} color="#6B7280" />
-                        <Text style={styles.noteText}>
-                            {imageType === 'leaf'
-                                ? isAnalyzing
-                                    ? 'Real-time ML analysis in progress. This will provide accurate fertilizer recommendations based on your leaf sample.'
-                                    : 'Tap "Get ML Recommendations" for AI-powered fertilizer advice based on real leaf analysis. Enhanced with soil data for better results.'
-                                : 'Enhanced analysis with both leaf and soil samples for comprehensive recommendations.'}
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Action Buttons */}
+                {/* Modern Action Buttons */}
                 <View style={styles.actionButtonsContainer}>
-                    <TouchableOpacity
-                        style={styles.retakeButton}
-                        onPress={handleRetakePhoto}
-                        activeOpacity={0.8}
-                    >
-                        <View style={styles.retakeButtonContent}>
-                            <Ionicons name="refresh" size={20} color="#6B7280" />
-                            <Text style={styles.retakeButtonText}>Retake Photo</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                    {imageType === 'leaf' ? (
-                        <View style={styles.leafAnalysisButtons}>
+                    {leafImage && soilImage ? (
+                        // Both images present - show comprehensive analysis button
+                        <TouchableOpacity
+                            style={[styles.primaryActionButton, isAnalyzing && styles.analyzingButton]}
+                            onPress={handleContinue}
+                            activeOpacity={0.8}
+                            disabled={isAnalyzing}
+                        >
+                            {isAnalyzing ? (
+                                <View style={styles.actionButtonContent}>
+                                    <ActivityIndicator size={24} color="#4CAF50" />
+                                    <Text style={styles.analyzingText}>{t('fertilizer.photo_preview.action_buttons.analyzing_both')}</Text>
+                                </View>
+                            ) : (
+                                <LinearGradient
+                                    colors={['#4CAF50', '#45A049']}
+                                    style={styles.primaryActionGradient}
+                                >
+                                    <View style={styles.actionButtonContent}>
+                                        <Ionicons name="fitness" size={22} color="#FFFFFF" />
+                                        <View style={styles.actionTextContainer}>
+                                            <Text style={styles.primaryActionText}>{t('fertilizer.photo_preview.action_buttons.comprehensive_analysis')}</Text>
+                                            <Text style={styles.actionSubtext}>{t('fertilizer.photo_preview.action_buttons.comprehensive_subtitle')}</Text>
+                                        </View>
+                                        <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                                    </View>
+                                </LinearGradient>
+                            )}
+                        </TouchableOpacity>
+                    ) : imageType === 'leaf' ? (
+                        <>
+                            {/* Secondary Soil Button */}
                             <TouchableOpacity
-                                style={[styles.continueButton, isAnalyzing && styles.continueButtonDisabled]}
+                                style={styles.secondaryActionButton}
+                                onPress={handleAddSoilAnalysis}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.actionButtonContent}>
+                                    <Ionicons name="earth-outline" size={22} color="#8B7355" />
+                                    <View style={styles.actionTextContainer}>
+                                        <Text style={styles.secondaryActionText}>{t('fertilizer.photo_preview.action_buttons.add_soil_image')}</Text>
+                                        <Text style={styles.secondarySubtext}>{t('fertilizer.photo_preview.action_buttons.recommended_accuracy')}</Text>
+                                    </View>
+                                    <Ionicons name="arrow-forward" size={20} color="#8B7355" />
+                                </View>
+                            </TouchableOpacity>
+
+                            {/* Primary Analysis Button */}
+                            <TouchableOpacity
+                                style={[styles.primaryActionButton, isAnalyzing && styles.analyzingButton]}
                                 onPress={handleContinue}
                                 activeOpacity={0.8}
                                 disabled={isAnalyzing}
                             >
-                                <LinearGradient
-                                    colors={isAnalyzing ? ['#9CA3AF', '#6B7280'] : ['#4CAF50', '#45A049']}
-                                    style={styles.continueButtonGradient}
-                                >
-                                    {isAnalyzing ? (
-                                        <>
-                                            <ActivityIndicator size="small" color="#FFFFFF" />
-                                            <Text style={styles.continueButtonText}>
-                                                Analyzing...
-                                            </Text>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Text style={styles.continueButtonText}>
-                                                Get ML Recommendations
-                                            </Text>
-                                            <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-                                        </>
-                                    )}
-                                </LinearGradient>
+                                {isAnalyzing ? (
+                                    <View style={styles.actionButtonContent}>
+                                        <ActivityIndicator size={24} color="#4CAF50" />
+                                        <Text style={styles.analyzingText}>{t('fertilizer.photo_preview.action_buttons.analyzing')}</Text>
+                                    </View>
+                                ) : (
+                                    <LinearGradient
+                                        colors={['#4CAF50', '#45A049']}
+                                        style={styles.primaryActionGradient}
+                                    >
+                                        <View style={styles.actionButtonContent}>
+                                            <Ionicons name="leaf-outline" size={22} color="#FFFFFF" />
+                                            <View style={styles.actionTextContainer}>
+                                                <Text style={styles.primaryActionText}>{t('fertilizer.photo_preview.action_buttons.leaf_analysis_only')}</Text>
+                                                <Text style={styles.actionSubtext}>{t('fertilizer.photo_preview.action_buttons.quick_recommendations')}</Text>
+                                            </View>
+                                            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                                        </View>
+                                    </LinearGradient>
+                                )}
                             </TouchableOpacity>
-
+                        </>
+                    ) : (
+                        <>
+                            {/* Secondary Leaf Button */}
                             <TouchableOpacity
-                                style={styles.addSoilButton}
-                                onPress={handleAddSoilAnalysis}
-                                activeOpacity={0.8}
+                                style={styles.secondaryActionButtonLeaf}
+                                onPress={handleAddLeafAnalysis}
+                                activeOpacity={0.7}
                             >
-                                <View style={styles.addSoilButtonContent}>
-                                    <Ionicons name="add-circle-outline" size={20} color="#8B7355" />
-                                    <Text style={styles.addSoilButtonText}>Add Soil Analysis for Better Results</Text>
+                                <View style={styles.actionButtonContent}>
+                                    <Ionicons name="leaf-outline" size={22} color="#4CAF50" />
+                                    <View style={styles.actionTextContainer}>
+                                        <Text style={styles.secondaryActionTextLeaf}>{t('fertilizer.photo_preview.action_buttons.add_leaf_image')}</Text>
+                                        <Text style={styles.secondarySubtextLeaf}>{t('fertilizer.photo_preview.action_buttons.recommended_accuracy')}</Text>
+                                    </View>
+                                    <Ionicons name="arrow-forward" size={20} color="#4CAF50" />
                                 </View>
                             </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <TouchableOpacity
-                            style={styles.continueButton}
-                            onPress={handleContinue}
-                            activeOpacity={0.8}
-                        >
-                            <LinearGradient
-                                colors={['#8B7355', '#7A5F47']}
-                                style={styles.continueButtonGradient}
+
+                            {/* Primary Soil Analysis Button */}
+                            <TouchableOpacity
+                                style={[styles.primaryActionButton, isAnalyzing && styles.brownAnalyzingButton]}
+                                onPress={handleContinue}
+                                activeOpacity={0.8}
+                                disabled={isAnalyzing}
                             >
-                                <Text style={styles.continueButtonText}>
-                                    Get Enhanced Results
-                                </Text>
-                                <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
-                            </LinearGradient>
-                        </TouchableOpacity>
+                                {isAnalyzing ? (
+                                    <View style={styles.actionButtonContent}>
+                                        <ActivityIndicator size={24} color="#8B7355" />
+                                        <Text style={styles.brownAnalyzingText}>{t('fertilizer.photo_preview.action_buttons.analyzing')}</Text>
+                                    </View>
+                                ) : (
+                                    <LinearGradient
+                                        colors={['#8B7355', '#7A5F47']}
+                                        style={styles.primaryActionGradient}
+                                    >
+                                        <View style={styles.actionButtonContent}>
+                                            <Ionicons name="earth-outline" size={22} color="#FFFFFF" />
+                                            <View style={styles.actionTextContainer}>
+                                                <Text style={styles.primaryActionText}>{t('fertilizer.photo_preview.action_buttons.soil_analysis_only')}</Text>
+                                                <Text style={styles.actionSubtext}>{t('fertilizer.photo_preview.action_buttons.quick_recommendations')}</Text>
+                                            </View>
+                                            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                                        </View>
+                                    </LinearGradient>
+                                )}
+                            </TouchableOpacity>
+                        </>
                     )}
                 </View>
 
@@ -410,15 +639,21 @@ const styles = StyleSheet.create({
     header: {
         marginTop: 20,
         marginBottom: 24,
+    },
+    headerTop: {
+        flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: 8,
+    },
+    backButton: {
+        marginRight: 12,
+        padding: 4,
     },
     headerTitle: {
-        fontSize: 28,
-        fontWeight: '800',
+        fontSize: 22,
+        fontWeight: '700',
         color: '#111827',
-        marginBottom: 8,
-        letterSpacing: -0.5,
-        textAlign: 'center',
+        flex: 1,
     },
     headerSubtitle: {
         fontSize: 16,
@@ -426,51 +661,66 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 22,
     },
-    progressContainer: {
+    processFlowCard: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
         padding: 20,
         marginBottom: 24,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.05,
         shadowRadius: 8,
-        elevation: 3,
+        elevation: 2,
     },
-    progressTitle: {
+    processFlowTitle: {
         fontSize: 16,
         fontWeight: '700',
         color: '#111827',
-        marginBottom: 12,
+        marginBottom: 16,
         textAlign: 'center',
     },
-    progressBar: {
-        height: 6,
-        backgroundColor: '#E5E7EB',
-        borderRadius: 3,
-        overflow: 'hidden',
+    processStepsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    processStep: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    processStepIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#F0FDF4',
+        alignItems: 'center',
+        justifyContent: 'center',
         marginBottom: 8,
+        borderWidth: 2,
+        borderColor: '#4CAF50',
     },
-    progressFill: {
-        height: '100%',
-        borderRadius: 3,
+    processStepContent: {
+        alignItems: 'center',
     },
-    progressText: {
-        fontSize: 14,
-        color: '#6B7280',
-        textAlign: 'center',
-        fontWeight: '500',
+    processStepLabel: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 2,
+    },
+
+    processArrow: {
+        marginHorizontal: 4,
     },
     photoCard: {
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
         marginBottom: 32,
         padding: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
     },
     photoHeader: {
         flexDirection: 'row',
@@ -519,191 +769,212 @@ const styles = StyleSheet.create({
         color: '#4CAF50',
         fontWeight: '600',
     },
-    analysisSection: {
-        marginBottom: 32,
-    },
-    analysisTitleContainer: {
+    retakeButtonBelowImage: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-        gap: 8,
-    },
-    analysisTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#111827',
-        flex: 1,
-    },
-    aiProcessingBadge: {
-        backgroundColor: '#FEF3C7',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-    },
-    aiProcessingText: {
-        fontSize: 12,
-        color: '#D97706',
-        fontWeight: '600',
-    },
-    mlProgressContainer: {
-        backgroundColor: '#F3F4F6',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 16,
-    },
-    mlProgressText: {
-        fontSize: 14,
-        color: '#374151',
-        fontWeight: '500',
-        textAlign: 'center',
-    },
-    issuesContainer: {
-        gap: 12,
-        marginBottom: 16,
-    },
-    issueCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    issueHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    issueIconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 12,
-    },
-    issueContent: {
-        flex: 1,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    issueText: {
-        fontSize: 14,
-        color: '#374151',
-        fontWeight: '500',
-        flex: 1,
-    },
-    severityBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        marginLeft: 12,
-    },
-    severityText: {
-        fontSize: 12,
-        color: '#FFFFFF',
-        fontWeight: '600',
-    },
-    analysisNote: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        backgroundColor: '#F9FAFB',
-        padding: 12,
+        backgroundColor: '#FFFFFF',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
         borderRadius: 12,
         gap: 8,
+        marginTop: 16,
+        borderWidth: 1,
+        borderColor: '#4CAF50',
     },
-    noteText: {
-        fontSize: 13,
-        color: '#6B7280',
-        lineHeight: 18,
-        flex: 1,
+    retakeBelowImageText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#4CAF50',
     },
-    actionButtonsContainer: {
-        gap: 16,
-        marginBottom: 24,
-    },
-    retakeButton: {
+    // Dual image styles
+    dualPhotoCard: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
+        marginBottom: 32,
+        padding: 20,
         borderWidth: 1,
         borderColor: '#E5E7EB',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
     },
-    retakeButtonContent: {
+    dualPhotoHeader: {
+        marginBottom: 20,
+        alignItems: 'center',
+    },
+    dualPhotoTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 4,
+    },
+    dualPhotoSubtitle: {
+        fontSize: 14,
+        color: '#6B7280',
+        fontWeight: '500',
+    },
+    dualImagesContainer: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 16,
+    },
+    singleImageWrapper: {
+        flex: 1,
+    },
+    singleImageHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        gap: 8,
+        gap: 6,
+        marginBottom: 8,
     },
-    retakeButtonText: {
-        fontSize: 16,
-        color: '#6B7280',
+    singleImageLabel: {
+        fontSize: 13,
         fontWeight: '600',
+        color: '#4B5563',
     },
-    continueButton: {
+    dualPreviewImage: {
+        width: '100%',
+        height: 140,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    instructionsCard: {
+        flexDirection: 'row',
+        backgroundColor: '#EFF6FF',
         borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        padding: 16,
+        marginBottom: 20,
+        gap: 12,
+        borderWidth: 1,
+        borderColor: '#BFDBFE',
     },
-    continueButtonDisabled: {
-        opacity: 0.7,
+    instructionIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#DBEAFE',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    continueButtonGradient: {
+    instructionContent: {
+        flex: 1,
+    },
+    instructionTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#1E40AF',
+        marginBottom: 4,
+    },
+    instructionText: {
+        fontSize: 13,
+        color: '#1E40AF',
+        lineHeight: 18,
+        fontWeight: '500',
+    },
+    actionButtonsContainer: {
+        gap: 12,
+        marginBottom: 24,
+    },
+    primaryActionButton: {
+        borderRadius: 16,
+    },
+    analyzingButton: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 2,
+        borderColor: '#4CAF50',
         borderRadius: 16,
         paddingVertical: 18,
-        paddingHorizontal: 24,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
+        paddingHorizontal: 20,
     },
-    continueButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
+    analyzingText: {
+        color: '#4CAF50',
+        fontSize: 17,
         fontWeight: '700',
+        letterSpacing: 0.3,
+        marginLeft: 12,
     },
-    leafAnalysisButtons: {
-        gap: 12,
-    },
-    addSoilButton: {
-        backgroundColor: '#8B735508', // Light soil-colored background
-        borderRadius: 12,
+    brownAnalyzingButton: {
+        backgroundColor: '#FFFFFF',
         borderWidth: 2,
         borderColor: '#8B7355',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
+        borderRadius: 16,
+        paddingVertical: 18,
+        paddingHorizontal: 20,
     },
-    addSoilButtonContent: {
+    brownAnalyzingText: {
+        color: '#8B7355',
+        fontSize: 17,
+        fontWeight: '700',
+        letterSpacing: 0.3,
+        marginLeft: 12,
+    },
+    primaryActionGradient: {
+        borderRadius: 16,
+        paddingVertical: 18,
+        paddingHorizontal: 20,
+    },
+    actionButtonContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        gap: 10,
+        justifyContent: 'space-between',
+        gap: 12,
     },
-    addSoilButtonText: {
-        fontSize: 15,
-        color: '#8B7355',
-        fontWeight: '600',
-        textAlign: 'center',
+    actionTextContainer: {
         flex: 1,
+    },
+    primaryActionText: {
+        color: '#FFFFFF',
+        fontSize: 17,
+        fontWeight: '700',
+        letterSpacing: 0.3,
+    },
+    actionSubtext: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '500',
+        opacity: 0.9,
+        marginTop: 2,
+    },
+    secondaryActionButton: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        borderWidth: 2,
+        borderColor: '#8B7355',
+        paddingVertical: 18,
+        paddingHorizontal: 20,
+    },
+    secondaryActionText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#8B7355',
+        letterSpacing: 0.2,
+    },
+    secondarySubtext: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: '#8B7355',
+        opacity: 0.7,
+        marginTop: 2,
+    },
+    secondaryActionButtonLeaf: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        borderWidth: 2,
+        borderColor: '#4CAF50',
+        paddingVertical: 18,
+        paddingHorizontal: 20,
+    },
+    secondaryActionTextLeaf: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#4CAF50',
+        letterSpacing: 0.2,
+    },
+    secondarySubtextLeaf: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: '#4CAF50',
+        opacity: 0.7,
+        marginTop: 2,
     },
 });
 

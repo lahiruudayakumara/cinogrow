@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { YieldWeatherStackParamList } from '../../../navigation/YieldWeatherNavigator';
 import DatePicker from '../../../components/ui/DatePicker';
+import CustomDropdown from '../../../components/ui/CustomDropdown';
 
 // API imports
 import { yieldAPI, UserYieldRecord } from '../../../services/yield_weather/yieldAPI';
@@ -223,6 +225,15 @@ const MyYieldScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} />
         }
       >
+        {/* Header with Back Button */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          </TouchableOpacity>
+        </View>
         {/* Actual Yield Records Title & Subtitle */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
           <Ionicons name="document-text" size={24} color="#4CAF50" />
@@ -346,27 +357,18 @@ const MyYieldScreen = () => {
           <View style={styles.modalContent}>
             {/* Plot Selection */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>{t('yield_weather.my_yield.select_plot')}</Text>
-              <TouchableOpacity 
-                style={styles.dropdown}
-                onPress={() => {
-                  Alert.alert(
-                    t('yield_weather.my_yield.select_plot'),
-                    t('yield_weather.my_yield.select_plot_for_record'),
-                    availablePlots.map(plot => ({
-                      text: `${plot.name} (${plot.area} ${t('yield_weather.my_yield.ha_suffix')})`,
-                      onPress: () => setSelectedPlotId(plot.id || null),
-                    })).concat([
-                      { text: t('yield_weather.my_yield.cancel'), onPress: () => {} }
-                    ])
-                  );
-                }}
-              >
-                <Text style={[styles.dropdownText, !selectedPlotId && styles.placeholderText]}>
-                  {getSelectedPlotName()}
-                </Text>
-                <Ionicons name="chevron-down" size={20} color="#6B7280" />
-              </TouchableOpacity>
+              <CustomDropdown
+                options={availablePlots.map(plot => ({
+                  label: plot.name,
+                  value: plot.id || 0,
+                  subtitle: `${plot.area} ${t('yield_weather.my_yield.ha_suffix')}`,
+                }))}
+                selectedValue={selectedPlotId}
+                onValueChange={(value) => setSelectedPlotId(value as number)}
+                label={t('yield_weather.my_yield.select_plot')}
+                placeholder={t('yield_weather.my_yield.select_plot_for_record')}
+                modalTitle={t('yield_weather.my_yield.select_plot')}
+              />
             </View>
 
             {/* Yield Amount */}
@@ -403,6 +405,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+  },
+  header: {
+    marginBottom: 16,
+  },
+  backButton: {
+    padding: 4,
+    marginBottom: 12,
   },
   centerContent: {
     flex: 1,

@@ -708,7 +708,15 @@ const MyFarm = () => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>{t('yield_weather.my_farm.title')}</Text>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#1F2937" />
+            </TouchableOpacity>
+            <Text style={styles.title}>{t('yield_weather.my_farm.title')}</Text>
+          </View>
           {farm && (
             <TouchableOpacity
               style={styles.editButton}
@@ -1112,8 +1120,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 24,
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '700',
     color: '#111827',
   },

@@ -13,10 +13,11 @@ import Header from "@/components/pest-disease/Header";
 import UploadCard from "@/components/pest-disease/UploadCard";
 import RecentCard from "@/components/pest-disease/RecentCard";
 import RecommendationButton from "@/components/pest-disease/RecommendationButton";
-import { t } from "i18next";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function PestDiseaseScreen() {
+  const { t } = useTranslation();
   useEffect(() => {
     (async () => {
       try {

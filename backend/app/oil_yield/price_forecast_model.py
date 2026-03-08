@@ -7,19 +7,56 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Paths
-DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "DEMO_cinnamon_leaf_oil_prices.csv"
+DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "cinnamon_leaf_oil_prices_2023_2025.csv"
 
 def load_price_data():
     """
-    Load historical cinnamon leaf oil price data.
+    Load historical cinnamon leaf oil price data from the configured CSV.
+    Handles flexible date and price column names.
+    Returns the cleaned DataFrame (indexed by date) and the price Series.
     """
     df = pd.read_csv(DATA_PATH)
-    df['date'] = pd.to_datetime(df['date'], format='%m/%d/%Y')
-    df = df.sort_values('date')
-    df.set_index('date', inplace=True)
-    return df
 
-def forecast_prices(time_range: str = 'months'):
+    # Normalize date column name
+    if 'date' not in df.columns:
+        for candidate in ['Date', 'DATE', 'timestamp', 'Timestamp']:
+            if candidate in df.columns:
+                df.rename(columns={candidate: 'date'}, inplace=True)
+                break
+    if 'date' not in df.columns:
+        raise ValueError("Dataset must contain a 'date' column.")
+
+    # Parse dates robustly
+    df['date'] = pd.to_datetime(df['date'], errors='coerce', infer_datetime_format=True)
+    df = df.dropna(subset=['date']).sort_values('date')
+    df.set_index('date', inplace=True)
+
+    # Detect price column
+    price_candidates = [
+        'cinnamon_leaf_oil_price_Rs',
+        'price_rs',
+        'price',
+        'usd_per_kg',
+        'price_usd'
+    ]
+    price_col = next((col for col in price_candidates if col in df.columns), None)
+    if price_col is None:
+        # If only one non-date column exists, assume it's price
+        non_date_cols = [c for c in df.columns if c != 'date']
+        if len(non_date_cols) == 1:
+            price_col = non_date_cols[0]
+        else:
+            raise ValueError("Dataset must contain a recognizable price column.")
+
+    prices = pd.to_numeric(df[price_col], errors='coerce')
+    prices = prices.dropna()
+
+    # Align df index with cleaned prices index
+    df = df.loc[prices.index]
+
+    return df, prices
+
+def forecast_prices(time_range: str = 'months', steps_override: int | None = None):
     """
     Generate price forecast using SARIMA model.
     
@@ -32,23 +69,22 @@ def forecast_prices(time_range: str = 'months'):
     - statistics: Dictionary with mean, min, max values
     """
     # Load data
-    df = load_price_data()
-    prices = df['cinnamon_leaf_oil_price_Rs']
+    df, prices = load_price_data()
     
     # Determine forecast parameters based on time range
     if time_range == 'days':
-        steps = 30
+        steps = steps_override or 30
         freq = 'D'
         # For daily forecast, use simpler model due to limited data granularity
         order = (1, 0, 1)
         seasonal_order = (0, 0, 0, 0)  # No seasonal component
     elif time_range == 'years':
-        steps = 5
+        steps = steps_override or 5
         freq = 'Y'
         order = (1, 1, 1)
         seasonal_order = (1, 0, 0, 12)  # Simplified seasonal
     else:  # months (default)
-        steps = 12
+        steps = steps_override or 12
         freq = 'M'
         order = (1, 1, 1)
         seasonal_order = (1, 0, 0, 12)  # Simplified seasonal

@@ -6,31 +6,27 @@ import { Colors } from '@/constants/Colors';
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <Tabs
       initialRouteName="index"
+      // Removed sceneContainerStyle as it's not a valid property
       screenOptions={{
         tabBarActiveTintColor: '#2E7D32', // Green color for better visibility
         tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        sceneContainerStyle: {
-          paddingTop: insets.top,
-        },
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect
-            height: 60 + insets.bottom,
-            paddingBottom: insets.bottom,
-            paddingTop: 8,
-            paddingHorizontal: 20
+            height: 65 + insets.bottom,
+            paddingHorizontal: 20,
           },
           default: {
             // Add specific Android styling if needed

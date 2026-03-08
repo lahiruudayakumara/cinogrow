@@ -2,16 +2,16 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // Import screens
-import OilYieldPredictorScreen from '../screens/Oil_yield/OilYieldPredictor';
-import DryingProcessScreen from '../screens/Oil_yield/DryingProcess';
-import DistillationProcessScreen from '../screens/Oil_yield/DistillationProcess';
-import OilYieldHomeScreen from '../screens/Oil_yield/OilYieldHome';
-import OilYieldPredictorSecond from '@/screens/Oil_yield/OilYieldPredictorSecond';
-import OilQualityGuideScreen from '../screens/Oil_yield/OilQualityGuide';
-import OilPricePredictorScreen from '../screens/Oil_yield/OilPricePredictor';
-import TrainingModulesScreen from '../screens/Oil_yield/TrainingModules';
-import LabCertificationScreen from '../screens/Oil_yield/LabCertification';
-import AddMaterialBatchScreen from '../screens/Oil_yield/AddMaterialBatch';
+import OilYieldPredictorScreen from '../app/screens/Oil_yield/OilYieldPredictor';
+import DryingProcessScreen from '../app/screens/Oil_yield/DryingProcess';
+import DistillationProcessScreen from '../app/screens/Oil_yield/DistillationProcess';
+import OilYieldHomeScreen from '../app/screens/Oil_yield/OilYieldHome';
+import OilYieldPredictorSecond from '@/app/screens/Oil_yield/OilYieldPredictorSecond';
+import OilQualityGuideScreen from '../app/screens/Oil_yield/OilQualityGuide';
+import OilPricePredictorScreen from '../app/screens/Oil_yield/OilPricePredictor';
+import TrainingModulesScreen from '../app/screens/Oil_yield/TrainingModules';
+import LabCertificationScreen from '../app/screens/Oil_yield/LabCertification';
+import AddMaterialBatchScreen from '../app/screens/Oil_yield/AddMaterialBatch';
 
 // Define navigation parameter types
 export type RootStackParamList = {

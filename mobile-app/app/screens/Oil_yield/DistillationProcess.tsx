@@ -18,6 +18,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
+import { saveDistillationPrediction } from '@/services/oilYieldPredictionStore';
+
 // Use localhost for web platform, otherwise use the configured API URL
 const API_BASE_URL = Platform.OS === 'web' 
   ? 'http://localhost:8000/api/v1'
@@ -127,10 +129,26 @@ export default function DistillationProcess() {
       const predictedTime = data.predicted_time_hours;
       console.log('📊 Predicted time:', predictedTime, 'hours');
 
-      setOptimalTime(parseFloat(predictedTime.toFixed(1)));
+      const roundedTime = parseFloat(predictedTime.toFixed(1));
+      setOptimalTime(roundedTime);
       setRemainingTime(Math.round(predictedTime * 60)); // convert to minutes
       setShowResults(true);
 
+      // Persist so OilYieldHome can surface results inline
+      if (selectedBatch) {
+        try {
+          await saveDistillationPrediction({
+            batchId: selectedBatch.id,
+            predictedTimeHours: roundedTime,
+            distillationCapacityLiters: capacity,
+            plantPart: selectedBatch.plant_part,
+            cinnamonType: selectedBatch.cinnamon_type,
+            predictedAt: new Date().toISOString(),
+          });
+        } catch (storeErr) {
+          console.warn('⚠️ Failed to persist distillation prediction', storeErr);
+        }
+      }
       console.log('✅ Calculation completed successfully');
     } catch (error: any) {
       console.error('❌ Prediction error:', error);

@@ -634,7 +634,7 @@
       "stem_circumference": "Stem Circumference (inches)",
       "stem_diameter": "Stem Diameter (mm)",
       "enter_circumference_placeholder": "Enter stem circumference in inches",
-      "enter_diameter_placeholder": "Enter stem diameter",
+      "enter_diameter_placeholder": "Enter diameter in mm",
       "number_of_stems": "Number of Existing Stems",
       "fertilizer_used": "Fertilizer Used?",
       "disease_status": "Disease Status",
@@ -732,7 +732,6 @@
       "next_steps_title": "Next Steps:",
       "tree_measurement_info": "After entering the total trees, you'll collect detailed measurements from 3 random trees in your plot for accurate yield prediction.",
       "tree_code_placeholder": "e.g., TREE_1",
-      "enter_diameter_placeholder": "Enter diameter in mm",
       "enter_stems_placeholder": "Enter number of stems",
       "fertilizer_used_label": "Fertilizer Used",
       "yes": "Yes",
@@ -1132,6 +1131,109 @@
           "reason": "Helps improve next harvest strategy."
         }
       },
+      "no_recommendations": "No recommendations available",
+      "no_actions_required": "No immediate actions required based on current conditions.",
+      "add_plots_message": "Add plots and planting records to get personalized farming recommendations",
+      "no_farms_found": "No farms found. Add your farm to get personalized weather-based recommendations.",
+      "add_farm": "Add Farm",
+      "no_plot_data": "No Plot Data Available",
+      "no_plot_description": "Add farms and planting records to get weather-based recommendations for your cinnamon plots.",
+      "days_old": "days old",
+      "activity_history": "Activity History",
+      "recent_activities": "Recent Activities",
+      "no_activities": "No activities recorded yet",
+      "record_activities": "Record your farming activities to track your farm management",
+      "growth_timeline": "Growth Timeline",
+      "days": "days",
+      "go_to_module": "Go to Module",
+      "navigation": {
+        "title": "Navigate to Module",
+        "no_module": "No specific module available for this activity",
+        "unknown_module": "Unknown module type"
+      },
+      "progress": "Progress",
+      "priority": {
+        "high": "High Priority",
+        "medium": "Medium Priority",
+        "low": "Low Priority"
+      },
+      "mark_done": "Done",
+      "view_details": "Details",
+      "recommendation_details": "Recommendation Details",
+      "activity": "Activity",
+      "action": "Recommended Action",
+      "reason": "Reason",
+      "suggested": "Suggested",
+      "suggested_date": "Suggested Date",
+      "trigger": "Trigger",
+      "why": "Why",
+      "close": "Close",
+      "partial_success": "Partial Success ⚠️",
+      "partial_success_message": "Activity completed but could not save to server: {{error}}\n\nThe activity is marked as done in your current session.",
+      "saved_to_history": "and saved to your activity history",
+      "saved_locally": "(saved locally)",
+      "activity_completed": "Activity Completed! ✅",
+      "activity_completed_message": "\"{{activity}}\" for {{plot}} has been marked as completed {{status}}.",
+      "need_assistance": "Need Further Assistance?",
+      "contact_description": "Contact the Cinnamon Research Center for expert advice and support",
+      "center_name": "Cinnamon Research Center - Sri Lanka",
+      "working_hours": "Monday - Friday: 8:00 AM - 4:30 PM",
+      "contact_info": "Contact Information",
+      "contact_details": "For expert assistance:\n\n📞 Phone: {{phone}}\n📧 Email: {{email}}\n🌐 Website: {{website}}\n\nWorking Hours: {{hours}}",
+      "default_contact": "Phone: +94-11-2696734\\nEmail: info@cinnamonresearch.lk",
+      "view_contact_info": "Contact Info",
+      "growth_stages": {
+        "seedling": "Seedling Stage",
+        "young": "Young Plant",
+        "maturing": "Maturing",
+        "mature": "Mature",
+        "ready_harvest": "Ready for Harvest",
+        "nursery_establishment": "Nursery / Establishment",
+        "vegetative_growth": "Vegetative Growth",
+        "harvest_maturity": "Harvest / Maturity",
+        "unknown": "Unknown"
+      },
+      "activities": {
+        "soil_ph_testing": "Soil pH Testing",
+        "shade_management": "Shade Management",
+        "weed_control": "Weed Control",
+        "training_pruning": "Training and Pruning",
+        "organic_mulching": "Organic Mulching",
+        "support_staking": "Support Staking",
+        "bark_quality_assessment": "Bark Quality Assessment",
+        "canopy_management": "Canopy Management",
+        "harvest_preparation": "Harvest Preparation",
+        "weather_monitoring": "Weather Monitoring",
+        "critical_irrigation": "Critical Irrigation",
+        "drainage_management": "Drainage Management",
+        "water_monitoring": "Water Monitoring",
+        "heat_protection": "Heat Protection",
+        "cold_protection": "Cold Protection",
+        "balanced_fertilization": "Balanced Fertilization",
+        "organic_nutrition": "Organic Nutrition",
+        "disease_prevention": "Disease Prevention",
+        "plant_health_check": "Plant Health Check",
+        "structural_pruning": "Structural Pruning",
+        "bark_harvesting": "Bark Harvesting",
+        "pre_harvest_management": "Pre-Harvest Management",
+        "post_harvest_processing": "Post-Harvest Processing",
+        "coppice_management": "Coppice Management",
+        "general_plant_care": "General Plant Care",
+        "routine_monitoring": "Routine Monitoring",
+        "quality_drying": "Post-Harvest Processing",
+        "regeneration": "Coppice Management",
+        "nutrient_deficiency_check": "Nutrient Deficiency Check",
+        "disease_pest_scan": "Disease & Pest Scan",
+        "weather_water_advisory": "Weather-Based Water Advisory",
+        "growth_yield_projection": "Growth Stage Yield Projection",
+        "fertilizer_optimization": "Fertilizer Optimization",
+        "preventive_pest_monitoring": "Preventive Pest Monitoring",
+        "crop_planning_advisory": "Pruning & Crop Planning Advisory",
+        "harvest_readiness_assessment": "Harvest Readiness Assessment",
+        "oil_yield_prediction": "Cinnamon Oil Yield Prediction",
+        "distillation_optimization": "Drying & Distillation Optimization",
+        "quality_monitoring": "Post-Harvest Quality Monitoring"
+      }
       "more_activities": "+{{count}} more activities",
       "select_plot": "Select a Plot",
       "filters": "Filters",
@@ -1201,8 +1303,7 @@
       "recommendation": "Recommendation",
       "noImage": "No image provided"
     }
-  }
-  ,
+  },
   "oil_yield": {
     "home": {
       "primary_action": {
@@ -1220,6 +1321,123 @@
         "quality_subtitle": "Assess quality",
         "price_predictor_title": "Oil Price Predictor",
         "price_predictor_subtitle": "Market forecast"
+      },
+      "title": "Cinnamon Oil Analysis",
+      "subtitle": "Track cinnamon oil batches from raw material through to distillation and sale.",
+      "loading_batches": "Loading batches…",
+      "retry": "Retry",
+      "add_batch_badge": "NEW BATCH",
+      "add_batch_title": "Add Batch",
+      "add_batch_subtitle": "Register a new material\nbatch for processing.",
+      "market_badge": "MARKET",
+      "price_predictor_title": "Price Predictor",
+      "price_predictor_subtitle": "Check live market rates\nand predict oil prices.",
+      "no_batches_title": "No Batches Yet",
+      "no_batches_desc": "Add your first material batch to get started.",
+      "select_batch": "Select Batch",
+      "purchased": "Purchased",
+      "own_farm": "Own Farm",
+      "kg_raw": "kg raw",
+      "kg_dried": "kg dried",
+      "distillation_pipeline": "Distillation Activities",
+      "pre_dried": "Pre-dried",
+      "skipped": "Skipped",
+      "next_step_badge": "NEXT STEP",
+      "go_to_module": "Go to module",
+      "mark_done": "Mark Done",
+      "predicted_yield_label": "Predicted Yield",
+      "re_predict": "Re-predict",
+      "predicted_on": "Predicted on",
+      "distill_predicted_time_label": "Predicted Distillation Time",
+      "re_calculate": "Re-calculate",
+      "timer_start": "Start Timer",
+      "timer_pause": "Pause",
+      "timer_reset": "Reset",
+      "quality_label": "Quality Assessment",
+      "re_assess": "Re-assess",
+      "batch_complete_title": "Batch Complete",
+      "batch_complete_subtitle": "All pipeline stages finished",
+      "batch_name_label": "Batch Name",
+      "source_label": "Source",
+      "raw_weight_label": "Raw Weight",
+      "dried_weight_label": "Dried Weight",
+      "added_label": "Added",
+      "check_market_price": "Check Market Price",
+      "recent_activities_title": "Recent Activities",
+      "no_activities": "No activities recorded yet for this batch.",
+      "kg_unit": "KG",
+      "added_prefix": "Added:",
+      "moisture_label": "Moisture",
+      "est_yield_label": "Est. Yield",
+      "status_label": "Status",
+      "dried_weight_pending": "Dried Weight Pending",
+      "dried_weight_tap": "Tap to record dried weight once drying is complete.",
+      "update": "Update",
+      "dried_weight_prefix": "Dried weight:",
+      "pre_dried_purchased": "Purchased, pre-dried",
+      "pipeline_activities": "Next Step Activities",
+      "modules_title": "All Modules",
+      "invalid_weight_title": "Invalid Weight",
+      "invalid_weight_msg": "Please enter a valid weight in kilograms.",
+      "invalid_capacity_msg": "Please enter a valid capacity in liters.",
+      "quality_missing_fields": "Please select a value for color, clarity, and aroma.",
+      "error_title": "Error",
+      "failed_update_dried": "Failed to update dried weight.",
+      "failed_advance": "Failed to advance batch stage.",
+      "record_dried_title": "Record Dried Weight",
+      "record_dried_subtitle": "Enter the dried weight (kg) for {{name}}. The batch will automatically advance to Distillation.",
+      "dried_weight_placeholder": "e.g. 42.5",
+      "cancel": "Cancel",
+      "confirm_advance": "Confirm & Advance",
+      "predict": "Predict",
+      "distill_capacity_title": "Distillation Capacity",
+      "distill_capacity_subtitle": "Enter the still capacity (liters) for {{name}} to predict distillation time.",
+      "distill_capacity_placeholder": "e.g. 50",
+      "quality_modal_title": "Oil Quality Assessment",
+      "quality_modal_subtitle": "Select the observed attributes for {{name}} to predict quality.",
+      "stages": {
+        "raw": "Raw Material",
+        "drying": "Drying",
+        "distilling": "Distillation",
+        "quality_check": "Quality Check",
+        "complete": "Complete"
+      },
+      "stage_days": {
+        "raw": "",
+        "drying": "3-4 days",
+        "distilling": "",
+        "quality_check": "",
+        "complete": ""
+      },
+      "modules": {
+        "yield_predictor_label": "Yield Predictor",
+        "yield_predictor_sub": "Estimate oil output from bark weight",
+        "distillation_label": "Distillation",
+        "distillation_sub": "Manage your extraction session",
+        "quality_label": "Quality Guide",
+        "quality_sub": "Grade and certify your oil",
+        "price_label": "Price Predictor",
+        "price_sub": "Check market rates"
+      },
+      "activities": {
+        "collect_raw_title": "Raw Materials Confirmed",
+        "collect_raw_desc": "This is the starting step before drying and distillation.",
+        "sun_dry_title": "This is the Drying Stage",
+        "sun_dry_desc": "This is the stage where the material is prepared by reducing moisture content.",
+        "predict_before_distill_title": "Predict oil yield",
+        "predict_before_distill_desc": "Once the drying is complete, the amount of oil can be easily predicted based on the weight and variety of the raw material.",
+        "distillation_title": "Start the distillation process",
+        "distillation_desc": "Add the dried material to the machine. Maintain the correct temperature. Stop the process when the oil flow decreases.",
+        "predict_during_distill_title": "Predict Distillation Time",
+        "predict_during_distill_desc": "Input current batch weight and distillation hours into the yield predictor for a real-time output estimate.",
+        "quality_check_title": "Check Oil Quality Score",
+        "quality_check_desc": "View the estimated quality score for this oil batch to help decide if it is worth sending for laboratory testing before export.",
+        "price_before_sale_title": "Check Current Market Price",
+        "price_before_sale_desc": "Run the price predictor to compare your batch grade against today's market rates before you sell.",
+        "log_yield_title": "Log Final Yield Data",
+        "log_yield_desc": "Record final oil volume, yield percentage, and quality grade for historical analysis and batch comparison.",
+        "market_price_title": "Check Market Price",
+        "market_price_desc": "Compare your completed batch grade to live market rates and decide the best time to sell."
       }
     },
     "predictor": {
@@ -1263,6 +1481,7 @@
         "load_error": "Load Error",
         "missing_info": "Missing Information",
         "select_batch_prompt": "Please select a material batch.",
+        "dried_weight_required": "The selected batch has no dried weight recorded. Please complete the drying stage first.",
         "prediction_failed": "Prediction Failed"
       }
     },
@@ -1458,7 +1677,10 @@
         "cinnamon_type": {
           "label": "Cinnamon Type",
           "subtitle": "Select variety",
-          "options": ["Sri Gemunu", "Sri Vijaya"]
+          "options": [
+            "Sri Gemunu",
+            "Sri Vijaya"
+          ]
         },
         "mass": {
           "label": "Mass (kg)",
@@ -1469,7 +1691,10 @@
         "plant_part": {
           "label": "Plant Part",
           "subtitle": "Select part",
-          "options": ["Leaves & Twigs", "Featherings & Chips"]
+          "options": [
+            "Leaves & Twigs",
+            "Featherings & Chips"
+          ]
         },
         "plant_age": {
           "label": "Plant Age",
@@ -1480,7 +1705,30 @@
         "harvest_season": {
           "label": "Harvest Season",
           "subtitle": "Select season",
-          "options": ["May–August", "January–April"]
+          "options": [
+            "May–August",
+            "October–December/January"
+          ]
+        }
+      },
+      "source": {
+        "own_farm": "Own Farm",
+        "purchased": "Purchased",
+        "hint_own_farm": "You will dry the bark yourself. Raw weight can be recorded after harvest.",
+        "hint_purchased": "Bark is already dried by the supplier. Enter the purchased weight below."
+      },
+      "options": {
+        "cinnamon_types": {
+          "sri_gemunu": "Sri Gemunu",
+          "sri_vijaya": "Sri Vijaya"
+        },
+        "plant_parts": {
+          "leaves_twigs": "Leaves & Twigs",
+          "featherings_chips": "Featherings & Chips"
+        },
+        "harvest_seasons": {
+          "may_august": "May–August",
+          "october_january": "October–December/January"
         }
       },
       "buttons": {

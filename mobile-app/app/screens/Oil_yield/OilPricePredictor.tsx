@@ -15,7 +15,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { LineChart } from 'react-native-chart-kit';
+import { BarChart } from 'react-native-chart-kit';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
@@ -47,8 +47,10 @@ export default function OilPricePredictor() {
 
     try {
       // Map UI range to backend-expected values
+      // weekly has no backend equivalent — fetch daily points and aggregate on the frontend
       const backendRange = range === 'daily' ? 'days' : range === 'monthly' ? 'months' : 'days';
-      const steps = range === 'daily' ? 7 : range === 'weekly' ? 56 : 12;
+      // daily: 30 days | weekly: 35 days (5 weeks × 7) | monthly: 12 months
+      const steps = range === 'daily' ? 30 : range === 'weekly' ? 35 : 12;
       const response = await fetch(`${API_BASE_URL}/oil_yield/price_forecast`, {
         method: 'POST',
         headers: {
@@ -126,56 +128,42 @@ export default function OilPricePredictor() {
     }
 
     let prices: number[] = forecastData.forecast || [];
-    const dates: string[] = forecastData.dates || [];
 
     if (timeRange === 'weekly') {
       prices = aggregateWeekly(prices);
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const pad2 = (n: number) => String(n).padStart(2, '0');
     const monthShort = (d: Date) => d.toLocaleString('en-US', { month: 'short' });
     const weekdayShort = (d: Date) => d.toLocaleString('en-US', { weekday: 'short' });
-    const formatDM = (ds: string) => {
-      const d = new Date(ds);
-      return `${pad2(d.getDate())} ${monthShort(d)}`;
-    };
-    const weekOfMonth = (ds: string) => {
-      const d = new Date(ds);
-      return Math.ceil(d.getDate() / 7);
-    };
 
     let labels: string[] = [];
-    if (timeRange === 'daily' && dates.length) {
-      labels = dates.map((ds) => {
-        const d = new Date(ds);
-        // Stack parts vertically to avoid overlap; include year
+
+    if (timeRange === 'daily') {
+      labels = prices.map((_, i) => {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        if (i === 0) return `Today\n${pad2(d.getDate())} ${monthShort(d)}\n${d.getFullYear()}`;
+        if (i === 1) return `Tmrw\n${pad2(d.getDate())} ${monthShort(d)}\n${d.getFullYear()}`;
         return `${weekdayShort(d)}\n${pad2(d.getDate())} ${monthShort(d)}\n${d.getFullYear()}`;
       });
-    } else if (timeRange === 'weekly' && dates.length) {
-      labels = [];
-      for (let i = 0; i < dates.length; i += 7) {
-        const start = dates[i];
-        const sd = new Date(start);
-        // Week number + month + year on separate lines
-        labels.push(`W${weekOfMonth(start)}\n${monthShort(sd)}\n${sd.getFullYear()}`);
-      }
-      // Ensure labels length matches aggregated prices length
-      if (labels.length > prices.length) labels = labels.slice(0, prices.length);
-      if (labels.length < prices.length) {
-        // pad with last known label
-        const last = labels[labels.length - 1] || 'W? ??/??';
-        while (labels.length < prices.length) labels.push(last);
-      }
+    } else if (timeRange === 'weekly') {
+      labels = prices.map((_, i) => {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i * 7);
+        if (i === 0) return `This\nWeek\n${monthShort(d)} ${d.getFullYear()}`;
+        if (i === 1) return `Next\nWeek\n${monthShort(d)} ${d.getFullYear()}`;
+        return `Wk ${i + 1}\n${monthShort(d)}\n${d.getFullYear()}`;
+      });
     } else {
-      // Monthly: show month names from dates
-      if (dates.length) {
-        labels = dates.map((ds) => {
-          const d = new Date(ds);
-          return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
-        });
-      } else {
-        labels = prices.map((_, index: number) => `M${index + 1}`);
-      }
+      // Monthly: generate labels starting from the current month
+      labels = prices.map((_, i) => {
+        const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+      });
     }
 
     return {
@@ -188,12 +176,6 @@ export default function OilPricePredictor() {
         },
       ],
     };
-  };
-
-  const getTimeRangeLabel = () => {
-    if (timeRange === 'daily') return 'Next 30 Days';
-    if (timeRange === 'weekly') return 'Next 4–5 Weeks';
-    return 'Next 12 Months';
   };
 
   const RadioOption = ({ label, value, selected, onSelect, icon, subtitle }: {
@@ -367,7 +349,7 @@ export default function OilPricePredictor() {
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#FF3B30" />
-            <Text style={styles.loadingText}>Loading forecast...</Text>
+            <Text style={styles.loadingText}>{t('oil_yield.price.loading.forecast')}</Text>
           </View>
         )}
 
@@ -382,66 +364,56 @@ export default function OilPricePredictor() {
             <View style={styles.chartCard}>
               <BlurView intensity={70} tint="light" style={styles.chartBlur}>
                 <View style={styles.chartHeader}>
-                  <View style={styles.chartIconCircle}>
+                  {/* <View style={styles.chartIconCircle}>
                     <MaterialCommunityIcons name="chart-areaspline" size={24} color="#4aab4e" />
-                  </View>
+                  </View> */}
                   <View style={styles.chartHeaderText}>
-                    <Text style={styles.chartTitle}>Price Trend</Text>
-                    <Text style={styles.chartSubtext}>SARIMA forecast visualization</Text>
+                    {/* <Text style={styles.chartTitle}>Price Trend</Text> */}
+                    {/* <Text style={styles.chartSubtext}>SARIMA forecast visualization</Text> */}
                   </View>
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {(() => {
                     const chartData = getChartData();
-                    const computedWidth = Math.max(CHART_WIDTH, chartData.labels.length * 40);
+                    // 72px per bar gives enough room for labels and values on top
+                    const computedWidth = Math.max(CHART_WIDTH, chartData.labels.length * 72);
                     return (
-                      <LineChart
+                      <BarChart
                         data={chartData}
                         width={computedWidth}
-                    height={280}
-                    chartConfig={{
-                      backgroundColor: '#FFFFFF',
-                      backgroundGradientFrom: '#FFFFFF',
-                      backgroundGradientTo: '#F9F9F9',
-                      decimalPlaces: 2,
-                      color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`,
-                      labelColor: (opacity = 1) => `rgba(60, 60, 67, ${opacity})`,
-                      style: {
-                        borderRadius: 16,
-                      },
-                          propsForLabels: {
-                            fontSize: 10,
+                        height={300}
+                        yAxisLabel="Rs."
+                        yAxisSuffix=""
+                        chartConfig={{
+                          backgroundColor: '#FFFFFF',
+                          backgroundGradientFrom: '#FFFFFF',
+                          backgroundGradientTo: '#F9F9F9',
+                          decimalPlaces: 0,
+                          color: () => `rgb(0, 99, 3)`,
+                          labelColor: (opacity = 1) => `rgba(60, 60, 67, ${opacity})`,
+                          style: { borderRadius: 16 },
+                          propsForLabels: { fontSize: 10 },
+                          propsForBackgroundLines: {
+                            strokeDasharray: '',
+                            stroke: 'rgba(0, 0, 0, 0.05)',
                           },
-                      propsForDots: {
-                        r: '5',
-                        strokeWidth: '2',
-                        stroke: '#FF3B30',
-                      },
-                      propsForBackgroundLines: {
-                        strokeDasharray: '',
-                        stroke: 'rgba(0, 0, 0, 0.05)',
-                      },
-                    }}
-                    bezier
-                    style={styles.chart}
-                    withVerticalLabels={true}
-                    withHorizontalLabels={true}
-                    withDots={true}
-                    withShadow={false}
-                    withInnerLines={true}
-                    withOuterLines={true}
-                    withVerticalLines={false}
-                    withHorizontalLines={true}
-                        verticalLabelRotation={60}
-                        xLabelsOffset={-6}
+                          barPercentage: 0.65,
+                        }}
+                        style={styles.chart}
+                        withVerticalLabels={true}
+                        withHorizontalLabels={true}
+                        withInnerLines={true}
+                        showValuesOnTopOfBars={true}
+                        verticalLabelRotation={45}
+                        fromZero={false}
                       />
                     );
                   })()}
                 </ScrollView>
                 <View style={styles.chartLegend}>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: '#FF3B30' }]} />
-                    <Text style={styles.legendText}>Predicted Price (LKR/kg)</Text>
+                    <View style={[styles.legendDot, { backgroundColor: '#4aab4e' }]} />
+                    <Text style={styles.legendText}>{t('oil_yield.price.chart.legend_predicted')}</Text>
                   </View>
                 </View>
               </BlurView>
@@ -451,10 +423,10 @@ export default function OilPricePredictor() {
             <View style={styles.recommendationCard}>
               <BlurView intensity={70} tint="light" style={styles.recommendationBlur}>
                 <View style={styles.recommendationHeader}>
-                  <View style={styles.recommendationIconCircle}>
+                  {/* <View style={styles.recommendationIconCircle}>
                     <MaterialCommunityIcons name="chart-box" size={20} color="#4aab4e" />
-                  </View>
-                  <Text style={styles.recommendationTitle}>Forecast Statistics</Text>
+                  </View> */}
+                  <Text style={styles.recommendationTitle}>{t('oil_yield.price.stats.title')}</Text>
                 </View>
                 
                 {getDisplayedStatistics() && (
@@ -462,21 +434,22 @@ export default function OilPricePredictor() {
                     <View style={styles.statsGrid}>
                       <View style={styles.statItem}>
                         <MaterialCommunityIcons name="arrow-up" size={20} color="#30D158" />
-                        <Text style={styles.statLabel}>Average</Text>
+                        <Text style={styles.statLabel}>{t('oil_yield.price.stats.average')}</Text>
                         <Text style={styles.statValue}>
                           {formatCurrency((getDisplayedStatistics() as any).mean || 0)}
                         </Text>
                       </View>
                       <View style={styles.statItem}>
-                        <MaterialCommunityIcons name="arrow-down" size={20} color="#FF3B30" />
-                        <Text style={styles.statLabel}>Min</Text>
+                        <MaterialCommunityIcons name="arrow-down" size={20} color="#FF3B30" />                        
+                        <Text style={styles.statLabel}>{t('oil_yield.price.stats.min')}</Text>
                         <Text style={styles.statValue}>
                           {formatCurrency((getDisplayedStatistics() as any).min || 0)}
                         </Text>
                       </View>
                       <View style={styles.statItem}>
                         <MaterialCommunityIcons name="arrow-up" size={20} color="#FF9F0A" />
-                        <Text style={styles.statLabel}>Max</Text>
+
+                        <Text style={styles.statLabel}>{t('oil_yield.price.stats.max')}</Text>
                         <Text style={styles.statValue}>
                           {formatCurrency((getDisplayedStatistics() as any).max || 0)}
                         </Text>
@@ -503,7 +476,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F7',
   },
   scrollContainer: {
-    paddingTop: 60,
+    paddingTop: 10,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -525,7 +498,7 @@ const styles = StyleSheet.create({
   },
   backButtonInline: {
     width: 40,
-    height: 40,
+    // height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.04)',
     alignItems: 'center',

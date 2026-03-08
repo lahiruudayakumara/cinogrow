@@ -125,6 +125,7 @@ export default function ProfileScreen() {
           onSelectPlan={(id) => setCurrentPlan(id)}
         />
 
+
         {/* Navigate to Home Screen */}
         <Pressable
           style={styles.navButton}

@@ -14,8 +14,10 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
+import { savePrediction } from '@/services/oilYieldPredictionStore';
 
 // Use localhost for web platform, otherwise use the configured API URL
 const API_BASE_URL = Platform.OS === 'web' 
@@ -25,11 +27,13 @@ const API_BASE_URL = Platform.OS === 'web'
 export default function OilYieldPredictorSecond() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  const { batchId } = useLocalSearchParams<{ batchId?: string }>();
   type MaterialBatch = {
     id: number;
     batch_name?: string | null;
     cinnamon_type: string;
     mass_kg: number;
+    dried_mass_kg?: number | null;
     plant_part: string;
     plant_age_years: number;
     harvest_season: string;
@@ -53,6 +57,10 @@ export default function OilYieldPredictorSecond() {
         }
         const data: MaterialBatch[] = await res.json();
         setBatches(data);
+        if (batchId) {
+          const id = parseInt(batchId, 10);
+          if (!isNaN(id)) setSelectedBatchId(id);
+        }
       } catch (e: any) {
         console.error('❌ Failed to fetch batches', e);
         Alert.alert(t('oil_yield.predictor.alerts.load_error'), e.message || t('yield_weather.common.unknown_error'));
@@ -60,6 +68,15 @@ export default function OilYieldPredictorSecond() {
     };
     fetchBatches();
   }, []);
+
+  const normalizeHarvestingSeasonForAPI = (value?: string): 'May\u2013August' | 'October\u2013December/January' => {
+    const v = (value || '').trim().toLowerCase();
+    if (v.includes('may') || v.includes('jun') || v.includes('jul') || v.includes('aug')) {
+      return 'May\u2013August';
+    }
+    // 'January\u2013April', 'jan', 'oct', 'nov', 'dec' all map to the second season
+    return 'October\u2013December/January';
+  };
 
   const handlePredict = async () => {
     console.log('🔍 handlePredict called');
@@ -77,12 +94,19 @@ export default function OilYieldPredictorSecond() {
     setRecommendation(null);
     setInputSummary(null);
 
+    const effectiveDriedMassKg = selectedBatch.dried_mass_kg ?? selectedBatch.mass_kg;
+    if (!effectiveDriedMassKg || effectiveDriedMassKg <= 0) {
+      Alert.alert(t('oil_yield.predictor.alerts.missing_info'), t('oil_yield.predictor.alerts.dried_weight_required'));
+      setLoading(false);
+      return;
+    }
+
     const requestBody = {
-      dried_mass_kg: selectedBatch.mass_kg,
+      dried_mass_kg: effectiveDriedMassKg,
       species_variety: selectedBatch.cinnamon_type,
       plant_part: selectedBatch.plant_part,
       age_years: selectedBatch.plant_age_years,
-      harvesting_season: selectedBatch.harvest_season,
+      harvesting_season: normalizeHarvestingSeasonForAPI(selectedBatch.harvest_season),
     };
 
     console.log('📤 Sending request to:', `${API_BASE_URL}/oil_yield/predict`);
@@ -125,6 +149,20 @@ export default function OilYieldPredictorSecond() {
       );
       console.log('💡 Generated recommendations:', recommendations);
       setRecommendation(JSON.stringify(recommendations));
+
+      // Persist prediction so OilYieldHome can surface it inline
+      try {
+        await savePrediction({
+          batchId: selectedBatch.id,
+          predictedYieldMl: parseFloat(yieldInML),
+          predictedYieldLiters: data.predicted_yield_liters,
+          inputSummary: data.input_summary,
+          recommendation: recommendations,
+          predictedAt: new Date().toISOString(),
+        });
+      } catch (storeErr) {
+        console.warn('⚠️ Failed to persist prediction', storeErr);
+      }
 
       console.log('✅ Prediction completed successfully');
 

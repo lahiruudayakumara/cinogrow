@@ -2,15 +2,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
 import { login } from '@/services/auth';
 import { router } from 'expo-router';
+import Logo from "@/assets/images/img/logo.png";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigation = useNavigation();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -45,7 +44,7 @@ const LoginScreen = () => {
       <View style={styles.card}>
         <View style={styles.logoCircle}>
           <Image
-            source={require('../assets/images/CinoGrow logo.webp')}
+            source={Logo}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -80,6 +79,18 @@ const LoginScreen = () => {
             <Text style={styles.buttonText}>Login</Text>
           )}
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.forgotPasswordLink}
+          onPress={() => router.push('/forgot-password')}
+        >
+          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        </TouchableOpacity>
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Don't have an account? </Text>
+          <TouchableOpacity onPress={() => router.push('/register')}>
+            <Text style={styles.registerLink}>Register</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -91,10 +102,11 @@ const styles = StyleSheet.create({
     height: 90,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 35,
   },
   logo: {
-    width: 70,
-    height: 70,
+    width: 150,
+    height: 150,
   },
   container: {
     flex: 1,
@@ -153,6 +165,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     letterSpacing: 1,
+  },
+  forgotPasswordLink: {
+    marginTop: 16,
+  },
+  forgotPasswordText: {
+    color: '#388e3c',
+    fontSize: 14,
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+  },
+  registerText: {
+    color: '#555',
+    fontSize: 14,
+  },
+  registerLink: {
+    color: '#2e7d32',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
 

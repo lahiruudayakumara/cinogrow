@@ -1,7 +1,9 @@
+
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Image, Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -87,9 +89,18 @@ export default function SplashScreen() {
       ])
     ).start();
 
-    // Navigate to tabs after 3 seconds
-    const timer = setTimeout(() => {
-      router.replace('/(tabs)');
+    // After 3 seconds, check if user exists and route accordingly
+    const timer = setTimeout(async () => {
+      try {
+        const user = await AsyncStorage.getItem('user');
+        if (user) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/login');
+        }
+      } catch {
+        router.replace('/login');
+      }
     }, 3000);
 
     return () => clearTimeout(timer);

@@ -21,5 +21,5 @@ def login(user_in: UserLogin, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     # Generate JWT token
-    access_token = create_access_token({"sub": str(user.id), "role": user.role})
-    return {"access_token": access_token, "token_type": "bearer", "user_id": str(user.id), "role": user.role}
+    access_token = create_access_token({"sub": str(user.id), "full_name": user.full_name, "role": user.role})
+    return {"access_token": access_token, "token_type": "bearer", "user_id": str(user.id), "full_name": user.full_name, "role": user.role}

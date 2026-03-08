@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView, Pressable, Text, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -87,6 +88,19 @@ export default function ProfileScreen() {
           onSelectPlan={(id) => setCurrentPlan(id)}
         />
 
+        {/* Logout Button */}
+        <Pressable
+          style={[styles.navButton, { backgroundColor: '#c62828' }]}
+          onPress={async () => {
+            await AsyncStorage.removeItem('user');
+            router.replace('/login');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Logout"
+        >
+          <Text style={[styles.navButtonText, { color: '#fff' }]}>Logout</Text>
+        </Pressable>
+
         {/* Navigate to Home Screen */}
         <Pressable
           style={styles.navButton}
@@ -108,7 +122,7 @@ const styles = StyleSheet.create({
   },
   navButton: {
     marginHorizontal: 16,
-    marginTop: 16,
+    marginTop: 2,
     marginBottom: 24,
     backgroundColor: "#2E7D32",
     borderRadius: 12,

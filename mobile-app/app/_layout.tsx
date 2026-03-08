@@ -25,8 +25,8 @@ export default function RootLayout() {
     return null;
   }
 
-  // Don't show header on splash screen
-  const showHeader = pathname !== '/splash' && pathname !== '/';
+  // Don't show header on splash or login screen
+  const showHeader = pathname !== '/splash' && pathname !== '/' && pathname !== '/login';
 
   return (
     <I18nextProvider i18n={i18n}>
@@ -41,8 +41,8 @@ export default function RootLayout() {
                 animation: 'fade'
               }} 
             />
+            <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            
             <Stack.Screen name="+not-found" />
           </Stack>
         </View>

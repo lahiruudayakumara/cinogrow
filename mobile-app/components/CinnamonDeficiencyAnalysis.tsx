@@ -333,9 +333,7 @@ const EnhancedCinnamonDeficiencyAnalysis: React.FC<EnhancedCinnamonDeficiencyAna
                         onFeedbackPress={() => setShowFeedbackModal(true)}
                         onAlternativePress={setSelectedAlternative}
                     />
-                ) : (
-                    <ReadyForAnalysisComponent />
-                )}
+                ) : null}
             </View>
 
             {/* User Preferences Panel */}
@@ -406,21 +404,7 @@ const ErrorComponent: React.FC<{ error: string; onRetry: () => void }> = ({ erro
     </View>
 );
 
-// Ready for Analysis Component
-const ReadyForAnalysisComponent: React.FC = () => (
-    <View style={styles.readyContainer}>
-        <Text style={styles.readyText}>Ready for AI Analysis</Text>
-        <Text style={styles.readySubtext}>
-            Our enhanced AI will analyze your leaf for nutrient deficiencies and provide intelligent fertilizer recommendations
-        </Text>
-        <View style={styles.featuresContainer}>
-            <Text style={styles.featureText}>✓ Advanced ML deficiency detection</Text>
-            <Text style={styles.featureText}>✓ Intelligent fertilizer recommendations</Text>
-            <Text style={styles.featureText}>✓ Cost optimization</Text>
-            <Text style={styles.featureText}>✓ Seasonal timing guidance</Text>
-        </View>
-    </View>
-);
+
 
 // Enhanced Results Preview Component
 const EnhancedResultsPreview: React.FC<EnhancedResultsPreviewProps> = ({
@@ -802,24 +786,6 @@ const styles = StyleSheet.create({
         color: '#d32f2f',
         textAlign: 'center' as const,
     },
-    readyContainer: {
-        alignItems: 'center' as const,
-        padding: 20,
-        backgroundColor: '#e8f5e8',
-        borderRadius: 8,
-        marginVertical: 10,
-    },
-    readyText: {
-        fontSize: 18,
-        fontWeight: 'bold' as const,
-        color: '#4CAF50',
-        marginBottom: 5,
-    },
-    readySubtext: {
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'center' as const,
-    },
     buttonContainer: {
         flexDirection: 'row' as const,
         justifyContent: 'space-between' as const,
@@ -1159,16 +1125,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600' as const,
-    },
-    featuresContainer: {
-        alignItems: 'flex-start' as const,
-        marginTop: 12,
-    },
-    featureText: {
-        fontSize: 12,
-        color: '#4CAF50',
-        marginVertical: 2,
-        fontWeight: '500' as const,
     },
     enhancedResultsContainer: {
         marginBottom: 20,

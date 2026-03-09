@@ -71,6 +71,7 @@ The **CinoGrow** system aims to:
    ✔️ Integrate **real-time weather data** with historical yield records.  
    ✔️ Predict **crop yield** using **Random Forest regression models**.  
    ✔️ Provide **weather based actionable insights** on planting, pruning, and harvesting schedules.  
+   ✔️ Automate **tree stem analysis** using **Roboflow workflow** for accurate stem count and circumference measurement.  
    ✔️ Report Generation.  
 
 ---

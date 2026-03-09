@@ -11,7 +11,19 @@ from app.db import Base, engine
 from app.routers import pest_disease_router
 
 # Load environment variables FIRST before importing anything else
-load_dotenv(os.path.join(os.path.dirname(__file__), '../..', '.env'))
+# Load from backend directory (one level up from app/)
+backend_env = os.path.join(os.path.dirname(__file__), '..', '.env')
+if os.path.exists(backend_env):
+    load_dotenv(backend_env)
+    print(f"✅ Loaded .env from: {backend_env}")
+else:
+    # Fallback to root directory
+    root_env = os.path.join(os.path.dirname(__file__), '../..', '.env')
+    if os.path.exists(root_env):
+        load_dotenv(root_env)
+        print(f"✅ Loaded .env from: {root_env}")
+    else:
+        print(f"⚠️  No .env file found")
 
 # Import all models FIRST to ensure they are registered with SQLModel
 from app.models.yield_weather.farm import Farm, Plot, FarmActivity, PlantingRecord, UserYieldRecord, YieldPrediction
@@ -22,16 +34,19 @@ from app.models.yield_weather.hybrid_yield import HybridYieldResult
 from app.models.fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis
 from app.models.fertilizer.fertilizer import FertilizerType, FertilizerApplication, FertilizerSchedule, FertilizerRecommendation
 from app.models.oil_yield.material_batch import MaterialBatch
+from app.models.oil_yield.predictions import OilYieldPrediction, DistillationPrediction, QualityPrediction
 
 # Import database and routers
 from app.db.session import create_db_and_tables
 from app.routers.yield_weather import weather, farm, farm_assistance, hybrid_prediction, hybrid_prediction_storage
 from app.routers.hybrid_yield import router as hybrid_yield_router
 from app.routers.fertilizer.roboflow_simple import router as roboflow_simple_router
+from app.routers.tree_analysis import router as tree_analysis_router
 from app.routers import auth
 
 # Import your oil yield router
 from app.oil_yield.router import router as oil_yield_router
+from app.oil_yield.predictions_router import router as oil_yield_predictions_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -61,8 +76,10 @@ async def startup_event():
     create_db_and_tables()
 
 # Include routers
-app.include_router(oil_yield_router, prefix='/api/v1')  # Oil yield prediction
+app.include_router(oil_yield_router, prefix='/api/v1')
+app.include_router(oil_yield_predictions_router, prefix='/api/v1')  # Oil yield prediction
 app.include_router(roboflow_simple_router, prefix='/api/v1')  # Roboflow deficiency detection
+app.include_router(tree_analysis_router, prefix='/api/v1')  # Tree stem analysis
 app.include_router(weather.router, prefix="/api/v1")  # Weather endpoints at /api/v1/weather/
 app.include_router(farm.router, prefix="/api/v1/yield-weather")
 app.include_router(farm_assistance.router, prefix="/api/v1/yield-weather")

@@ -28,28 +28,28 @@ export default function FertilizerLayout() {
                 name="upload-leaf"
                 options={{
                     title: 'Upload Leaf Sample',
-                    headerBackVisible: true,
+                    headerShown: false,
                 }}
             />
             <Stack.Screen
                 name="upload-soil"
                 options={{
                     title: 'Upload Soil Sample',
-                    headerBackVisible: true,
+                    headerShown: false,
                 }}
             />
             <Stack.Screen
                 name="photo-preview"
                 options={{
                     title: 'Photo Preview',
-                    headerBackVisible: true,
+                    headerShown: false,
                 }}
             />
             <Stack.Screen
                 name="result"
                 options={{
                     title: 'Analysis Results',
-                    headerBackVisible: true,
+                    headerShown: false,
                 }}
             />
         </Stack>

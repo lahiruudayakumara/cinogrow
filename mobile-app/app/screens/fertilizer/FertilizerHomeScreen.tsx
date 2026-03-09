@@ -102,35 +102,71 @@ const Fertilizer: React.FC = () => {
     };
 
     const handleHistoryPress = (item: FertilizerHistoryRecord) => {
-        // Navigate to result screen with history data
-        router.push({
-            pathname: '/fertilizer/result',
-            params: {
-                roboflowAnalysis: JSON.stringify({
-                    success: true,
-                    primary_deficiency: item.primary_deficiency,
+        // Navigate to result screen with history data based on analysis type
+        const baseParams: any = {
+            plantAge: item.plant_age || 1,
+        };
+
+        if (item.analysis_flow === 'combined') {
+            // Combined analysis - pass both leaf and soil data
+            baseParams.analysisType = 'comprehensive';
+            baseParams.combinedAnalysis = JSON.stringify({
+                leaf_analysis: {
+                    detected_deficiency: item.primary_deficiency,
                     confidence: item.confidence,
                     severity: item.severity,
-                    plant_age: item.plant_age,
-                    recommendations: item.recommendations,
-                    history_id: item.id,
-                    detections: [{
-                        class: item.primary_deficiency || 'Unknown',
-                        confidence: item.confidence || 0,
-                        deficiency: item.primary_deficiency || 'Unknown',
-                        severity: item.severity || 'Low'
-                    }],
-                    roboflow_output: [{
-                        predictions: {
-                            predictions: [{
-                                class: item.primary_deficiency || 'Unknown',
-                                confidence: item.confidence || 0
-                            }]
-                        }
-                    }]
-                }),
-                plantAge: item.plant_age || 1,
-            }
+                    recommendations: item.recommendations
+                },
+                soil_analysis: {
+                    soil_type: item.soil_type,
+                    confidence: item.soil_confidence,
+                    characteristics: item.soil_characteristics?.key_properties || [],
+                    improvement_actions: item.soil_characteristics?.improvement_actions || [],
+                    recommendations: item.recommendations?.soil_recommendations || {}
+                }
+            });
+        } else if (item.analysis_flow === 'soil_only') {
+            // Soil only analysis
+            baseParams.analysisType = 'soil-only';
+            baseParams.soilAnalysis = JSON.stringify({
+                success: true,
+                soil_detected: !!item.soil_type,
+                soil_type: item.soil_type,
+                confidence: item.soil_confidence,
+                soil_characteristics: item.soil_characteristics || {},
+                recommendations: item.recommendations
+            });
+        } else {
+            // Leaf only analysis (default)
+            baseParams.analysisType = 'leaf-only';
+            baseParams.roboflowAnalysis = JSON.stringify({
+                success: true,
+                primary_deficiency: item.primary_deficiency,
+                confidence: item.confidence,
+                severity: item.severity,
+                plant_age: item.plant_age,
+                recommendations: item.recommendations,
+                history_id: item.id,
+                detections: [{
+                    class: item.primary_deficiency || 'Unknown',
+                    confidence: item.confidence || 0,
+                    deficiency: item.primary_deficiency || 'Unknown',
+                    severity: item.severity || 'Low'
+                }],
+                roboflow_output: [{
+                    predictions: {
+                        predictions: [{
+                            class: item.primary_deficiency || 'Unknown',
+                            confidence: item.confidence || 0
+                        }]
+                    }
+                }]
+            });
+        }
+
+        router.push({
+            pathname: '/fertilizer/result',
+            params: baseParams
         });
     };
 
@@ -188,6 +224,49 @@ const Fertilizer: React.FC = () => {
         const severityColor = getSeverityColor(item.severity);
         const confidence = formatConfidence(item.confidence);
         const date = formatAnalysisDate(item.analyzed_at);
+        
+        // Determine analysis type display
+        const getAnalysisTypeInfo = () => {
+            switch (item.analysis_flow) {
+                case 'combined':
+                    return {
+                        icon: 'fitness' as const,
+                        label: 'Comprehensive',
+                        color: '#0EA5E9',
+                        bgColor: '#E0F2FE'
+                    };
+                case 'soil_only':
+                    return {
+                        icon: 'earth' as const,
+                        label: 'Soil Analysis',
+                        color: '#8B7355',
+                        bgColor: '#FEF7ED'
+                    };
+                case 'leaf_only':
+                default:
+                    return {
+                        icon: 'leaf' as const,
+                        label: 'Leaf Analysis',
+                        color: '#4CAF50',
+                        bgColor: '#F0FDF4'
+                    };
+            }
+        };
+        
+        const analysisType = getAnalysisTypeInfo();
+        
+        // Determine primary result to display
+        const getPrimaryResult = () => {
+            if (item.analysis_flow === 'combined') {
+                return item.primary_deficiency 
+                    ? `${item.primary_deficiency}${item.soil_type ? ` • ${item.soil_type}` : ''}` 
+                    : item.soil_type || 'Analysis Complete';
+            } else if (item.analysis_flow === 'soil_only') {
+                return item.soil_type || 'Soil Analyzed';
+            } else {
+                return item.primary_deficiency || 'Leaf Analyzed';
+            }
+        };
 
         return (
             <TouchableOpacity
@@ -198,23 +277,37 @@ const Fertilizer: React.FC = () => {
             >
                 <View style={styles.recommendationHeader}>
                     <View style={styles.recommendationTitleRow}>
-                        <Text style={styles.recommendationType}>
-                            {item.primary_deficiency || 'Unknown Deficiency'}
-                        </Text>
+                        <View style={[styles.analysisTypeBadge, { backgroundColor: analysisType.bgColor }]}>
+                            <Ionicons name={analysisType.icon} size={14} color={analysisType.color} />
+                            <Text style={[styles.analysisTypeText, { color: analysisType.color }]}>
+                                {analysisType.label}
+                            </Text>
+                        </View>
                         {item.severity && (
                             <View style={[styles.severityBadge, { backgroundColor: severityColor }]}>
                                 <Text style={styles.severityText}>{item.severity}</Text>
                             </View>
                         )}
                     </View>
+                    <Text style={styles.recommendationType}>
+                        {getPrimaryResult()}
+                    </Text>
                     <Text style={styles.recommendationDate}>{date}</Text>
                 </View>
 
                 <View style={styles.actionRow}>
-                    <View style={styles.actionContent}>
-                        <Ionicons name="analytics-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
-                        <Text style={styles.actionText}>{t('fertilizer.home.confidence')}: {confidence}</Text>
-                    </View>
+                    {(item.confidence || item.soil_confidence) && (
+                        <View style={styles.actionContent}>
+                            <Ionicons name="analytics-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
+                            <Text style={styles.actionText}>
+                                {item.analysis_flow === 'combined' 
+                                    ? `${formatConfidence(item.confidence)}${item.soil_confidence ? ` • ${formatConfidence(item.soil_confidence)}` : ''}` 
+                                    : item.analysis_flow === 'soil_only'
+                                    ? formatConfidence(item.soil_confidence)
+                                    : confidence}
+                            </Text>
+                        </View>
+                    )}
                     {item.plant_age && (
                         <View style={styles.actionContent}>
                             <Ionicons name="leaf-outline" size={16} color="#4CAF50" style={styles.actionIcon} />
@@ -307,8 +400,7 @@ const Fertilizer: React.FC = () => {
                             />
                         </View>
                         <Text style={styles.progressText}>
-                            {leafImage && soilImage ? t('fertilizer.home.ready_for_analysis') :
-                                leafImage || soilImage ? t('fertilizer.home.samples_uploaded') : t('fertilizer.home.upload_to_begin')}
+                            {leafImage || soilImage ? t('fertilizer.home.samples_uploaded') : t('fertilizer.home.upload_to_begin')}
                         </Text>
                     </View>
                 </View>
@@ -519,12 +611,27 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 6,
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    analysisTypeBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+        gap: 4,
+    },
+    analysisTypeText: {
+        fontSize: 12,
+        fontWeight: '600',
     },
     recommendationType: {
         fontSize: 16,
         fontWeight: '700',
         color: '#111827',
         flex: 1,
+        marginTop: 4,
     },
     severityBadge: {
         paddingHorizontal: 8,

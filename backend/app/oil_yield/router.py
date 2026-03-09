@@ -4,7 +4,7 @@ from .schemas import (
     OilYieldInput, OilYieldOutput, 
     DistillationTimeInput, DistillationTimeOutput,
     PriceForecastInput, PriceForecastOutput,
-    MaterialBatchCreate, MaterialBatchRead,
+    MaterialBatchCreate, MaterialBatchUpdate, MaterialBatchRead,
     OilQualityInput, OilQualityOutput
 )
 from .model import load_model
@@ -243,29 +243,54 @@ def get_price_forecast(data: PriceForecastInput):
         )
 
 
-@router.post("/batch", response_model=MaterialBatchRead)
+@router.post("/batch", response_model=MaterialBatchRead, status_code=201)
 def create_material_batch(payload: MaterialBatchCreate, session: Session = Depends(get_session)):
     """
     Create a material batch record for oil yield processing.
 
-    Fields:
-    - cinnamon_type: Cinnamon type or variety
-    - mass_kg: Mass of material in kilograms
-    - plant_part: Plant part used
-    - plant_age_years: Age of the plant in years
-    - harvest_season: Harvest season description
+    **Scene 1 – Own Farm** (`source="own_farm"`):
+    - User harvests and dries the bark themselves.
+    - `dried_mass_kg` is optional at creation; update it later once drying is complete.
+    - `process_stage` defaults to `"raw"` if not supplied.
+
+    **Scene 2 – Purchased** (`source="purchased"`):
+    - Bark was already dried by a supplier before purchase.
+    - `dried_mass_kg` should be provided (equals purchase weight).
+    - `process_stage` defaults to `"distilling"` (drying stage is auto-completed).
+
+    **Fields:**
+    - `batch_name`: Optional label for the batch
+    - `cinnamon_type`: Variety / type of cinnamon
+    - `mass_kg`: Raw/fresh weight at intake (kg)
+    - `dried_mass_kg`: Weight after drying (kg) — required for purchased, optional for own_farm
+    - `plant_part`: Plant part harvested
+    - `plant_age_years`: Age of tree at harvest
+    - `harvest_season`: Season description
+    - `source`: `"own_farm"` | `"purchased"`
+    - `process_stage`: `"raw"` | `"drying"` | `"distilling"` | `"quality_check"` | `"complete"`
     """
+    # Derive sensible defaults based on source
+    if payload.source == "purchased":
+        stage = payload.process_stage or "distilling"
+        # For purchased batches, dried_mass_kg defaults to mass_kg if not supplied
+        dried_kg = payload.dried_mass_kg if payload.dried_mass_kg is not None else payload.mass_kg
+    else:
+        stage = payload.process_stage or "raw"
+        dried_kg = payload.dried_mass_kg  # may be None; can be patched later
+
     try:
-        # Ensure table exists (in case app started before model import)
         MaterialBatch.__table__.create(session.get_bind(), checkfirst=True)
 
         batch = MaterialBatch(
             batch_name=payload.batch_name,
             cinnamon_type=payload.cinnamon_type,
-            mass_kg=payload.mass_kg,
+            mass_kg=payload.mass_kg if payload.mass_kg is not None else 0.0,
+            dried_mass_kg=dried_kg,
             plant_part=payload.plant_part,
             plant_age_years=payload.plant_age_years,
             harvest_season=payload.harvest_season,
+            source=payload.source,
+            process_stage=stage,
         )
         session.add(batch)
         session.commit()
@@ -275,18 +300,75 @@ def create_material_batch(payload: MaterialBatchCreate, session: Session = Depen
         raise HTTPException(status_code=500, detail=f"Failed to create material batch: {str(e)}")
 
 
+@router.put("/batch/{batch_id}", response_model=MaterialBatchRead)
+def update_material_batch(
+    batch_id: int,
+    payload: MaterialBatchUpdate,
+    session: Session = Depends(get_session),
+):
+    """
+    Partially update a material batch (all fields optional).
+
+    Common use cases:
+    - **Record dried weight** (own_farm): set `dried_mass_kg` — automatically advances
+      `process_stage` from `drying` → `distilling` if not overridden.
+    - **Advance pipeline stage**: set `process_stage` to the next stage value.
+    - **Edit any other field** without touching the rest.
+    """
+    batch = session.get(MaterialBatch, batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail=f"Batch {batch_id} not found")
+
+    update_data = payload.model_dump(exclude_unset=True)
+
+    # Auto-advance stage when dried_mass_kg is recorded on an own_farm/drying batch
+    if (
+        "dried_mass_kg" in update_data
+        and update_data["dried_mass_kg"] is not None
+        and "process_stage" not in update_data
+        and batch.source == "own_farm"
+        and batch.process_stage == "drying"
+    ):
+        update_data["process_stage"] = "distilling"
+
+    for field, value in update_data.items():
+        setattr(batch, field, value)
+
+    try:
+        session.add(batch)
+        session.commit()
+        session.refresh(batch)
+        return batch
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update batch: {str(e)}")
+
+
 @router.get("/batch", response_model=list[MaterialBatchRead])
-def list_material_batches(session: Session = Depends(get_session)):
+def list_material_batches(
+    source: str | None = None,
+    process_stage: str | None = None,
+    session: Session = Depends(get_session),
+):
     """
     List all material batch records, newest first.
+
+    **Optional query filters:**
+    - `source`: Filter by batch origin — `own_farm` or `purchased`
+    - `process_stage`: Filter by current pipeline stage — `raw`, `drying`, `distilling`, `quality_check`, `complete`
 
     Returns a list of `MaterialBatchRead` items.
     """
     try:
-        # Ensure table exists
         MaterialBatch.__table__.create(session.get_bind(), checkfirst=True)
 
-        stmt = select(MaterialBatch).order_by(MaterialBatch.created_at.desc())
+        stmt = select(MaterialBatch)
+        if source:
+            stmt = stmt.where(MaterialBatch.source == source)
+        if process_stage:
+            stmt = stmt.where(MaterialBatch.process_stage == process_stage)
+        stmt = stmt.order_by(MaterialBatch.created_at.desc())
+
         results = session.exec(stmt).all()
         return results
     except Exception as e:

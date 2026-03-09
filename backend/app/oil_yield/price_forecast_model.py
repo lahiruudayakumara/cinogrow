@@ -27,7 +27,7 @@ def load_price_data():
         raise ValueError("Dataset must contain a 'date' column.")
 
     # Parse dates robustly
-    df['date'] = pd.to_datetime(df['date'], errors='coerce', infer_datetime_format=True)
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
     df = df.dropna(subset=['date']).sort_values('date')
     df.set_index('date', inplace=True)
 

@@ -83,3 +83,29 @@ async def detect(
                 "language": lang,
             },
         )
+    
+@router.get("/pest-disease-detections")
+async def get_pest_disease_detections(user_id: str = Query(None), db: Session = Depends(get_db)):
+    query = db.query(PestDiseaseDetectionResult)
+    if user_id:
+        query = query.filter(PestDiseaseDetectionResult.user_id == user_id)
+    results = query.order_by(PestDiseaseDetectionResult.created_at.desc()).all()
+    return [
+        {
+            "id": r.id,
+            "user_id": r.user_id,
+            "status": r.status,
+            "name": r.name,
+            "confidence": r.confidence,
+            "severity": r.severity,
+            "recommendation": r.recommendation,
+            "category": r.category,
+            "affected_area": r.affected_area,
+            "symptoms": r.symptoms.split(",") if r.symptoms else [],
+            "cause": r.cause,
+            "life_cycle": r.life_cycle,
+            "message": r.message,
+            "created_at": r.created_at,
+        }
+        for r in results
+    ]

@@ -59,62 +59,37 @@ def get_quality_model():
 @router.post("/predict", response_model=OilYieldOutput)
 def predict_yield(data: OilYieldInput):
     """
-    Predict oil yield based on cinnamon characteristics.
-    
+    Predict leaf oil yield based on cinnamon characteristics.
+
     Parameters:
-    - dried_mass_kg: Dried mass of cinnamon in kilograms
+    - dried_mass_kg: Leaf dry weight in kilograms
     - species_variety: Cinnamon species (Sri Gemunu or Sri Vijaya)
-    - plant_part: Plant part used (Leaves & Twigs or Featherings & Chips)
-    - age_years: Age of the plant in years
-    - harvesting_season: Harvesting season
-    
+    - harvesting_season: Harvesting season (January-May or June-December)
+
     Returns predicted oil yield in liters.
     """
     model = get_model()
 
     # Encode categorical features
     species_encoded = 0 if data.species_variety == "Sri Gemunu" else 1
-    plant_part_encoded = 0 if data.plant_part == "Featherings & Chips" else 1
-    season_encoded = 0 if data.harvesting_season == "May–August" else 1
+    season_encoded = 0 if data.harvesting_season == "January-May" else 1
 
-    # Build features based on model expectation to avoid shape mismatch
-    try:
-        n_features = getattr(model, "n_features_in_", None)
-    except Exception:
-        n_features = None
-
-    if n_features == 4:
-        # Older model without season feature: [mass, species, part, age]
-        X = np.array([[
-            data.dried_mass_kg,
-            species_encoded,
-            plant_part_encoded,
-            data.age_years,
-        ]])
-        logger.info("Using 4-feature input vector for oil yield model (season excluded)")
-    else:
-        # Default/newer model with season feature: [mass, species, part, age, season]
-        X = np.array([[
-            data.dried_mass_kg,
-            species_encoded,
-            plant_part_encoded,
-            data.age_years,
-            season_encoded
-        ]])
-        if n_features is not None and n_features != 5:
-            logger.warning(f"Model expects {n_features} features; attempting with 5-feature vector.")
+    # Feature vector: [Leaf_Dry_Weight_kg, species_encoded, season_encoded]
+    X = np.array([[
+        data.dried_mass_kg,
+        species_encoded,
+        season_encoded,
+    ]])
 
     # Make prediction
     prediction = model.predict(X)[0]
-    
+
     return {
         "predicted_yield_liters": round(float(prediction), 2),
         "input_summary": {
             "dried_mass_kg": data.dried_mass_kg,
             "species_variety": data.species_variety,
-            "plant_part": data.plant_part,
-            "age_years": data.age_years,
-            "harvesting_season": data.harvesting_season
+            "harvesting_season": data.harvesting_season,
         }
     }
 
@@ -286,8 +261,6 @@ def create_material_batch(payload: MaterialBatchCreate, session: Session = Depen
             cinnamon_type=payload.cinnamon_type,
             mass_kg=payload.mass_kg if payload.mass_kg is not None else 0.0,
             dried_mass_kg=dried_kg,
-            plant_part=payload.plant_part,
-            plant_age_years=payload.plant_age_years,
             harvest_season=payload.harvest_season,
             source=payload.source,
             process_stage=stage,

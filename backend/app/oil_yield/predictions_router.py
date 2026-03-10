@@ -32,8 +32,6 @@ def save_yield_prediction(
         predicted_yield_liters=payload.predicted_yield_liters,
         dried_mass_kg=summary.get("dried_mass_kg", 0.0),
         species_variety=summary.get("species_variety", ""),
-        plant_part=summary.get("plant_part", ""),
-        age_years=summary.get("age_years", 0.0),
         harvesting_season=summary.get("harvesting_season", ""),
         recommendation_primary=rec.get("primary", ""),
         recommendation_tips=json.dumps(rec.get("tips", [])),

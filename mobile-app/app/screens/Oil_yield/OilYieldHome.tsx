@@ -1051,17 +1051,16 @@ export default function OilScreen() {
     }
     const normalizeSeasonForAPI = (v?: string): string => {
       const s = (v || "").toLowerCase();
-      return (s.includes("may") || s.includes("jun") || s.includes("jul") || s.includes("aug"))
-        ? "May\u2013August"
-        : "October\u2013December/January";
+      return (s.includes("jun") || s.includes("jul") || s.includes("aug") || s.includes("sep") ||
+              s.includes("oct") || s.includes("nov") || s.includes("dec"))
+        ? "June-December"
+        : "January-May";
     };
     setIsPredicting(true);
     try {
       const body = {
         dried_mass_kg:     driedMass,
         species_variety:   selectedBatch.cinnamonType ?? "",
-        plant_part:        selectedBatch.plantPart ?? "",
-        age_years:         selectedBatch.plantAgeYears ?? 0,
         harvesting_season: normalizeSeasonForAPI(selectedBatch.harvestSeason),
       };
       const res = await fetch(`${API_BASE_URL}/oil_yield/predict`, {

@@ -13,8 +13,6 @@ class OilYieldPrediction(SQLModel, table=True):
     # input_summary fields
     dried_mass_kg: float
     species_variety: str = Field(max_length=100)
-    plant_part: str = Field(max_length=100)
-    age_years: float
     harvesting_season: str = Field(max_length=100)
     # recommendation fields
     recommendation_primary: str

@@ -4,11 +4,9 @@ from typing import Literal
 from datetime import datetime
 
 class OilYieldInput(BaseModel):
-    dried_mass_kg: float = Field(..., description="Dried mass of cinnamon in kilograms", gt=0)
+    dried_mass_kg: float = Field(..., description="Leaf dry weight in kilograms", gt=0)
     species_variety: Literal["Sri Gemunu", "Sri Vijaya"] = Field(..., description="Cinnamon species and variety")
-    plant_part: Literal["Leaves & Twigs", "Featherings & Chips"] = Field(..., description="Part of the plant used")
-    age_years: float = Field(..., description="Age of the plant in years", gt=0)
-    harvesting_season: Literal["May–August", "October–December/January"] = Field(..., description="Harvesting season")
+    harvesting_season: Literal["January-May", "June-December"] = Field(..., description="Harvesting season")
 
 class OilYieldOutput(BaseModel):
     predicted_yield_liters: float = Field(..., description="Predicted oil yield in liters")
@@ -53,8 +51,6 @@ class MaterialBatchCreate(BaseModel):
         None, gt=0,
         description="Dried weight (kg). Required when source='purchased'; can be omitted for own_farm and updated later."
     )
-    plant_part: str = Field(..., description="Plant part used")
-    plant_age_years: float = Field(..., gt=0, description="Age of the plant in years")
     harvest_season: str = Field(..., description="Harvest season description")
     source: _BATCH_SOURCE = Field(
         "own_farm",
@@ -76,8 +72,6 @@ class MaterialBatchUpdate(BaseModel):
     cinnamon_type: str | None = Field(None, description="Cinnamon type or variety")
     mass_kg: float | None = Field(None, gt=0, description="Raw/fresh mass (kg)")
     dried_mass_kg: float | None = Field(None, gt=0, description="Dried weight (kg)")
-    plant_part: str | None = Field(None, description="Plant part used")
-    plant_age_years: float | None = Field(None, gt=0, description="Age of the plant in years")
     harvest_season: str | None = Field(None, description="Harvest season description")
     source: _BATCH_SOURCE | None = Field(None, description="'own_farm' or 'purchased'")
     process_stage: _PROCESS_STAGE | None = Field(
@@ -92,8 +86,6 @@ class MaterialBatchRead(BaseModel):
     cinnamon_type: str
     mass_kg: float
     dried_mass_kg: float | None
-    plant_part: str
-    plant_age_years: float
     harvest_season: str
     source: str
     process_stage: str
@@ -141,8 +133,6 @@ class OilYieldPredictionRead(BaseModel):
     predicted_yield_liters: float
     dried_mass_kg: float
     species_variety: str
-    plant_part: str
-    age_years: float
     harvesting_season: str
     recommendation_primary: str
     recommendation_tips: str

@@ -69,13 +69,13 @@ export default function OilYieldPredictorSecond() {
     fetchBatches();
   }, []);
 
-  const normalizeHarvestingSeasonForAPI = (value?: string): 'May\u2013August' | 'October\u2013December/January' => {
+  const normalizeHarvestingSeasonForAPI = (value?: string): 'January-May' | 'June-December' => {
     const v = (value || '').trim().toLowerCase();
-    if (v.includes('may') || v.includes('jun') || v.includes('jul') || v.includes('aug')) {
-      return 'May\u2013August';
+    if (v.includes('jun') || v.includes('jul') || v.includes('aug') || v.includes('sep') ||
+        v.includes('oct') || v.includes('nov') || v.includes('dec')) {
+      return 'June-December';
     }
-    // 'January\u2013April', 'jan', 'oct', 'nov', 'dec' all map to the second season
-    return 'October\u2013December/January';
+    return 'January-May';
   };
 
   const handlePredict = async () => {
@@ -104,8 +104,6 @@ export default function OilYieldPredictorSecond() {
     const requestBody = {
       dried_mass_kg: effectiveDriedMassKg,
       species_variety: selectedBatch.cinnamon_type,
-      plant_part: selectedBatch.plant_part,
-      age_years: selectedBatch.plant_age_years,
       harvesting_season: normalizeHarvestingSeasonForAPI(selectedBatch.harvest_season),
     };
 

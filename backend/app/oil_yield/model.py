@@ -4,110 +4,116 @@ import joblib
 import logging
 import warnings
 from xgboost import XGBRegressor
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.metrics import mean_absolute_error, r2_score
 from pathlib import Path
+import numpy as np
 
-# Suppress XGBoost warnings for model loading
+# Suppress XGBoost warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='xgboost')
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # Paths
 MODEL_PATH = Path(__file__).resolve().parent / "oil_yield_model.pkl"
-DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "cinnamon_oil_yield_dataset.csv"
+DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "sri_lankan_cinnamon_leaf_oil_yield.csv"
 
 def encode_features(df):
-    """
-    Encode categorical features to numeric values.
-    """
-    # Encode Species & Variety: Sri Gemunu = 0, Sri Vijaya = 1
-    df['species_encoded'] = df['Species & Variety'].map({
-        'Sri Gemunu': 0,
-        'Sri Vijaya': 1
-    })
-    
-    # Encode Plant Part: Featherings & Chips = 0, Leaves & Twigs = 1
-    df['plant_part_encoded'] = df['Plant Part'].map({
-        'Featherings & Chips': 0,
-        'Leaves & Twigs': 1
-    })
-    
-    # Encode Harvesting Season: May–August = 0, October–December/January = 1
-    df['season_encoded'] = df['Harvesting Season'].map({
-        'May–August': 0,
-        'October–December/January': 1
-    })
-    
+    df['species_encoded'] = df['Species_Variety'].map({'Sri Gemunu': 0, 'Sri Vijaya': 1})
+    df['season_encoded'] = df['Harvest_Season'].map({'January-May': 0, 'June-December': 1})
     return df
 
-logger = logging.getLogger(__name__)
+def train_model(force_retrain=True):
+    if MODEL_PATH.exists() and not force_retrain:
+        logger.info(f"Model already exists at {MODEL_PATH}, skipping training.")
+        return joblib.load(MODEL_PATH)
 
-def train_model():
-    """
-    Train an XGBoost model on real cinnamon oil yield data and save it as a .pkl file.
-    """
-    logger.info("🔧 Training new XGBoost model for oil yield prediction...")
-    
+    logger.info("🔧 Training new XGBoost model for cinnamon leaf oil yield...")
+
     # Load dataset
     data = pd.read_csv(DATA_PATH)
-    
-    # Encode categorical features
     data = encode_features(data)
-    
-    # Prepare features and target
-    X = data[['Dried Mass (kg)', 'species_encoded', 'plant_part_encoded', 
-              'Age (years)', 'season_encoded']]
-    y = data['Oil Yield (L)']
-    
-    # Split data
+
+    X = data[['Leaf_Dry_Weight_kg', 'species_encoded', 'season_encoded']]
+    y = data['Oil_Yield_L']
+
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
-    
-    # Train model
-    model = XGBRegressor(
-        n_estimators=200,
-        learning_rate=0.05,
-        max_depth=6,
-        random_state=42,
-        verbosity=0  # Suppress XGBoost warnings during training
+
+    # Grid search parameters
+    param_grid = {
+        'n_estimators': [200, 300, 400],
+        'learning_rate': [0.03, 0.05, 0.07],
+        'max_depth': [3, 4, 5],
+        'subsample': [0.8, 1.0],
+        'colsample_bytree': [0.8, 1.0]
+    }
+
+    xgb = XGBRegressor(random_state=42, verbosity=0)
+    grid_search = GridSearchCV(
+        estimator=xgb,
+        param_grid=param_grid,
+        cv=5,
+        scoring='r2',
+        n_jobs=-1
     )
-    model.fit(X_train, y_train)
-    
-    # Evaluate model
+
+    grid_search.fit(X_train, y_train)
+
+    # Best model
+    model = grid_search.best_estimator_
+    logger.info(f"🏆 Best hyperparameters: {grid_search.best_params_}")
+
+    # Test set evaluation
     y_pred = model.predict(X_test)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-    
-    # Save model using the current XGBoost version
-    joblib.dump(model, MODEL_PATH)
-    logger.info(f"✅ Model trained and saved at {MODEL_PATH}")
-    logger.info(f"📊 Model Performance:")
+    logger.info("📊 Test Set Performance:")
     logger.info(f"   - Mean Absolute Error: {mae:.3f} L")
     logger.info(f"   - R² Score: {r2:.3f}")
     logger.info(f"   - Training samples: {len(X_train)}")
     logger.info(f"   - Test samples: {len(X_test)}")
 
+    # Feature importance
+    fi = model.feature_importances_
+    features = ['Leaf_Dry_Weight_kg', 'species_encoded', 'season_encoded']
+    logger.info("🔑 Feature Importance:")
+    for f, v in zip(features, fi):
+        logger.info(f"   - {f}: {v:.4f}")
+
+    # 5-fold cross-validation on final model
+    cv_scores = cross_val_score(model, X, y, cv=5, scoring='r2', n_jobs=-1)
+    logger.info("📌 5-Fold Cross-Validation R²:")
+    logger.info(f"   - Scores: {[round(s, 4) for s in cv_scores]}")
+    logger.info(f"   - Mean R²: {cv_scores.mean():.4f}")
+    logger.info(f"   - Std R²: {cv_scores.std():.4f}")
+
+    # Save model
+    joblib.dump(model, MODEL_PATH)
+    logger.info(f"✅ Model saved at {MODEL_PATH}")
+
+    # Print final model object
+    print("\n--- FINAL MODEL OBJECT ---")
+    print(model)
+
+    return model
+
 def load_model():
-    """
-    Load the trained XGBoost model from disk.
-    If the model doesn't exist or fails to load due to version issues, train a new one.
-    """
     try:
         if not MODEL_PATH.exists():
-            logger.warning(f"⚠️ Model not found at {MODEL_PATH}. Training a new model...")
-            train_model()
-        
-        # Try to load the model
+            return train_model(force_retrain=True)
         model = joblib.load(MODEL_PATH)
         logger.info("✅ XGBoost model loaded successfully")
         return model
-        
     except Exception as e:
-        logger.warning(f"⚠️ Failed to load existing model ({str(e)}). Training a new model...")
-        # If loading fails (e.g., due to version compatibility), retrain the model
-        train_model()
-        return joblib.load(MODEL_PATH)
+        logger.warning(f"⚠️ Failed to load existing model ({e}), retraining...")
+        return train_model(force_retrain=True)
 
-# --- Run training if executed directly ---
 if __name__ == "__main__":
-    train_model()
+    train_model(force_retrain=True)

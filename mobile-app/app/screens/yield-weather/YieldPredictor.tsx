@@ -288,13 +288,13 @@ const YieldPredictorScreen = () => {
 
   const getPlotDropdownOptions = () => {
     if (!selectedFarmId) return [];
-    
+
     const filteredPlots = getFilteredPlots();
     // Include both MATURE and HARVESTING plots since mature plots are ready for harvest
-    const harvestReadyPlots = filteredPlots.filter(plot => 
+    const harvestReadyPlots = filteredPlots.filter(plot =>
       plot.status === 'HARVESTING' || plot.status === 'MATURE'
     );
-    
+
     return harvestReadyPlots.map(plot => ({
       label: plot.name,
       value: plot.id || 0,
@@ -334,14 +334,14 @@ const YieldPredictorScreen = () => {
     };
     setTreeData(updatedTrees);
     setShowImageUpload(false);
-    
+
     Alert.alert(
       t('yield_weather.my_yield.analysis_complete_title'),
-      t('yield_weather.my_yield.stem_data_filled_message_with_harvestable', { 
+      t('yield_weather.my_yield.stem_data_filled_message_with_harvestable', {
         total: result.total_stems,
         harvestable: result.harvestable_stems
-      }) || t('yield_weather.my_yield.stem_data_filled_message', { 
-        confidence: 85 
+      }) || t('yield_weather.my_yield.stem_data_filled_message', {
+        confidence: 85
       }),
       [{ text: 'OK' }]
     );
@@ -567,7 +567,7 @@ const YieldPredictorScreen = () => {
     // Check if plot meets criteria for hybrid prediction
     const plotAgeMonths = selectedPlot.age_months || 0;
     const plotAgeYears = plotAgeMonths / 12;
-    
+
     // Allow plots that are 2 years or older (24+ months)
     if (plotAgeYears < 2) {
       Alert.alert(
@@ -674,7 +674,7 @@ const YieldPredictorScreen = () => {
                         <Text style={styles.yieldPerHectare}>
                           ({hybridYieldResult.yieldPerHectare?.toFixed(1) || 'N/A'} {t('yield_weather.my_yield.kg_ha_suffix')})
                         </Text>
-                        
+
                         {/* Dry Yield and Market Value Section */}
                         <View style={styles.economicInfo}>
                           <View style={styles.infoRow}>
@@ -968,7 +968,7 @@ const YieldPredictorScreen = () => {
       <Modal
         animationType="slide"
         presentationStyle="pageSheet"
-        visible={showTreeInputModal}
+        visible={showTreeInputModal && !showImageUpload}
         onRequestClose={() => setShowTreeInputModal(false)}
       >
         <SafeAreaView style={styles.container}>
@@ -1048,17 +1048,17 @@ const YieldPredictorScreen = () => {
                         ]}
                         onPress={() => setUseImageUpload(false)}
                       >
-                        <Ionicons 
-                          name="create-outline" 
-                          size={20} 
-                          color={!useImageUpload ? "#FFFFFF" : "#4CAF50"} 
+                        <Ionicons
+                          name="create-outline"
+                          size={20}
+                          color={!useImageUpload ? "#FFFFFF" : "#4CAF50"}
                         />
                         <Text style={[
                           styles.inputMethodButtonText,
                           !useImageUpload && styles.inputMethodButtonTextActive
                         ]}>{t('yield_weather.my_yield.manual_input')}</Text>
                       </TouchableOpacity>
-                      
+
                       <TouchableOpacity
                         style={[
                           styles.inputMethodButton,
@@ -1069,10 +1069,10 @@ const YieldPredictorScreen = () => {
                           setShowImageUpload(true);
                         }}
                       >
-                        <Ionicons 
-                          name="camera-outline" 
-                          size={20} 
-                          color={useImageUpload ? "#FFFFFF" : "#4CAF50"} 
+                        <Ionicons
+                          name="camera-outline"
+                          size={20}
+                          color={useImageUpload ? "#FFFFFF" : "#4CAF50"}
                         />
                         <Text style={[
                           styles.inputMethodButtonText,
@@ -1218,7 +1218,7 @@ const YieldPredictorScreen = () => {
       {/* Tree Image Upload Modal */}
       <Modal
         animationType="slide"
-        transparent={false}
+        presentationStyle="fullScreen"
         visible={showImageUpload}
         onRequestClose={() => setShowImageUpload(false)}
       >

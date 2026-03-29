@@ -9,10 +9,8 @@ export type ProcessStage    = 'raw' | 'drying' | 'distilling' | 'quality_check' 
 export interface MaterialBatchCreate {
   batch_name?: string;
   cinnamon_type: string;
-  mass_kg: number;
+  mass_kg?: number;
   dried_mass_kg?: number;
-  plant_part: string;
-  plant_age_years: number;
   harvest_season: string;
   source: BatchSource;
   process_stage?: ProcessStage;
@@ -23,8 +21,6 @@ export interface MaterialBatchUpdate {
   cinnamon_type?: string;
   mass_kg?: number;
   dried_mass_kg?: number;
-  plant_part?: string;
-  plant_age_years?: number;
   harvest_season?: string;
   source?: BatchSource;
   process_stage?: ProcessStage;
@@ -36,8 +32,6 @@ export interface MaterialBatchRead {
   cinnamon_type: string;
   mass_kg: number;
   dried_mass_kg: number | null;
-  plant_part: string;
-  plant_age_years: number;
   harvest_season: string;
   source: BatchSource;
   process_stage: ProcessStage;

@@ -238,8 +238,6 @@ def create_material_batch(payload: MaterialBatchCreate, session: Session = Depen
     - `cinnamon_type`: Variety / type of cinnamon
     - `mass_kg`: Raw/fresh weight at intake (kg)
     - `dried_mass_kg`: Weight after drying (kg) — required for purchased, optional for own_farm
-    - `plant_part`: Plant part harvested
-    - `plant_age_years`: Age of tree at harvest
     - `harvest_season`: Season description
     - `source`: `"own_farm"` | `"purchased"`
     - `process_stage`: `"raw"` | `"drying"` | `"distilling"` | `"quality_check"` | `"complete"`
@@ -254,8 +252,6 @@ def create_material_batch(payload: MaterialBatchCreate, session: Session = Depen
         dried_kg = payload.dried_mass_kg  # may be None; can be patched later
 
     try:
-        MaterialBatch.__table__.create(session.get_bind(), checkfirst=True)
-
         batch = MaterialBatch(
             batch_name=payload.batch_name,
             cinnamon_type=payload.cinnamon_type,
@@ -270,6 +266,8 @@ def create_material_batch(payload: MaterialBatchCreate, session: Session = Depen
         session.refresh(batch)
         return batch
     except Exception as e:
+        session.rollback()
+        logger.error(f"Failed to create material batch: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to create material batch: {str(e)}")
 
 

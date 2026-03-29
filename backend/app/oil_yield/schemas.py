@@ -45,7 +45,7 @@ class MaterialBatchCreate(BaseModel):
     cinnamon_type: str = Field(..., description="Cinnamon type or variety")
     mass_kg: float | None = Field(
         None, ge=0,
-        description="Raw/fresh mass of material in kilograms. Omit or set to 0 for own_farm batches — actual weight is recorded later as dried_mass_kg."
+        description="Raw/fresh mass of material in kilograms. Optional for own_farm, required for purchased."
     )
     dried_mass_kg: float | None = Field(
         None, gt=0,

@@ -581,6 +581,64 @@ def future_forecast(
     }
 
 
+def forecast_prices(time_range: str = "months", steps: int | None = None):
+    """
+    Wrapper function to generate price forecasts.
+    
+    Parameters:
+    - time_range: One of 'days', 'months', or 'years'
+    - steps: Override the number of steps (optional)
+    
+    Returns:
+    - Dictionary with forecast data, dates, and statistics
+    """
+    try:
+        # Get data path
+        _DATA = Path(__file__).parent / "data_sets"
+        HIST = _DATA / "cinnamon_oil_prices_526.csv"
+        ACTUAL = _DATA / "Actual_Price.csv"
+        
+        # Load data
+        hist_series, actuals = load_data(str(HIST), str(ACTUAL) if ACTUAL.exists() else None)
+        
+        # Determine forecast horizon
+        if steps is None:
+            if time_range.lower() == "days":
+                steps = 7
+            elif time_range.lower() == "months":
+                steps = 5
+            elif time_range.lower() == "years":
+                steps = 52
+            else:
+                steps = 5
+        
+        # Train Holt-Winters model
+        hw = HoltWintersDamped(lam=0.997)
+        hw.fit(hist_series.values)
+        
+        # Train LightGBM model
+        lgbm = LGBMResidualModel(n_estimators=500, quantile_lo=0.05, quantile_hi=0.95)
+        lgbm.fit(hist_series, hw)
+        
+        # Generate forecast
+        result = future_forecast(hist_series, hw, lgbm, h=steps)
+        
+        # Format output
+        return {
+            "forecast": result['fc'].tolist(),
+            "dates": result['dates'].strftime('%Y-%m-%d').tolist(),
+            "statistics": {
+                "mean": float(result['fc'].mean()),
+                "min": float(result['fc'].min()),
+                "max": float(result['fc'].max()),
+                "lower_bound": result['bl_lo90'].tolist(),
+                "upper_bound": result['bl_hi90'].tolist(),
+            }
+        }
+    except Exception as e:
+        raise Exception(f"Error in price forecasting: {str(e)}")
+
+
 if __name__ == "__main__":
     _DATA  = Path(__file__).parent / "data_sets"
     HIST   = _DATA / "cinnamon_oil_prices_526.csv"

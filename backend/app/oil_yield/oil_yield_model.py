@@ -21,11 +21,28 @@ logger = logging.getLogger(__name__)
 
 # Paths
 MODEL_PATH = Path(__file__).resolve().parent / "oil_yield_model.pkl"
-DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "sri_lankan_cinnamon_leaf_oil_yield.csv"
+DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "cinnamon_oil_yield_dataset.csv"
 
 def encode_features(df):
+    """Normalize column names and encode categorical features"""
+    # Rename columns to standard names
+    df = df.rename(columns={
+        'Dried Mass (kg)': 'Leaf_Dry_Weight_kg',
+        'Species & Variety': 'Species_Variety',
+        'Harvesting Season': 'Harvest_Season',
+        'Oil Yield (L)': 'Oil_Yield_L'
+    })
+    
+    # Encode species
     df['species_encoded'] = df['Species_Variety'].map({'Sri Gemunu': 0, 'Sri Vijaya': 1})
-    df['season_encoded'] = df['Harvest_Season'].map({'January-May': 0, 'June-December': 1})
+    
+    # Map harvest seasons to normalized format
+    season_mapping = {
+        'October–December/January': 0,  # Early season → January-May equivalent
+        'May–August': 1                  # Late season → June-December equivalent
+    }
+    df['season_encoded'] = df['Harvest_Season'].map(season_mapping)
+    
     return df
 
 def train_model(force_retrain=True):

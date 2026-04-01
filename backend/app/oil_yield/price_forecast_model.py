@@ -48,8 +48,14 @@ import lightgbm as lgb
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from scipy import stats
 from statsmodels.tsa.stattools import adfuller, kpss
+import joblib
 
 warnings.filterwarnings("ignore")
+
+# ── Model persistence paths ──────────────────────────────────────────────────
+MODEL_DIR = Path(__file__).resolve().parent
+PRICE_FORECAST_MODEL_PATH = MODEL_DIR / "price_forecast_model.pkl"
+PRICE_FORECAST_META_PATH = MODEL_DIR / "price_forecast_model_meta.pkl"
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -85,6 +91,92 @@ SELL_THRESHOLD_PCT : float = -0.30   # %/week
 CONFIDENCE_MIN     : float =  0.50   # Below this → downgrade to WATCH
 N_BOOTSTRAP        : int   = 2000
 BOOTSTRAP_SEED     : int   = 42
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# §1.5  MODEL PERSISTENCE UTILITIES
+# ══════════════════════════════════════════════════════════════════════════════
+
+def save_pretrained_model(model: lgb.LGBMRegressor,
+                          model_metadata: Dict,
+                          force_overwrite: bool = True) -> Path:
+    """
+    Save pre-trained LightGBM model and metadata to disk for production use.
+    
+    Model persistence enables fast loading (~100ms) instead of retraining (~30s).
+    
+    Parameters
+    ──────────
+    model : Trained LightGBM regressor
+    model_metadata : Dict with training info (feature_columns, train/val metrics, etc.)
+    force_overwrite : If True, overwrite existing model files
+    
+    Returns
+    ───────
+    Path to saved model file
+    
+    Example
+    ───────
+    >>> save_pretrained_model(trained_lgbm, {"features": feat_cols, "mape": 3.67})
+    PosixPath('/path/to/price_forecast_model.pkl')
+    """
+    try:
+        # Save model
+        joblib.dump(model, PRICE_FORECAST_MODEL_PATH, compress=3)
+        
+        # Save metadata
+        joblib.dump(model_metadata, PRICE_FORECAST_META_PATH, compress=3)
+        
+        model_size_mb = PRICE_FORECAST_MODEL_PATH.stat().st_size / (1024 ** 2)
+        print(f"✅ Pre-trained model saved")
+        print(f"   Model: {PRICE_FORECAST_MODEL_PATH} ({model_size_mb:.2f} MB)")
+        print(f"   Meta:  {PRICE_FORECAST_META_PATH}")
+        return PRICE_FORECAST_MODEL_PATH
+    except Exception as e:
+        print(f"⚠️  Failed to save model: {e}")
+        raise
+
+
+def load_pretrained_model() -> Optional[Tuple[lgb.LGBMRegressor, Dict]]:
+    """
+    Load pre-trained LightGBM model from disk for fast inference.
+    
+    Fast loading (~100ms) vs. full training (~30s), making it suitable for:
+    - API request handling
+    - Real-time forecasting endpoints
+    - Scheduled batch predictions
+    
+    Returns
+    ───────
+    Tuple[model, metadata] if both files exist, else None
+    
+    Example
+    ───────
+    >>> model, meta = load_pretrained_model()
+    >>> if model is not None:
+    ...     preds = model.predict(X_test)
+    """
+    try:
+        if not PRICE_FORECAST_MODEL_PATH.exists():
+            print(f"⚠️  Pre-trained model not found at {PRICE_FORECAST_MODEL_PATH}")
+            return None
+        
+        model = joblib.load(PRICE_FORECAST_MODEL_PATH)
+        
+        metadata = {}
+        if PRICE_FORECAST_META_PATH.exists():
+            metadata = joblib.load(PRICE_FORECAST_META_PATH)
+        
+        model_size_mb = PRICE_FORECAST_MODEL_PATH.stat().st_size / (1024 ** 2)
+        print(f"✅ Pre-trained model loaded successfully")
+        print(f"   Model: {PRICE_FORECAST_MODEL_PATH} ({model_size_mb:.2f} MB)")
+        if metadata.get("holdout_mape"):
+            print(f"   Validation MAPE: {metadata['holdout_mape']:.4f}%")
+        
+        return model, metadata
+    except Exception as e:
+        print(f"⚠️  Failed to load pre-trained model: {e}")
+        return None
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -769,6 +861,24 @@ def run_full_pipeline(csv_path:      str,
         "feature_ablation"        : ablation,
     }
 
+    # ── Save pre-trained model for production ─────────────────────────────────
+    log("[11/10] Saving pre-trained model ...")
+    model_metadata = {
+        "feature_columns"    : feat_cols,
+        "holdout_mae"        : holdout_met["mae"],
+        "holdout_rmse"       : holdout_met["rmse"],
+        "holdout_mape"       : holdout_met["mape"],
+        "residual_std"       : sigma_res,
+        "conformal_q_hat"    : q_hat,
+        "empirical_coverage" : emp_cov,
+        "n_calibration"      : n_cal,
+        "training_date"      : str(pd.Timestamp.now()),
+        "n_train_samples"    : int(split),
+        "n_val_samples"      : int(len(y_va)),
+    }
+    save_pretrained_model(model, model_metadata)
+    report["model_save_path"] = str(PRICE_FORECAST_MODEL_PATH)
+
     if verbose:
         _print_summary(report)
     return report
@@ -839,6 +949,9 @@ def forecast_prices(time_range: str = "weeks", steps: int = 4) -> Dict:
     """
     API wrapper for price forecasting.
     
+    Attempts to load pre-trained model first for fast inference (~100ms),
+    falling back to full pipeline if model doesn't exist.
+    
     Args:
         time_range: "weeks", "months", or "custom"
         steps: Number of periods to forecast (default 4)
@@ -863,7 +976,62 @@ def forecast_prices(time_range: str = "weeks", steps: int = 4) -> Dict:
             break
     
     try:
-        # Try to load from CSV if it exists
+        # First, try to use pre-trained model for fast inference
+        pretrained = load_pretrained_model()
+        if pretrained is not None:
+            model, model_meta = pretrained
+            feat_cols = model_meta.get("feature_columns", [])
+            
+            if csv_path and feat_cols:
+                try:
+                    df = load_price_data(csv_path)
+                    df_feat = engineer_features(df)
+                    df_model = df_feat.dropna().reset_index(drop=True)
+                    X_tr = df_model[feat_cols].values
+                    
+                    # Run iterative forecast with pre-trained model
+                    fut_dates, fut_prices = iterative_forecast(model, df, feat_cols, X_tr)
+                    
+                    # Use conformal intervals from calibration
+                    q_hat = model_meta.get("conformal_q_hat", 250.0)
+                    ci_lo, ci_hi = conformal_step_ci(fut_prices, q_hat)
+                    
+                    # Generate signal
+                    last_p = float(df["price_lkr"].iloc[-1])
+                    residuals = np.random.normal(0, model_meta.get("residual_std", 100), 100)
+                    signal = generate_confident_signal(
+                        fut_prices, fut_dates, last_p,
+                        ci_lo, ci_hi, residuals,
+                    )
+                    
+                    # Build forecast list
+                    weekly_data = signal.get("weekly_breakdown", [])
+                    forecast_prices_list = [w.get("price_lkr", 0) for w in weekly_data[:steps]]
+                    forecast_dates = [w.get("date", "") for w in weekly_data[:steps]]
+                    
+                    if forecast_prices_list:
+                        statistics = {
+                            "mean": float(np.mean(forecast_prices_list)),
+                            "min": float(np.min(forecast_prices_list)),
+                            "max": float(np.max(forecast_prices_list)),
+                            "std": float(np.std(forecast_prices_list)),
+                            "trend": signal.get("trend", "NEUTRAL"),
+                            "signal": signal.get("signal", "WATCH"),
+                            "confidence": signal.get("confidence", 0),
+                            "source": "pre-trained model (fast)",
+                        }
+                    else:
+                        statistics = {"mean": 0, "min": 0, "max": 0, "std": 0}
+                    
+                    return {
+                        "forecast": forecast_prices_list,
+                        "dates": [str(d) for d in forecast_dates],
+                        "statistics": statistics,
+                    }
+                except Exception as e:
+                    print(f"⚠️  Pre-trained model inference failed: {e}, falling back to full pipeline...")
+        
+        # Fallback: Try to load from CSV if it exists
         if csv_path:
             report = run_full_pipeline(csv_path, run_ablation=False, verbose=False)
             
@@ -886,6 +1054,7 @@ def forecast_prices(time_range: str = "weeks", steps: int = 4) -> Dict:
                     "trend": decision.get("trend", "NEUTRAL"),
                     "signal": decision.get("signal", "WATCH"),
                     "confidence": decision.get("confidence", 0),
+                    "source": "full pipeline (trained)",
                 }
             else:
                 statistics = {"mean": 0, "min": 0, "max": 0, "std": 0}

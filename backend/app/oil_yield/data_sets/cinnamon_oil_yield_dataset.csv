@@ -1,101 +1,521 @@
-Dried Mass (kg),Species & Variety,Plant Part,Age (years),Harvesting Season,Oil Yield (L)
-165.3,Sri Gemunu,Leaves & Twigs,2.1,October–December/January,3.12
-118.9,Sri Vijaya,Featherings & Chips,4.5,October–December/January,0.92
-139.6,Sri Gemunu,Featherings & Chips,3.3,May–August,1.33
-125.3,Sri Gemunu,Featherings & Chips,4.0,May–August,1.28
-120.5,Sri Gemunu,Featherings & Chips,5.6,October–December/January,1.13
-192.5,Sri Vijaya,Featherings & Chips,3.0,October–December/January,1.68
-167.9,Sri Gemunu,Featherings & Chips,3.6,October–December/January,1.78
-115.4,Sri Gemunu,Featherings & Chips,5.0,October–December/January,1.13
-195.0,Sri Gemunu,Featherings & Chips,2.9,October–December/January,1.78
-265.4,Sri Vijaya,Leaves & Twigs,2.3,October–December/January,4.53
-190.6,Sri Gemunu,Featherings & Chips,3.2,May–August,1.9
-135.7,Sri Gemunu,Leaves & Twigs,2.6,October–December/January,2.59
-108.6,Sri Gemunu,Featherings & Chips,5.7,October–December/January,1.0
-122.0,Sri Gemunu,Featherings & Chips,5.2,May–August,1.18
-358.3,Sri Vijaya,Leaves & Twigs,4.5,May–August,5.73
-180.5,Sri Gemunu,Featherings & Chips,5.5,May–August,1.81
-112.2,Sri Vijaya,Leaves & Twigs,5.2,May–August,1.75
-155.9,Sri Vijaya,Featherings & Chips,2.7,October–December/January,1.29
-213.9,Sri Vijaya,Featherings & Chips,5.6,October–December/January,1.62
-301.4,Sri Gemunu,Leaves & Twigs,4.2,October–December/January,5.39
-177.4,Sri Vijaya,Featherings & Chips,5.2,October–December/January,1.43
-600.0,Sri Gemunu,Leaves & Twigs,5.6,October–December/January,11.08
-139.1,Sri Vijaya,Featherings & Chips,3.3,October–December/January,1.15
-363.6,Sri Vijaya,Leaves & Twigs,2.4,May–August,5.49
-345.4,Sri Vijaya,Leaves & Twigs,2.9,October–December/January,5.1
-190.7,Sri Vijaya,Featherings & Chips,3.7,May–August,1.62
-215.3,Sri Vijaya,Featherings & Chips,5.3,May–August,1.75
-325.9,Sri Vijaya,Leaves & Twigs,5.4,October–December/January,5.02
-184.1,Sri Vijaya,Featherings & Chips,2.0,May–August,1.59
-134.5,Sri Vijaya,Featherings & Chips,4.0,October–December/January,1.08
-166.2,Sri Gemunu,Featherings & Chips,3.7,May–August,1.76
-258.2,Sri Gemunu,Leaves & Twigs,2.9,October–December/January,4.66
-481.5,Sri Vijaya,Leaves & Twigs,2.5,May–August,8.5
-63.3,Sri Vijaya,Leaves & Twigs,3.4,October–December/January,1.1
-318.6,Sri Vijaya,Leaves & Twigs,5.8,October–December/January,5.03
-88.7,Sri Gemunu,Leaves & Twigs,3.3,October–December/January,1.67
-202.8,Sri Vijaya,Leaves & Twigs,4.1,October–December/January,3.35
-358.9,Sri Gemunu,Leaves & Twigs,4.8,October–December/January,6.9
-256.4,Sri Gemunu,Leaves & Twigs,3.5,May–August,4.39
-142.2,Sri Gemunu,Leaves & Twigs,5.9,May–August,2.65
-181.2,Sri Gemunu,Featherings & Chips,5.8,May–August,1.91
-318.0,Sri Gemunu,Leaves & Twigs,3.0,October–December/January,5.22
-149.4,Sri Vijaya,Featherings & Chips,4.0,May–August,1.12
-105.1,Sri Vijaya,Featherings & Chips,3.2,October–December/January,0.76
-153.8,Sri Vijaya,Featherings & Chips,3.1,October–December/January,1.21
-184.8,Sri Vijaya,Leaves & Twigs,2.1,May–August,3.06
-464.4,Sri Vijaya,Leaves & Twigs,4.4,May–August,7.99
-313.4,Sri Gemunu,Leaves & Twigs,4.0,October–December/January,5.66
-50.0,Sri Vijaya,Leaves & Twigs,2.2,May–August,0.87
-133.9,Sri Vijaya,Featherings & Chips,3.1,October–December/January,1.0
-183.8,Sri Gemunu,Leaves & Twigs,5.6,October–December/January,3.03
-335.2,Sri Vijaya,Leaves & Twigs,3.0,October–December/January,5.35
-170.7,Sri Gemunu,Leaves & Twigs,2.6,October–December/January,3.13
-238.5,Sri Vijaya,Leaves & Twigs,4.0,October–December/January,3.81
-300.5,Sri Gemunu,Leaves & Twigs,5.9,May–August,4.85
-124.7,Sri Vijaya,Featherings & Chips,3.0,May–August,0.99
-130.0,Sri Vijaya,Leaves & Twigs,4.7,October–December/January,1.94
-161.6,Sri Gemunu,Featherings & Chips,5.0,October–December/January,1.67
-202.5,Sri Gemunu,Leaves & Twigs,3.0,May–August,3.71
-79.6,Sri Gemunu,Featherings & Chips,4.9,May–August,0.76
-426.5,Sri Gemunu,Leaves & Twigs,3.5,October–December/January,7.48
-290.5,Sri Gemunu,Leaves & Twigs,4.5,May–August,4.95
-165.5,Sri Gemunu,Featherings & Chips,4.5,October–December/January,1.65
-223.8,Sri Gemunu,Featherings & Chips,4.1,May–August,2.34
-192.9,Sri Gemunu,Featherings & Chips,2.4,October–December/January,1.83
-353.2,Sri Vijaya,Leaves & Twigs,5.3,May–August,5.79
-149.0,Sri Vijaya,Featherings & Chips,3.3,October–December/January,1.16
-201.6,Sri Gemunu,Leaves & Twigs,2.7,May–August,3.48
-376.7,Sri Vijaya,Leaves & Twigs,2.2,May–August,5.99
-135.6,Sri Vijaya,Featherings & Chips,4.4,October–December/January,1.03
-166.1,Sri Vijaya,Featherings & Chips,4.7,May–August,1.29
-327.5,Sri Vijaya,Leaves & Twigs,2.1,October–December/January,4.93
-157.3,Sri Gemunu,Leaves & Twigs,4.0,May–August,3.11
-226.6,Sri Vijaya,Featherings & Chips,2.9,October–December/January,1.82
-144.6,Sri Gemunu,Featherings & Chips,4.6,May–August,1.4
-170.1,Sri Vijaya,Featherings & Chips,2.7,October–December/January,1.38
-224.7,Sri Vijaya,Leaves & Twigs,4.8,May–August,3.58
-125.2,Sri Vijaya,Leaves & Twigs,3.5,October–December/January,1.98
-413.2,Sri Gemunu,Leaves & Twigs,5.7,May–August,7.67
-107.0,Sri Vijaya,Leaves & Twigs,2.6,October–December/January,1.78
-206.0,Sri Gemunu,Leaves & Twigs,3.4,October–December/January,3.61
-263.1,Sri Vijaya,Leaves & Twigs,2.5,October–December/January,4.09
-151.2,Sri Gemunu,Featherings & Chips,5.7,May–August,1.49
-106.4,Sri Vijaya,Leaves & Twigs,5.5,October–December/January,1.51
-366.3,Sri Gemunu,Leaves & Twigs,3.0,May–August,6.09
-251.0,Sri Gemunu,Leaves & Twigs,4.6,October–December/January,4.83
-257.7,Sri Vijaya,Featherings & Chips,5.3,May–August,2.23
-296.2,Sri Gemunu,Leaves & Twigs,4.2,October–December/January,5.27
-269.9,Sri Vijaya,Leaves & Twigs,4.1,May–August,4.44
-159.2,Sri Vijaya,Featherings & Chips,3.0,May–August,1.29
-257.0,Sri Vijaya,Leaves & Twigs,2.4,October–December/January,4.75
-211.5,Sri Vijaya,Leaves & Twigs,5.6,May–August,3.57
-261.4,Sri Vijaya,Leaves & Twigs,5.6,May–August,4.16
-316.2,Sri Vijaya,Leaves & Twigs,4.5,October–December/January,4.82
-408.6,Sri Vijaya,Leaves & Twigs,3.4,May–August,6.01
-123.7,Sri Vijaya,Featherings & Chips,3.4,May–August,1.0
-112.0,Sri Vijaya,Featherings & Chips,4.9,May–August,0.86
-157.5,Sri Vijaya,Featherings & Chips,5.6,October–December/January,1.17
-234.8,Sri Vijaya,Leaves & Twigs,5.5,May–August,3.64
-308.8,Sri Gemunu,Leaves & Twigs,5.1,October–December/January,5.26
+Leaf_Dry_Weight_kg,Species_Variety,Harvest_Season,Oil_Yield_kg
+123.16,Sri Gemunu,October–December/January,2.54
+150.88,Sri Vijaya,May–August,3.745
+98.64,Sri Vijaya,October–December/January,1.975
+159.83,Sri Vijaya,October–December/January,2.844
+141.38,Sri Gemunu,October–December/January,2.966
+149.89,Sri Gemunu,May–August,3.218
+141.46,Sri Gemunu,May–August,3.221
+99.1,Sri Vijaya,May–August,1.804
+108.37,Sri Vijaya,May–August,2.163
+83.37,Sri Vijaya,October–December/January,1.245
+159.02,Sri Gemunu,October–December/January,2.787
+97.46,Sri Vijaya,October–December/January,1.607
+142.91,Sri Vijaya,October–December/January,2.633
+155.58,Sri Gemunu,October–December/January,3.091
+129.07,Sri Gemunu,October–December/January,3.219
+98.45,Sri Gemunu,October–December/January,2.501
+97.64,Sri Gemunu,October–December/January,2.254
+84.63,Sri Vijaya,May–August,1.878
+150.7,Sri Gemunu,May–August,3.931
+135.68,Sri Gemunu,May–August,3.104
+145.27,Sri Vijaya,October–December/January,2.421
+127.44,Sri Gemunu,October–December/January,2.6
+87.32,Sri Gemunu,May–August,2.17
+151.1,Sri Gemunu,October–December/January,3.682
+148.97,Sri Gemunu,October–December/January,3.495
+86.96,Sri Vijaya,May–August,2.129
+109.82,Sri Gemunu,May–August,3.152
+86.48,Sri Vijaya,October–December/January,1.344
+134.66,Sri Vijaya,May–August,2.381
+145.97,Sri Gemunu,October–December/January,2.849
+134.24,Sri Vijaya,May–August,2.682
+143.79,Sri Gemunu,October–December/January,3.375
+148.05,Sri Gemunu,October–December/January,3.507
+135.8,Sri Vijaya,October–December/January,2.687
+129.49,Sri Vijaya,October–December/January,2.261
+149.75,Sri Vijaya,May–August,3.372
+146.07,Sri Gemunu,May–August,3.807
+92.86,Sri Gemunu,May–August,2.326
+146.57,Sri Vijaya,October–December/January,2.51
+129.35,Sri Gemunu,October–December/January,2.971
+130.55,Sri Gemunu,October–December/January,3.128
+142.39,Sri Gemunu,May–August,3.181
+140.88,Sri Gemunu,May–August,3.878
+130.61,Sri Vijaya,May–August,3.064
+88.2,Sri Gemunu,May–August,2.3
+104.08,Sri Vijaya,October–December/January,2.002
+85.39,Sri Gemunu,May–August,1.897
+83.66,Sri Vijaya,May–August,2.106
+157.88,Sri Vijaya,October–December/January,2.808
+81.77,Sri Gemunu,May–August,2.031
+119.09,Sri Vijaya,May–August,2.841
+101.89,Sri Vijaya,October–December/January,2.155
+114.09,Sri Vijaya,May–August,2.354
+135.49,Sri Vijaya,October–December/January,2.315
+86.59,Sri Vijaya,October–December/January,1.714
+156.07,Sri Vijaya,October–December/January,3.109
+114.59,Sri Gemunu,May–August,3.035
+111.81,Sri Gemunu,October–December/January,2.586
+158.72,Sri Gemunu,May–August,4.477
+97.05,Sri Gemunu,May–August,2.431
+132.13,Sri Gemunu,May–August,3.808
+157.46,Sri Gemunu,October–December/January,3.23
+149.49,Sri Vijaya,May–August,3.678
+140.88,Sri Gemunu,May–August,4.023
+90.5,Sri Gemunu,October–December/January,2.27
+89.38,Sri Vijaya,May–August,2.032
+134.85,Sri Gemunu,May–August,3.113
+85.14,Sri Vijaya,May–August,1.876
+101.52,Sri Gemunu,May–August,2.52
+80.93,Sri Vijaya,May–August,1.913
+111.4,Sri Vijaya,May–August,3.011
+135.6,Sri Gemunu,October–December/January,2.913
+142.39,Sri Gemunu,May–August,3.652
+99.36,Sri Vijaya,May–August,2.219
+91.4,Sri Vijaya,October–December/January,2.121
+124.77,Sri Vijaya,May–August,2.679
+106.12,Sri Vijaya,October–December/January,1.692
+82.66,Sri Gemunu,May–August,2.129
+111.75,Sri Gemunu,May–August,3.058
+144.05,Sri Gemunu,May–August,3.348
+93.4,Sri Vijaya,May–August,2.192
+82.53,Sri Vijaya,May–August,1.797
+84.16,Sri Gemunu,May–August,2.674
+137.13,Sri Gemunu,May–August,3.839
+107.16,Sri Gemunu,May–August,2.938
+116.19,Sri Gemunu,May–August,3.388
+122.11,Sri Vijaya,May–August,2.55
+99.77,Sri Vijaya,May–August,2.218
+149.74,Sri Vijaya,May–August,3.147
+132.7,Sri Gemunu,October–December/January,2.743
+124.43,Sri Gemunu,May–August,3.131
+157.98,Sri Vijaya,October–December/January,3.129
+95.96,Sri Vijaya,October–December/January,1.541
+100.61,Sri Vijaya,May–August,2.299
+149.46,Sri Vijaya,October–December/January,2.947
+107.67,Sri Gemunu,October–December/January,2.576
+159.01,Sri Vijaya,May–August,3.153
+118.93,Sri Gemunu,May–August,3.836
+152.06,Sri Gemunu,October–December/January,2.753
+152.99,Sri Gemunu,October–December/January,3.058
+129.84,Sri Gemunu,May–August,3.792
+137.27,Sri Vijaya,May–August,3.414
+94.37,Sri Gemunu,May–August,2.576
+99.78,Sri Vijaya,May–August,2.261
+115.62,Sri Vijaya,October–December/January,1.586
+93.08,Sri Gemunu,May–August,2.501
+157.55,Sri Gemunu,May–August,4.438
+141.88,Sri Vijaya,October–December/January,2.096
+157.59,Sri Gemunu,May–August,3.429
+93.58,Sri Gemunu,May–August,2.42
+106.96,Sri Gemunu,October–December/January,2.23
+129.37,Sri Gemunu,October–December/January,3.299
+93.36,Sri Vijaya,May–August,2.254
+147.53,Sri Vijaya,May–August,3.77
+126.83,Sri Vijaya,May–August,2.678
+101.58,Sri Vijaya,May–August,2.273
+122.49,Sri Vijaya,May–August,2.83
+105.29,Sri Gemunu,May–August,2.519
+83.33,Sri Vijaya,May–August,1.959
+116.38,Sri Vijaya,May–August,2.727
+119.11,Sri Vijaya,May–August,2.36
+104.63,Sri Vijaya,May–August,2.482
+96.15,Sri Gemunu,May–August,2.604
+149.45,Sri Gemunu,May–August,3.621
+135.41,Sri Gemunu,May–August,3.61
+149.51,Sri Gemunu,October–December/January,4.059
+82.43,Sri Vijaya,October–December/January,1.545
+97.25,Sri Vijaya,October–December/January,1.869
+111.51,Sri Gemunu,October–December/January,2.273
+159.95,Sri Vijaya,May–August,3.549
+158.17,Sri Gemunu,May–August,4.678
+125.36,Sri Gemunu,May–August,3.303
+150.28,Sri Gemunu,October–December/January,2.724
+144.63,Sri Gemunu,October–December/January,2.92
+143.83,Sri Vijaya,May–August,3.498
+123.56,Sri Gemunu,May–August,3.071
+105.97,Sri Vijaya,May–August,2.155
+111.08,Sri Vijaya,May–August,2.123
+99.0,Sri Gemunu,October–December/January,1.774
+128.28,Sri Vijaya,October–December/January,2.198
+129.56,Sri Vijaya,May–August,2.426
+121.53,Sri Gemunu,October–December/January,2.461
+82.05,Sri Gemunu,October–December/January,1.551
+126.41,Sri Gemunu,May–August,2.874
+128.63,Sri Gemunu,May–August,3.684
+156.44,Sri Gemunu,May–August,4.22
+95.66,Sri Vijaya,May–August,2.186
+84.82,Sri Vijaya,May–August,2.049
+108.13,Sri Gemunu,May–August,2.804
+102.79,Sri Gemunu,May–August,2.44
+144.24,Sri Vijaya,May–August,2.726
+137.29,Sri Gemunu,October–December/January,3.094
+113.08,Sri Gemunu,May–August,3.0
+94.52,Sri Gemunu,May–August,2.472
+136.72,Sri Vijaya,May–August,3.054
+157.03,Sri Gemunu,October–December/January,3.082
+144.48,Sri Vijaya,May–August,3.122
+156.11,Sri Vijaya,May–August,3.564
+145.54,Sri Gemunu,October–December/January,3.015
+128.88,Sri Vijaya,October–December/January,2.4
+147.19,Sri Gemunu,October–December/January,3.059
+142.44,Sri Vijaya,May–August,3.355
+145.81,Sri Vijaya,May–August,3.693
+129.91,Sri Vijaya,October–December/January,2.111
+126.93,Sri Gemunu,October–December/January,3.051
+97.34,Sri Vijaya,October–December/January,1.53
+81.89,Sri Gemunu,October–December/January,2.06
+98.56,Sri Gemunu,May–August,2.99
+127.56,Sri Gemunu,October–December/January,2.814
+135.61,Sri Vijaya,May–August,3.025
+114.26,Sri Vijaya,May–August,2.906
+90.27,Sri Gemunu,May–August,2.57
+137.95,Sri Vijaya,May–August,2.54
+86.85,Sri Gemunu,May–August,2.492
+95.35,Sri Vijaya,May–August,1.908
+85.55,Sri Gemunu,October–December/January,1.733
+85.41,Sri Vijaya,May–August,1.822
+150.41,Sri Gemunu,October–December/January,3.618
+122.64,Sri Vijaya,May–August,2.513
+159.53,Sri Gemunu,May–August,3.787
+124.62,Sri Gemunu,May–August,3.112
+124.98,Sri Gemunu,May–August,3.966
+94.02,Sri Vijaya,May–August,1.936
+87.73,Sri Vijaya,May–August,2.076
+140.49,Sri Gemunu,May–August,4.268
+154.17,Sri Vijaya,October–December/January,2.319
+111.95,Sri Vijaya,May–August,2.612
+121.68,Sri Vijaya,October–December/January,2.41
+87.13,Sri Vijaya,May–August,1.925
+142.56,Sri Gemunu,October–December/January,3.325
+82.89,Sri Gemunu,October–December/January,1.579
+87.01,Sri Vijaya,October–December/January,1.487
+124.3,Sri Vijaya,May–August,2.573
+128.05,Sri Vijaya,May–August,2.475
+153.55,Sri Gemunu,May–August,4.274
+96.68,Sri Gemunu,October–December/January,2.21
+89.31,Sri Vijaya,October–December/January,1.597
+149.44,Sri Vijaya,October–December/January,3.13
+143.2,Sri Vijaya,May–August,3.049
+93.88,Sri Vijaya,October–December/January,1.682
+107.69,Sri Vijaya,October–December/January,2.019
+90.6,Sri Gemunu,May–August,2.505
+153.82,Sri Gemunu,May–August,5.106
+93.99,Sri Vijaya,October–December/January,1.636
+111.89,Sri Vijaya,October–December/January,1.834
+82.06,Sri Gemunu,October–December/January,1.542
+157.05,Sri Gemunu,May–August,4.34
+104.95,Sri Vijaya,October–December/January,1.902
+115.16,Sri Gemunu,May–August,3.068
+129.57,Sri Gemunu,May–August,3.215
+92.16,Sri Vijaya,May–August,2.038
+84.62,Sri Vijaya,October–December/January,1.546
+158.69,Sri Vijaya,October–December/January,2.557
+104.26,Sri Gemunu,May–August,2.573
+135.37,Sri Vijaya,May–August,3.185
+145.12,Sri Gemunu,October–December/January,2.962
+104.5,Sri Gemunu,May–August,2.884
+90.46,Sri Vijaya,October–December/January,2.112
+115.98,Sri Vijaya,May–August,2.472
+146.2,Sri Vijaya,May–August,3.015
+141.54,Sri Vijaya,May–August,3.171
+81.54,Sri Vijaya,May–August,1.767
+140.82,Sri Gemunu,October–December/January,3.056
+80.97,Sri Gemunu,May–August,1.877
+158.07,Sri Gemunu,May–August,3.811
+116.35,Sri Gemunu,October–December/January,2.631
+87.85,Sri Vijaya,May–August,1.736
+138.99,Sri Gemunu,May–August,3.663
+110.07,Sri Vijaya,October–December/January,1.851
+151.37,Sri Vijaya,October–December/January,2.173
+142.95,Sri Vijaya,May–August,3.525
+100.37,Sri Vijaya,October–December/January,1.65
+83.07,Sri Vijaya,October–December/January,1.503
+132.75,Sri Gemunu,May–August,3.929
+130.93,Sri Gemunu,May–August,3.265
+92.01,Sri Vijaya,October–December/January,1.731
+120.98,Sri Gemunu,October–December/January,2.492
+137.31,Sri Gemunu,May–August,3.552
+85.7,Sri Vijaya,October–December/January,1.37
+107.98,Sri Gemunu,October–December/January,2.785
+132.91,Sri Vijaya,May–August,2.764
+132.82,Sri Vijaya,May–August,2.943
+101.2,Sri Vijaya,May–August,2.376
+96.45,Sri Gemunu,October–December/January,2.365
+129.2,Sri Gemunu,May–August,3.639
+83.36,Sri Vijaya,October–December/January,1.783
+143.9,Sri Gemunu,October–December/January,3.761
+144.94,Sri Vijaya,October–December/January,3.176
+90.25,Sri Vijaya,May–August,2.081
+109.77,Sri Vijaya,October–December/January,1.915
+115.15,Sri Gemunu,May–August,3.159
+89.72,Sri Gemunu,October–December/January,1.953
+150.95,Sri Vijaya,May–August,3.087
+148.91,Sri Gemunu,May–August,4.389
+153.51,Sri Gemunu,October–December/January,3.687
+147.36,Sri Vijaya,May–August,3.143
+142.12,Sri Vijaya,May–August,2.915
+158.77,Sri Vijaya,October–December/January,3.157
+83.45,Sri Vijaya,October–December/January,1.524
+145.42,Sri Gemunu,October–December/January,3.085
+120.47,Sri Vijaya,October–December/January,2.298
+127.23,Sri Vijaya,May–August,3.049
+103.8,Sri Gemunu,May–August,3.298
+130.9,Sri Vijaya,May–August,3.177
+92.81,Sri Vijaya,May–August,1.995
+138.12,Sri Vijaya,October–December/January,2.617
+87.93,Sri Vijaya,October–December/January,1.757
+124.41,Sri Vijaya,May–August,2.752
+129.28,Sri Gemunu,May–August,3.333
+124.34,Sri Gemunu,October–December/January,2.267
+140.88,Sri Vijaya,May–August,2.662
+104.45,Sri Vijaya,October–December/January,1.728
+159.71,Sri Vijaya,May–August,3.403
+150.9,Sri Vijaya,October–December/January,2.112
+111.32,Sri Vijaya,May–August,2.768
+129.57,Sri Vijaya,October–December/January,2.1
+143.54,Sri Vijaya,October–December/January,2.63
+131.39,Sri Vijaya,October–December/January,2.031
+126.4,Sri Vijaya,October–December/January,2.772
+134.12,Sri Vijaya,October–December/January,3.002
+101.59,Sri Vijaya,October–December/January,1.741
+84.68,Sri Gemunu,May–August,2.494
+142.79,Sri Gemunu,October–December/January,3.485
+115.22,Sri Gemunu,October–December/January,2.65
+106.26,Sri Vijaya,May–August,2.152
+127.86,Sri Gemunu,October–December/January,2.83
+159.87,Sri Gemunu,October–December/January,3.568
+130.89,Sri Vijaya,October–December/January,2.582
+89.47,Sri Gemunu,May–August,2.607
+125.75,Sri Vijaya,May–August,2.775
+94.76,Sri Gemunu,October–December/January,1.661
+81.94,Sri Gemunu,October–December/January,1.616
+101.85,Sri Vijaya,May–August,1.995
+100.74,Sri Gemunu,October–December/January,2.245
+149.82,Sri Gemunu,October–December/January,3.249
+116.65,Sri Vijaya,May–August,2.715
+90.68,Sri Vijaya,October–December/January,1.669
+114.95,Sri Gemunu,May–August,2.99
+141.24,Sri Vijaya,May–August,3.175
+140.11,Sri Gemunu,May–August,3.372
+156.53,Sri Gemunu,October–December/January,2.982
+152.5,Sri Vijaya,May–August,3.083
+101.76,Sri Vijaya,May–August,2.284
+85.23,Sri Vijaya,May–August,2.183
+82.69,Sri Vijaya,May–August,1.863
+107.79,Sri Vijaya,October–December/January,1.783
+81.75,Sri Vijaya,May–August,1.89
+154.95,Sri Gemunu,May–August,4.001
+113.5,Sri Vijaya,October–December/January,2.353
+100.52,Sri Gemunu,May–August,2.464
+95.85,Sri Gemunu,May–August,2.311
+128.68,Sri Gemunu,May–August,4.148
+89.13,Sri Gemunu,May–August,2.222
+148.05,Sri Vijaya,May–August,3.189
+121.87,Sri Vijaya,May–August,2.721
+123.48,Sri Vijaya,May–August,2.713
+116.66,Sri Gemunu,October–December/January,2.301
+148.0,Sri Gemunu,May–August,3.951
+116.98,Sri Gemunu,October–December/January,3.102
+84.98,Sri Gemunu,October–December/January,1.652
+144.51,Sri Vijaya,May–August,3.147
+96.11,Sri Vijaya,October–December/January,1.672
+93.18,Sri Vijaya,May–August,2.317
+96.39,Sri Gemunu,October–December/January,2.008
+150.37,Sri Vijaya,May–August,3.26
+158.8,Sri Vijaya,May–August,3.822
+82.17,Sri Vijaya,May–August,1.906
+123.1,Sri Vijaya,October–December/January,2.034
+88.44,Sri Gemunu,May–August,2.552
+142.05,Sri Gemunu,October–December/January,3.437
+96.3,Sri Gemunu,May–August,2.168
+126.21,Sri Vijaya,October–December/January,2.356
+143.83,Sri Gemunu,May–August,4.096
+92.64,Sri Gemunu,October–December/January,2.03
+143.46,Sri Gemunu,May–August,4.217
+102.15,Sri Gemunu,May–August,2.697
+91.26,Sri Vijaya,May–August,2.025
+132.34,Sri Vijaya,May–August,2.749
+115.23,Sri Gemunu,October–December/January,2.411
+144.29,Sri Gemunu,May–August,3.899
+157.37,Sri Gemunu,October–December/January,3.619
+130.77,Sri Gemunu,May–August,3.363
+150.55,Sri Gemunu,May–August,3.395
+124.78,Sri Gemunu,May–August,3.234
+137.55,Sri Gemunu,May–August,3.467
+145.53,Sri Vijaya,October–December/January,2.805
+136.82,Sri Vijaya,May–August,3.083
+116.74,Sri Gemunu,May–August,2.49
+119.54,Sri Gemunu,October–December/January,2.403
+136.96,Sri Vijaya,October–December/January,2.827
+88.05,Sri Vijaya,May–August,1.855
+116.03,Sri Vijaya,May–August,2.573
+132.09,Sri Vijaya,October–December/January,2.067
+117.7,Sri Gemunu,May–August,3.598
+130.73,Sri Gemunu,May–August,3.54
+134.91,Sri Vijaya,May–August,2.706
+93.99,Sri Gemunu,October–December/January,2.037
+102.34,Sri Vijaya,October–December/January,1.979
+135.53,Sri Vijaya,May–August,2.447
+82.66,Sri Vijaya,May–August,1.848
+132.25,Sri Gemunu,May–August,3.788
+100.82,Sri Vijaya,October–December/January,2.032
+133.66,Sri Gemunu,May–August,3.205
+116.83,Sri Vijaya,May–August,2.749
+123.73,Sri Vijaya,October–December/January,2.193
+113.8,Sri Gemunu,May–August,2.894
+139.19,Sri Vijaya,October–December/January,2.543
+103.38,Sri Vijaya,May–August,2.498
+140.32,Sri Gemunu,May–August,3.969
+149.82,Sri Gemunu,May–August,3.657
+136.29,Sri Gemunu,October–December/January,2.618
+80.99,Sri Gemunu,October–December/January,1.795
+104.1,Sri Gemunu,October–December/January,1.831
+139.46,Sri Vijaya,May–August,3.229
+152.23,Sri Gemunu,October–December/January,3.54
+151.38,Sri Gemunu,May–August,4.257
+86.32,Sri Vijaya,May–August,1.989
+126.62,Sri Gemunu,October–December/January,2.706
+148.46,Sri Vijaya,May–August,3.221
+127.92,Sri Gemunu,May–August,3.303
+87.51,Sri Gemunu,May–August,2.435
+150.32,Sri Vijaya,May–August,3.597
+121.4,Sri Vijaya,May–August,2.276
+141.91,Sri Vijaya,October–December/January,2.388
+151.4,Sri Vijaya,May–August,4.084
+127.34,Sri Vijaya,October–December/January,2.06
+98.99,Sri Gemunu,October–December/January,1.916
+119.01,Sri Gemunu,May–August,3.199
+156.04,Sri Vijaya,May–August,3.975
+130.73,Sri Vijaya,May–August,2.989
+100.35,Sri Vijaya,October–December/January,1.627
+91.2,Sri Gemunu,May–August,1.873
+157.72,Sri Gemunu,October–December/January,3.287
+128.86,Sri Vijaya,May–August,2.31
+96.56,Sri Gemunu,October–December/January,1.98
+97.53,Sri Vijaya,May–August,2.105
+88.64,Sri Vijaya,May–August,2.199
+121.01,Sri Gemunu,October–December/January,2.438
+154.54,Sri Vijaya,October–December/January,2.577
+89.11,Sri Vijaya,May–August,1.943
+120.59,Sri Gemunu,October–December/January,2.696
+159.43,Sri Vijaya,May–August,3.813
+101.98,Sri Vijaya,October–December/January,1.536
+152.61,Sri Vijaya,October–December/January,2.245
+128.63,Sri Gemunu,May–August,3.822
+145.7,Sri Vijaya,May–August,2.975
+130.91,Sri Gemunu,May–August,3.565
+89.16,Sri Gemunu,May–August,2.205
+116.5,Sri Vijaya,October–December/January,1.871
+140.09,Sri Gemunu,May–August,3.485
+86.41,Sri Gemunu,May–August,2.43
+134.29,Sri Vijaya,October–December/January,2.335
+127.49,Sri Vijaya,October–December/January,2.443
+137.92,Sri Vijaya,May–August,3.208
+152.2,Sri Vijaya,May–August,3.333
+80.94,Sri Gemunu,May–August,1.981
+103.6,Sri Gemunu,May–August,3.345
+89.84,Sri Gemunu,October–December/January,1.878
+107.45,Sri Vijaya,May–August,2.676
+135.4,Sri Vijaya,October–December/January,2.767
+133.84,Sri Vijaya,May–August,2.836
+115.71,Sri Vijaya,October–December/January,1.899
+145.79,Sri Gemunu,October–December/January,2.568
+109.69,Sri Gemunu,October–December/January,2.245
+136.45,Sri Gemunu,May–August,3.188
+114.44,Sri Vijaya,May–August,2.832
+151.21,Sri Gemunu,May–August,3.499
+131.67,Sri Vijaya,October–December/January,2.293
+107.25,Sri Gemunu,October–December/January,2.279
+134.17,Sri Gemunu,October–December/January,2.741
+109.17,Sri Gemunu,October–December/January,2.839
+118.85,Sri Vijaya,October–December/January,1.917
+120.44,Sri Vijaya,May–August,2.574
+82.48,Sri Gemunu,October–December/January,1.88
+92.8,Sri Gemunu,May–August,2.115
+89.29,Sri Vijaya,May–August,2.027
+105.12,Sri Gemunu,May–August,2.917
+158.72,Sri Vijaya,May–August,3.791
+156.89,Sri Vijaya,May–August,2.997
+123.31,Sri Gemunu,October–December/January,2.169
+124.3,Sri Gemunu,May–August,3.866
+115.24,Sri Vijaya,October–December/January,2.086
+100.75,Sri Gemunu,May–August,2.446
+124.62,Sri Gemunu,May–August,2.995
+126.44,Sri Vijaya,May–August,2.833
+119.11,Sri Vijaya,May–August,2.393
+159.51,Sri Vijaya,October–December/January,2.986
+129.65,Sri Vijaya,May–August,3.073
+111.61,Sri Gemunu,October–December/January,2.457
+98.22,Sri Gemunu,May–August,2.555
+152.76,Sri Vijaya,October–December/January,2.944
+90.45,Sri Vijaya,October–December/January,2.001
+89.99,Sri Gemunu,October–December/January,1.898
+155.52,Sri Vijaya,May–August,3.662
+117.01,Sri Gemunu,May–August,3.182
+127.1,Sri Gemunu,May–August,3.461
+102.86,Sri Gemunu,October–December/January,2.404
+120.9,Sri Gemunu,May–August,2.983
+126.18,Sri Gemunu,May–August,3.787
+125.88,Sri Gemunu,October–December/January,2.778
+96.04,Sri Gemunu,May–August,2.9
+85.0,Sri Vijaya,October–December/January,1.56
+115.87,Sri Vijaya,May–August,3.246
+81.53,Sri Vijaya,May–August,1.862
+135.02,Sri Vijaya,October–December/January,2.589
+103.95,Sri Gemunu,May–August,3.012
+144.35,Sri Gemunu,October–December/January,2.985
+80.71,Sri Vijaya,May–August,1.786
+134.15,Sri Gemunu,May–August,3.245
+139.03,Sri Vijaya,October–December/January,2.834
+139.24,Sri Gemunu,October–December/January,3.285
+132.68,Sri Vijaya,October–December/January,2.301
+147.67,Sri Gemunu,May–August,3.627
+86.21,Sri Vijaya,October–December/January,1.572
+112.57,Sri Vijaya,May–August,2.402
+144.66,Sri Vijaya,May–August,3.226
+85.79,Sri Gemunu,October–December/January,1.859
+86.15,Sri Vijaya,May–August,2.043
+143.56,Sri Vijaya,October–December/January,2.41
+112.23,Sri Vijaya,May–August,2.498
+98.59,Sri Vijaya,May–August,2.475
+112.41,Sri Vijaya,May–August,2.479
+105.72,Sri Gemunu,October–December/January,1.948
+158.32,Sri Vijaya,October–December/January,2.841
+108.63,Sri Vijaya,October–December/January,1.854
+120.25,Sri Vijaya,October–December/January,2.233
+126.87,Sri Gemunu,October–December/January,2.632
+99.35,Sri Gemunu,October–December/January,2.275
+145.8,Sri Vijaya,May–August,3.355
+91.43,Sri Vijaya,May–August,2.358
+101.71,Sri Gemunu,May–August,2.155
+130.36,Sri Vijaya,October–December/January,2.223
+139.89,Sri Gemunu,October–December/January,2.796
+136.56,Sri Gemunu,May–August,3.505
+147.15,Sri Gemunu,October–December/January,2.804
+108.82,Sri Gemunu,October–December/January,2.65
+147.42,Sri Vijaya,May–August,3.735
+114.71,Sri Gemunu,October–December/January,2.427
+110.19,Sri Vijaya,October–December/January,1.944
+130.62,Sri Vijaya,May–August,3.51
+80.35,Sri Vijaya,October–December/January,1.557
+157.28,Sri Vijaya,May–August,3.364
+156.06,Sri Gemunu,October–December/January,2.898
+142.55,Sri Vijaya,October–December/January,2.909
+83.85,Sri Vijaya,October–December/January,1.578
+114.62,Sri Gemunu,May–August,2.992
+96.71,Sri Vijaya,October–December/January,1.383
+141.41,Sri Vijaya,October–December/January,2.121
+145.77,Sri Vijaya,May–August,3.21
+117.78,Sri Vijaya,October–December/January,2.323
+97.26,Sri Vijaya,May–August,2.337
+90.93,Sri Gemunu,October–December/January,2.392
+139.09,Sri Vijaya,May–August,3.399
+137.06,Sri Vijaya,May–August,2.626
+151.22,Sri Gemunu,May–August,3.542
+88.92,Sri Gemunu,October–December/January,1.645
+101.41,Sri Gemunu,May–August,2.203
+89.95,Sri Vijaya,October–December/January,1.4
+119.43,Sri Vijaya,May–August,2.896
+80.79,Sri Gemunu,May–August,1.65

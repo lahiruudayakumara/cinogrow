@@ -850,12 +850,21 @@ def forecast_prices(time_range: str = "weeks", steps: int = 4) -> Dict:
     
     steps = steps or 4  # Default to 4 if None
     
-    # Use embedded price data or load from file
-    csv_path = Path(__file__).parent / "price_data.csv"
+    # Try multiple possible paths for the CSV file
+    possible_paths = [
+        Path(__file__).parent / "price_data.csv",  # Local fallback
+        Path(__file__).parent.parent / "database" / "oil" / "oil_price.csv",  # Standard path
+    ]
+    
+    csv_path = None
+    for p in possible_paths:
+        if p.exists():
+            csv_path = p
+            break
     
     try:
         # Try to load from CSV if it exists
-        if csv_path.exists():
+        if csv_path:
             report = run_full_pipeline(csv_path, run_ablation=False, verbose=False)
             
             # Extract forecast data

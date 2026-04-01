@@ -3,13 +3,12 @@ from fastapi import APIRouter, HTTPException, Depends
 from .schemas import (
     OilYieldInput, OilYieldOutput, 
     DistillationTimeInput, DistillationTimeOutput,
-    PriceForecastInput, PriceForecastOutput,
+    PriceForecastOutput,
     MaterialBatchCreate, MaterialBatchUpdate, MaterialBatchRead,
     OilQualityInput, OilQualityOutput
 )
 from .model import load_model
 from .distillation_time_model import load_model as load_distillation_model
-from .price_forecast_model import forecast_prices
 from .oil_quality_model import load_model as load_quality_model
 import numpy as np
 import logging
@@ -182,39 +181,48 @@ def predict_oil_quality(data: OilQualityInput):
     }
 
 @router.post("/price_forecast", response_model=PriceForecastOutput)
-def get_price_forecast(data: PriceForecastInput):
+def get_price_forecast():
     """
-    Generate price forecast using SARIMA time series model.
+    Generate a 4-week cinnamon leaf oil price forecast.
     
-    Parameters:
-    - oil_type: Type of cinnamon oil (Leaf or Bark)
-    - time_range: Forecast period (days, months, or years)
+    Uses LightGBM gradient boosting with split conformal prediction intervals
+    to forecast leaf oil prices based on historical weekly observations.
     
-    Returns:
-    - forecast: List of forecasted prices
-    - dates: Corresponding forecast dates
-    - statistics: Mean, min, and max prices
+    No request body required. Returns:
+    - forecast: 4-week point price predictions (LKR/kg)
+    - dates: ISO date strings for each forecast week
+    - statistics: Aggregated statistics and confidence-weighted trading signal
+        - mean, min, max: price range
+        - std: forecast volatility
+        - trend: "UP", "DOWN", or "FLAT/UNCERTAIN"
+        - signal: "HOLD", "SELL", or "WATCH" (confidence-weighted)
+        - confidence: signal strength [0–2], where ≥1.0 is strong
+    
+    Data source:
+    - File: backend/app/database/oil/oil_price.csv
+    - Historical: Jan 2017 – present (526+ weekly observations)
+    - Features: 38 engineered including lags, rolling stats, momentum
+    - Model: LightGBM + split-conformal calibration (∼90% empirical coverage)
+    
+    Decision signal interpretation:
+    - HOLD: Expect price appreciation (slope > +0.30%/week)
+    - SELL: Expect price depreciation (slope < -0.30%/week)
+    - WATCH: Uncertain trend or low confidence (monitor reassess weekly)
     """
     try:
-        # Currently only Leaf oil data is available
-        if data.oil_type != "Leaf":
-            raise HTTPException(
-                status_code=400,
-                detail="Only Leaf oil forecasting is currently supported"
-            )
+        # Lazy import to avoid circular dependency issues
+        from app.oil_yield.price_forecast_model import forecast_prices as generate_forecast
         
-        # Generate forecast with optional steps override
-        steps_override = getattr(data, 'steps', None)
-        result = forecast_prices(data.time_range, steps_override)
+        logger.info("📊 Processing oil price forecast request...")
+        result = generate_forecast(time_range="weeks", steps=4)
         
         return result
         
-    except HTTPException:
-        raise
     except Exception as e:
+        logger.error(f"Price forecast error: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error generating forecast: {str(e)}"
+            detail=f"Error generating price forecast: {str(e)}"
         )
 
 

@@ -44,7 +44,7 @@ from app.routers.tree_analysis import router as tree_analysis_router
 from app.routers import auth
 
 # Import your oil yield router
-from app.oil_yield.router import router as oil_yield_router
+from app.routers.oil_yield.router import router as oil_yield_router
 
 # Create FastAPI app
 app = FastAPI(

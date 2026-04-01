@@ -1,15 +1,13 @@
 import json
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends
-from .schemas import (
+from app.schemas.oil_yield import (
     OilYieldInput, OilYieldOutput,
     PriceForecastOutput,
     MaterialBatchCreate, MaterialBatchUpdate, MaterialBatchRead,
     OilYieldPredictionCreate, OilYieldPredictionRead,
-    DistillationPredictionCreate, DistillationPredictionRead,
-    QualityPredictionCreate, QualityPredictionRead,
 )
-from .oil_yield_model import load_model
+from training_scripts.oil_yield.oil_yield_model import load_model
 import numpy as np
 import logging
 from sqlmodel import Session, select
@@ -17,8 +15,6 @@ from app.db.session import get_session
 from app.models.oil_yield.material_batch import MaterialBatch
 from app.models.oil_yield.predictions import (
     OilYieldPrediction,
-    DistillationPrediction,
-    QualityPrediction,
 )
 
 router = APIRouter(prefix="/oil_yield", tags=["Oil Yield"])
@@ -56,7 +52,7 @@ def predict_yield(data: OilYieldInput):
 @router.post("/price_forecast", response_model=PriceForecastOutput)
 def get_price_forecast():
     try:
-        from app.oil_yield.price_forecast_model import forecast_prices as generate_forecast
+        from training_scripts.oil_yield.price_forecast_model import forecast_prices as generate_forecast
         return generate_forecast(time_range="weeks", steps=4)
     except Exception as e:
         logger.error(f"Price forecast error: {e}")
@@ -196,104 +192,3 @@ def get_yield_prediction(batch_id: int, session: Session = Depends(get_session))
     if not row:
         raise HTTPException(status_code=404, detail="Prediction not found")
     return row
-
-
-@router.delete("/predictions/yield/{batch_id}", status_code=204)
-def delete_yield_prediction(batch_id: int, session: Session = Depends(get_session)):
-    row = session.exec(
-        select(OilYieldPrediction).where(OilYieldPrediction.batch_id == batch_id)
-    ).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    session.delete(row)
-    session.commit()
-
-
-@router.post("/predictions/distillation", response_model=DistillationPredictionRead, status_code=201)
-def save_distillation_prediction(payload: DistillationPredictionCreate, session: Session = Depends(get_session)):
-    row = DistillationPrediction(
-        batch_id=payload.batch_id,
-        predicted_time_hours=payload.predicted_time_hours,
-        distillation_capacity_liters=payload.distillation_capacity_liters,
-        plant_part=payload.plant_part,
-        cinnamon_type=payload.cinnamon_type,
-        predicted_at=datetime.fromisoformat(payload.predicted_at),
-    )
-    session.add(row)
-    session.commit()
-    session.refresh(row)
-    return row
-
-
-@router.get("/predictions/distillation", response_model=list[DistillationPredictionRead])
-def list_distillation_predictions(session: Session = Depends(get_session)):
-    return session.exec(select(DistillationPrediction)).all()
-
-
-@router.get("/predictions/distillation/{batch_id}", response_model=DistillationPredictionRead)
-def get_distillation_prediction(batch_id: int, session: Session = Depends(get_session)):
-    row = session.exec(
-        select(DistillationPrediction).where(DistillationPrediction.batch_id == batch_id)
-    ).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    return row
-
-
-@router.delete("/predictions/distillation/{batch_id}", status_code=204)
-def delete_distillation_prediction(batch_id: int, session: Session = Depends(get_session)):
-    row = session.exec(
-        select(DistillationPrediction).where(DistillationPrediction.batch_id == batch_id)
-    ).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    session.delete(row)
-    session.commit()
-
-
-@router.post("/predictions/quality", response_model=QualityPredictionRead, status_code=201)
-def save_quality_prediction(payload: QualityPredictionCreate, session: Session = Depends(get_session)):
-    row = QualityPrediction(
-        batch_id=payload.batch_id,
-        score=payload.score,
-        label=payload.label,
-        price_range=payload.price_range,
-        recommendations=json.dumps(payload.recommendations),
-        lab_advice=payload.lab_advice,
-        color=payload.color,
-        clarity=payload.clarity,
-        aroma=payload.aroma,
-        cinnamon_type=payload.cinnamon_type,
-        plant_part=payload.plant_part,
-        predicted_at=datetime.fromisoformat(payload.predicted_at),
-    )
-    session.add(row)
-    session.commit()
-    session.refresh(row)
-    return row
-
-
-@router.get("/predictions/quality", response_model=list[QualityPredictionRead])
-def list_quality_predictions(session: Session = Depends(get_session)):
-    return session.exec(select(QualityPrediction)).all()
-
-
-@router.get("/predictions/quality/{batch_id}", response_model=QualityPredictionRead)
-def get_quality_prediction(batch_id: int, session: Session = Depends(get_session)):
-    row = session.exec(
-        select(QualityPrediction).where(QualityPrediction.batch_id == batch_id)
-    ).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    return row
-
-
-@router.delete("/predictions/quality/{batch_id}", status_code=204)
-def delete_quality_prediction(batch_id: int, session: Session = Depends(get_session)):
-    row = session.exec(
-        select(QualityPrediction).where(QualityPrediction.batch_id == batch_id)
-    ).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    session.delete(row)
-    session.commit()

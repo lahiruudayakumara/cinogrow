@@ -1,4 +1,4 @@
-# app/oil_yield/schemas.py
+# app/schemas/oil_yield.py
 from pydantic import BaseModel, Field
 from typing import Literal
 from datetime import datetime
@@ -83,60 +83,6 @@ class OilYieldPredictionRead(BaseModel):
     recommendation_primary: str
     recommendation_tips: str
     recommendation_quality: str
-    predicted_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class DistillationPredictionCreate(BaseModel):
-    batch_id: int
-    predicted_time_hours: float
-    distillation_capacity_liters: float
-    plant_part: str
-    cinnamon_type: str
-    predicted_at: str = Field(..., description="ISO 8601 timestamp of prediction")
-
-
-class DistillationPredictionRead(BaseModel):
-    id: int
-    batch_id: int
-    predicted_time_hours: float
-    distillation_capacity_liters: float
-    plant_part: str
-    cinnamon_type: str
-    predicted_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class QualityPredictionCreate(BaseModel):
-    batch_id: int
-    score: float
-    label: str = Field(..., description="Quality label: Excellent, Good, Fair, or Poor")
-    price_range: str
-    recommendations: list[str]
-    lab_advice: str
-    color: str
-    clarity: str
-    aroma: str
-    cinnamon_type: str
-    plant_part: str
-    predicted_at: str = Field(..., description="ISO 8601 timestamp of prediction")
-
-
-class QualityPredictionRead(BaseModel):
-    id: int
-    batch_id: int
-    score: float
-    label: str
-    price_range: str
-    recommendations: str
-    lab_advice: str
-    color: str
-    clarity: str
-    aroma: str
-    cinnamon_type: str
-    plant_part: str
     predicted_at: datetime
 
     model_config = {"from_attributes": True}

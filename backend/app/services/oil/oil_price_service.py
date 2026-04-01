@@ -56,7 +56,7 @@ def get_price_forecast() -> Dict:
     """
     try:
         # Import here to avoid circular imports and defer expensive model loading
-        from app.oil_yield.price_forecast_model import forecast_prices
+        from training_scripts.oil_yield.price_forecast_model import forecast_prices
         
         logger.info("🔮 Generating oil price forecast...")
         

@@ -5,11 +5,9 @@ from sqlmodel import Session, select
 from app.db.session import get_session
 from app.models.oil_yield.predictions import (
     OilYieldPrediction,
-    QualityPrediction,
 )
 from .schemas import (
     OilYieldPredictionCreate, OilYieldPredictionRead,
-    QualityPredictionCreate, QualityPredictionRead,
 )
 
 router = APIRouter(prefix="/oil_yield/predictions", tags=["Oil Yield Predictions"])
@@ -67,55 +65,3 @@ def delete_yield_prediction(batch_id: int, session: Session = Depends(get_sessio
     session.delete(row)
     session.commit()
 
-
-# ─── Quality predictions ──────────────────────────────────────────────────────
-
-@router.post("/quality", response_model=QualityPredictionRead, status_code=201)
-def save_quality_prediction(
-    payload: QualityPredictionCreate,
-    session: Session = Depends(get_session),
-):
-    row = QualityPrediction(
-        batch_id=payload.batch_id,
-        score=payload.score,
-        label=payload.label,
-        price_range=payload.price_range,
-        recommendations=json.dumps(payload.recommendations),
-        lab_advice=payload.lab_advice,
-        color=payload.color,
-        clarity=payload.clarity,
-        aroma=payload.aroma,
-        cinnamon_type=payload.cinnamon_type,
-        plant_part=payload.plant_part,
-        predicted_at=datetime.fromisoformat(payload.predicted_at),
-    )
-    session.add(row)
-    session.commit()
-    session.refresh(row)
-    return row
-
-
-@router.get("/quality", response_model=list[QualityPredictionRead])
-def list_quality_predictions(session: Session = Depends(get_session)):
-    return session.exec(select(QualityPrediction)).all()
-
-
-@router.get("/quality/{batch_id}", response_model=QualityPredictionRead)
-def get_quality_prediction(batch_id: int, session: Session = Depends(get_session)):
-    row = session.exec(
-        select(QualityPrediction).where(QualityPrediction.batch_id == batch_id)
-    ).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    return row
-
-
-@router.delete("/quality/{batch_id}", status_code=204)
-def delete_quality_prediction(batch_id: int, session: Session = Depends(get_session)):
-    row = session.exec(
-        select(QualityPrediction).where(QualityPrediction.batch_id == batch_id)
-    ).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    session.delete(row)
-    session.commit()

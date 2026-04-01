@@ -21,19 +21,3 @@ class OilYieldPrediction(SQLModel, table=True):
     predicted_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-class QualityPrediction(SQLModel, table=True):
-    __tablename__ = "quality_predictions"
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    batch_id: int = Field(index=True)
-    score: float
-    label: str = Field(max_length=50)         # Excellent | Good | Fair | Poor
-    price_range: str = Field(max_length=100)
-    recommendations: str                       # JSON-encoded list
-    lab_advice: str
-    color: str = Field(max_length=50)
-    clarity: str = Field(max_length=50)
-    aroma: str = Field(max_length=50)
-    cinnamon_type: str = Field(max_length=100)
-    plant_part: str = Field(max_length=100)
-    predicted_at: datetime = Field(default_factory=datetime.utcnow)

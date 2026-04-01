@@ -86,25 +86,6 @@ class MaterialBatchRead(BaseModel):
 
 
 # --------------------------
-# Oil Quality Schemas
-# --------------------------
-class OilQualityInput(BaseModel):
-    cinnamon_type: Literal["Sri Gamunu", "Sri Wijaya"] = Field(..., description="Cinnamon type or variety")
-    plant_part: Literal["Leaves & Twigs", "Featherings & Chips"] = Field(..., description="Part of the plant used")
-    mass_kg: float = Field(..., description="Mass of material in kilograms")
-    plant_age_years: float = Field(..., gt=0, description="Age of the plant in years")
-    harvest_season: Literal["January", "April", "July", "October"] = Field(..., description="Harvest season month")
-    color: Literal["pale_yellow", "golden", "amber", "dark"] = Field(..., description="Oil color observed")
-    clarity: Literal["clear", "slightly_cloudy", "cloudy"] = Field(..., description="Oil clarity observed")
-    aroma: Literal["mild", "aromatic", "pungent"] = Field(..., description="Oil aroma intensity/type")
-
-
-class OilQualityOutput(BaseModel):
-    predicted_quality_score: float = Field(..., description="Predicted quality score (0-100)")
-    input_summary: dict = Field(..., description="Summary of input parameters")
-
-
-# --------------------------
 # Prediction Storage Schemas
 # --------------------------
 
@@ -133,34 +114,5 @@ class OilYieldPredictionRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class QualityPredictionCreate(BaseModel):
-    batch_id: int
-    score: float
-    label: str
-    price_range: str
-    recommendations: list[str]
-    lab_advice: str
-    color: str
-    clarity: str
-    aroma: str
-    cinnamon_type: str
-    plant_part: str
-    predicted_at: str
 
 
-class QualityPredictionRead(BaseModel):
-    id: int
-    batch_id: int
-    score: float
-    label: str
-    price_range: str
-    recommendations: str
-    lab_advice: str
-    color: str
-    clarity: str
-    aroma: str
-    cinnamon_type: str
-    plant_part: str
-    predicted_at: datetime
-
-    model_config = {"from_attributes": True}

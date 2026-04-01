@@ -21,18 +21,6 @@ class OilYieldPrediction(SQLModel, table=True):
     predicted_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-class DistillationPrediction(SQLModel, table=True):
-    __tablename__ = "distillation_predictions"
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    batch_id: int = Field(index=True)
-    predicted_time_hours: float
-    distillation_capacity_liters: float
-    plant_part: str = Field(max_length=100)
-    cinnamon_type: str = Field(max_length=100)
-    predicted_at: datetime = Field(default_factory=datetime.utcnow)
-
-
 class QualityPrediction(SQLModel, table=True):
     __tablename__ = "quality_predictions"
 

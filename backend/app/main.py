@@ -34,7 +34,7 @@ from app.models.yield_weather.hybrid_yield import HybridYieldResult
 from app.models.fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis
 from app.models.fertilizer.fertilizer import FertilizerType, FertilizerApplication, FertilizerSchedule, FertilizerRecommendation
 from app.models.oil_yield.material_batch import MaterialBatch
-from app.models.oil_yield.predictions import OilYieldPrediction, DistillationPrediction, QualityPrediction
+from app.models.oil_yield.predictions import OilYieldPrediction, QualityPrediction
 
 # Import database and routers
 from app.db.session import create_db_and_tables

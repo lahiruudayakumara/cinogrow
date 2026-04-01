@@ -2,13 +2,11 @@
 from fastapi import APIRouter, HTTPException, Depends
 from .schemas import (
     OilYieldInput, OilYieldOutput, 
-    DistillationTimeInput, DistillationTimeOutput,
     PriceForecastOutput,
     MaterialBatchCreate, MaterialBatchUpdate, MaterialBatchRead,
     OilQualityInput, OilQualityOutput
 )
 from .model import load_model
-from .distillation_time_model import load_model as load_distillation_model
 from .oil_quality_model import load_model as load_quality_model
 import numpy as np
 import logging
@@ -21,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 # Global variable to cache the model
 _cached_model = None
-_cached_distillation_model = None
 _cached_quality_model = None
 
 def get_model():
@@ -35,15 +32,6 @@ def get_model():
         _cached_model = load_model()
     return _cached_model
 
-def get_distillation_model():
-    """
-    Get the distillation time model, loading it if not already cached.
-    """
-    global _cached_distillation_model
-    if _cached_distillation_model is None:
-        logger.info("🔧 Loading distillation time model...")
-        _cached_distillation_model = load_distillation_model()
-    return _cached_distillation_model
 
 def get_quality_model():
     """
@@ -89,43 +77,6 @@ def predict_yield(data: OilYieldInput):
             "dried_mass_kg": data.dried_mass_kg,
             "species_variety": data.species_variety,
             "harvesting_season": data.harvesting_season,
-        }
-    }
-
-@router.post("/predict_distillation_time", response_model=DistillationTimeOutput)
-def predict_distillation_time(data: DistillationTimeInput):
-    """
-    Predict distillation time based on plant characteristics and capacity.
-    
-    Parameters:
-    - plant_part: Plant part used (Leaves & Twigs or Featherings & Chips)
-    - cinnamon_type: Cinnamon type (Sri Gamunu or Sri Wijaya)
-    - distillation_capacity_liters: Distillation capacity in liters
-    
-    Returns predicted distillation time in hours.
-    """
-    distillation_model = get_distillation_model()
-    
-    # Encode categorical features
-    plant_part_encoded = 0 if data.plant_part == "Featherings & Chips" else 1
-    cinnamon_type_encoded = 0 if data.cinnamon_type == "Sri Gamunu" else 1
-    
-    # Prepare feature array
-    X = np.array([[
-        plant_part_encoded,
-        cinnamon_type_encoded,
-        data.distillation_capacity_liters
-    ]])
-    
-    # Make prediction
-    prediction = distillation_model.predict(X)[0]
-    
-    return {
-        "predicted_time_hours": round(float(prediction), 2),
-        "input_summary": {
-            "plant_part": data.plant_part,
-            "cinnamon_type": data.cinnamon_type,
-            "distillation_capacity_liters": data.distillation_capacity_liters
         }
     }
 

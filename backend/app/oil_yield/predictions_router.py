@@ -5,12 +5,10 @@ from sqlmodel import Session, select
 from app.db.session import get_session
 from app.models.oil_yield.predictions import (
     OilYieldPrediction,
-    DistillationPrediction,
     QualityPrediction,
 )
 from .schemas import (
     OilYieldPredictionCreate, OilYieldPredictionRead,
-    DistillationPredictionCreate, DistillationPredictionRead,
     QualityPredictionCreate, QualityPredictionRead,
 )
 
@@ -63,53 +61,6 @@ def get_yield_prediction(batch_id: int, session: Session = Depends(get_session))
 def delete_yield_prediction(batch_id: int, session: Session = Depends(get_session)):
     row = session.exec(
         select(OilYieldPrediction).where(OilYieldPrediction.batch_id == batch_id)
-    ).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    session.delete(row)
-    session.commit()
-
-
-# ─── Distillation-time predictions ───────────────────────────────────────────
-
-@router.post("/distillation", response_model=DistillationPredictionRead, status_code=201)
-def save_distillation_prediction(
-    payload: DistillationPredictionCreate,
-    session: Session = Depends(get_session),
-):
-    row = DistillationPrediction(
-        batch_id=payload.batch_id,
-        predicted_time_hours=payload.predicted_time_hours,
-        distillation_capacity_liters=payload.distillation_capacity_liters,
-        plant_part=payload.plant_part,
-        cinnamon_type=payload.cinnamon_type,
-        predicted_at=datetime.fromisoformat(payload.predicted_at),
-    )
-    session.add(row)
-    session.commit()
-    session.refresh(row)
-    return row
-
-
-@router.get("/distillation", response_model=list[DistillationPredictionRead])
-def list_distillation_predictions(session: Session = Depends(get_session)):
-    return session.exec(select(DistillationPrediction)).all()
-
-
-@router.get("/distillation/{batch_id}", response_model=DistillationPredictionRead)
-def get_distillation_prediction(batch_id: int, session: Session = Depends(get_session)):
-    row = session.exec(
-        select(DistillationPrediction).where(DistillationPrediction.batch_id == batch_id)
-    ).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    return row
-
-
-@router.delete("/distillation/{batch_id}", status_code=204)
-def delete_distillation_prediction(batch_id: int, session: Session = Depends(get_session)):
-    row = session.exec(
-        select(DistillationPrediction).where(DistillationPrediction.batch_id == batch_id)
     ).first()
     if not row:
         raise HTTPException(status_code=404, detail="Prediction not found")

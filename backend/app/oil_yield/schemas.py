@@ -12,15 +12,6 @@ class OilYieldOutput(BaseModel):
     predicted_yield_liters: float = Field(..., description="Predicted oil yield in liters")
     input_summary: dict = Field(..., description="Summary of input parameters")
 
-class DistillationTimeInput(BaseModel):
-    plant_part: Literal["Leaves & Twigs", "Featherings & Chips"] = Field(..., description="Part of the plant used")
-    cinnamon_type: Literal["Sri Gamunu", "Sri Wijaya"] = Field(..., description="Cinnamon type")
-    distillation_capacity_liters: float = Field(..., description="Distillation capacity in liters", gt=0)
-
-class DistillationTimeOutput(BaseModel):
-    predicted_time_hours: float = Field(..., description="Predicted distillation time in hours")
-    input_summary: dict = Field(..., description="Summary of input parameters")
-
 class PriceForecastInput(BaseModel):
     oil_type: Literal["Leaf", "Bark"] = Field(..., description="Type of cinnamon oil")
     time_range: Literal["days", "months", "years"] = Field(..., description="Forecast time range")
@@ -137,27 +128,6 @@ class OilYieldPredictionRead(BaseModel):
     recommendation_primary: str
     recommendation_tips: str
     recommendation_quality: str
-    predicted_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class DistillationPredictionCreate(BaseModel):
-    batch_id: int
-    predicted_time_hours: float
-    distillation_capacity_liters: float
-    plant_part: str
-    cinnamon_type: str
-    predicted_at: str
-
-
-class DistillationPredictionRead(BaseModel):
-    id: int
-    batch_id: int
-    predicted_time_hours: float
-    distillation_capacity_liters: float
-    plant_part: str
-    cinnamon_type: str
     predicted_at: datetime
 
     model_config = {"from_attributes": True}

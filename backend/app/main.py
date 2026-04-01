@@ -45,7 +45,6 @@ from app.routers import auth
 
 # Import your oil yield router
 from app.oil_yield.router import router as oil_yield_router
-from app.oil_yield.predictions_router import router as oil_yield_predictions_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -76,7 +75,6 @@ async def startup_event():
 
 # Include routers
 app.include_router(oil_yield_router, prefix='/api/v1')
-app.include_router(oil_yield_predictions_router, prefix='/api/v1')  # Oil yield prediction
 app.include_router(roboflow_simple_router, prefix='/api/v1')  # Roboflow deficiency detection
 app.include_router(tree_analysis_router, prefix='/api/v1')  # Tree stem analysis
 app.include_router(weather.router, prefix="/api/v1")  # Weather endpoints at /api/v1/weather/

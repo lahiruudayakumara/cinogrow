@@ -5,7 +5,7 @@ from .schemas import (
     PriceForecastOutput,
     MaterialBatchCreate, MaterialBatchUpdate, MaterialBatchRead
 )
-from .model import load_model
+from .oil_yield_model import load_model
 import numpy as np
 import logging
 from sqlmodel import Session, select

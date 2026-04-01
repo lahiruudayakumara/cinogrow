@@ -9,7 +9,7 @@ class OilYieldInput(BaseModel):
     harvesting_season: Literal["January-May", "June-December"] = Field(..., description="Harvesting season")
 
 class OilYieldOutput(BaseModel):
-    predicted_yield_liters: float = Field(..., description="Predicted oil yield in liters")
+    predicted_yield_kg: float = Field(..., description="Predicted oil yield in liters")
     input_summary: dict = Field(..., description="Summary of input parameters")
 
 class PriceForecastInput(BaseModel):
@@ -23,52 +23,28 @@ class PriceForecastOutput(BaseModel):
     statistics: dict = Field(..., description="Forecast statistics (mean, min, max)")
 
 
-# --------------------------
-# Material Batch Schemas
-# --------------------------
-
-_BATCH_SOURCE      = Literal["own_farm", "purchased"]
-_PROCESS_STAGE     = Literal["raw", "drying", "distilling", "quality_check", "complete"]
+_BATCH_SOURCE  = Literal["own_farm", "purchased"]
+_PROCESS_STAGE = Literal["raw", "drying", "distilling", "quality_check", "complete"]
 
 
 class MaterialBatchCreate(BaseModel):
     batch_name: str | None = Field(None, description="Optional batch name for identification")
     cinnamon_type: str = Field(..., description="Cinnamon type or variety")
-    mass_kg: float | None = Field(
-        None, ge=0,
-        description="Raw/fresh mass of material in kilograms. Optional for own_farm, required for purchased."
-    )
-    dried_mass_kg: float | None = Field(
-        None, gt=0,
-        description="Dried weight (kg). Required when source='purchased'; can be omitted for own_farm and updated later."
-    )
+    mass_kg: float | None = Field(None, ge=0, description="Raw/fresh mass of material in kilograms")
+    dried_mass_kg: float | None = Field(None, gt=0, description="Dried weight (kg); required when source is 'purchased'")
     harvest_season: str = Field(..., description="Harvest season description")
-    source: _BATCH_SOURCE = Field(
-        "own_farm",
-        description="'own_farm' – user dries the bark themselves; 'purchased' – bark already dried by supplier."
-    )
-    process_stage: _PROCESS_STAGE | None = Field(
-        None,
-        description=(
-            "Current pipeline stage. Defaults to 'raw' for own_farm or 'distilling' for purchased "
-            "(drying already completed externally). "
-            "Allowed values: raw, drying, distilling, quality_check, complete."
-        )
-    )
+    source: _BATCH_SOURCE = Field("own_farm", description="'own_farm' – user dries material; 'purchased' – already dried by supplier")
+    process_stage: _PROCESS_STAGE | None = Field(None, description="Current pipeline stage; defaults to 'raw' for own_farm or 'distilling' for purchased")
 
 
 class MaterialBatchUpdate(BaseModel):
-    """All fields optional — only provided fields are applied (partial update)."""
     batch_name: str | None = Field(None, description="Optional batch name")
     cinnamon_type: str | None = Field(None, description="Cinnamon type or variety")
     mass_kg: float | None = Field(None, gt=0, description="Raw/fresh mass (kg)")
     dried_mass_kg: float | None = Field(None, gt=0, description="Dried weight (kg)")
     harvest_season: str | None = Field(None, description="Harvest season description")
     source: _BATCH_SOURCE | None = Field(None, description="'own_farm' or 'purchased'")
-    process_stage: _PROCESS_STAGE | None = Field(
-        None,
-        description="Pipeline stage: raw, drying, distilling, quality_check, complete"
-    )
+    process_stage: _PROCESS_STAGE | None = Field(None, description="Pipeline stage: raw, drying, distilling, quality_check, complete")
 
 
 class MaterialBatchRead(BaseModel):
@@ -81,5 +57,86 @@ class MaterialBatchRead(BaseModel):
     source: str
     process_stage: str
     created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class OilYieldPredictionCreate(BaseModel):
+    batch_id: int
+    predicted_yield_ml: float
+    predicted_yield_kg: float
+    input_summary: dict = Field(..., description="Summary of input parameters (dried_mass_kg, species_variety, plant_part, age_years, harvesting_season)")
+    recommendation: dict = Field(..., description="Recommendations dict with 'primary', 'tips', 'quality' keys")
+    predicted_at: str = Field(..., description="ISO 8601 timestamp of prediction")
+
+
+class OilYieldPredictionRead(BaseModel):
+    id: int
+    batch_id: int
+    predicted_yield_ml: float
+    predicted_yield_kg: float
+    dried_mass_kg: float
+    species_variety: str
+    plant_part: str
+    age_years: float
+    harvesting_season: str
+    recommendation_primary: str
+    recommendation_tips: str
+    recommendation_quality: str
+    predicted_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DistillationPredictionCreate(BaseModel):
+    batch_id: int
+    predicted_time_hours: float
+    distillation_capacity_liters: float
+    plant_part: str
+    cinnamon_type: str
+    predicted_at: str = Field(..., description="ISO 8601 timestamp of prediction")
+
+
+class DistillationPredictionRead(BaseModel):
+    id: int
+    batch_id: int
+    predicted_time_hours: float
+    distillation_capacity_liters: float
+    plant_part: str
+    cinnamon_type: str
+    predicted_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class QualityPredictionCreate(BaseModel):
+    batch_id: int
+    score: float
+    label: str = Field(..., description="Quality label: Excellent, Good, Fair, or Poor")
+    price_range: str
+    recommendations: list[str]
+    lab_advice: str
+    color: str
+    clarity: str
+    aroma: str
+    cinnamon_type: str
+    plant_part: str
+    predicted_at: str = Field(..., description="ISO 8601 timestamp of prediction")
+
+
+class QualityPredictionRead(BaseModel):
+    id: int
+    batch_id: int
+    score: float
+    label: str
+    price_range: str
+    recommendations: str
+    lab_advice: str
+    color: str
+    clarity: str
+    aroma: str
+    cinnamon_type: str
+    plant_part: str
+    predicted_at: datetime
 
     model_config = {"from_attributes": True}

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Enum
+from sqlalchemy import Column, String, Boolean, Enum, Date, func
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from app.db import Base
@@ -13,4 +13,4 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(UserRole), nullable=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(String, server_default="now()")
+    created_at = Column(Date, server_default=func.current_date())

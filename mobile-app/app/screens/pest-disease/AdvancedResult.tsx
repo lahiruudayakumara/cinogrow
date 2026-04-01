@@ -35,185 +35,208 @@ export default function AdvancedResult() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
       <ScrollView
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 24 }}
       >
-  <Header title={t("pestDisease.advancedButton", "Advanced Pest & Disease Recommendations")} backButton />
-
-      {image && (
-        <Image
-          source={{ uri: image }}
-          style={styles.image}
-          resizeMode="cover"
+        <Header
+          title={t(
+            "pestDisease.advancedButton",
+            "Advanced Pest & Disease Recommendations",
+          )}
+          backButton
         />
-      )}
 
-      {result ? (
-        result.status === "infected" ? (
-          <View style={{ marginTop: 16 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                padding: 6,
-                backgroundColor: "#e0ffddff",
-                borderRadius: 8,
-              }}
-            >
-              <View>
-                <Text style={styles.text}>{t("common.name", "Name")}: {result.name}</Text>
-                <Text style={styles.text}>{t("pestDisease.category", "Category")}: {result.category}</Text>
-              </View>
-              <View
-                style={{
-                  width: "25%",
-                  padding: 4,
-                  borderRadius: 8,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: 4,
-                  backgroundColor:
-                    result.severity === "Low"
-                      ? "#7efc0082" // green
-                      : result.severity === "Moderate"
-                      ? "#ffd90045" // yellow
-                      : result.severity === "High"
-                      ? "#ff8c0051" // orange
-                      : result.severity === "Critical"
-                      ? "#ff440051" // red
-                      : "#e0e0e0", // fallback
-                }}
-              >
-                <TriangleAlert />
-                <Text
-                  style={{ fontSize: 9, color: "#1A1A1A", marginBottom: 8 }}
-                >
-                  {t("common.severity", "Severity")}: {result.severity}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={{
-                marginTop: 8,
-                padding: 8,
-                backgroundColor: "#f0f8ffff",
-                borderRadius: 8,
-              }}
-            >
-              <Text style={styles.text}>{t("common.confidence", "Confidence")}: {result.confidence}%</Text>
+        {image && (
+          <Image
+            source={{ uri: image }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        )}
 
-              {/* Background bar */}
-              <View
-                style={{
-                  height: 20,
-                  width: "100%",
-                  backgroundColor: "#E0E0E0", // gray background
-                  borderRadius: 10,
-                  overflow: "hidden",
-                  marginTop: 4,
-                }}
-              >
-                {/* Filled bar */}
-                <View
-                  style={{
-                    height: "100%",
-                    width:
-                      result.confidence !== undefined
-                        ? `${result.confidence}%`
-                        : "0%", // fill according to confidence
-                    backgroundColor:
-                      (result.confidence ?? 0) >= 75
-                        ? "#4CAF50" // green for high confidence
-                        : (result.confidence ?? 0) >= 40
-                        ? "#FFC107" // yellow for medium confidence
-                        : "#F44336", // red for low confidence
-                    borderRadius: 10,
-                  }}
-                />
-              </View>
-            </View>
-
-            <View
-              style={{
-                marginTop: 8,
-                backgroundColor: "#daffd7ff",
-                padding: 8,
-                borderRadius: 8,
-              }}
-            >
-              <Text style={styles.text}>
-                {t("pestDisease.affectedArea", "Affected Area")}: {result.affected_area}
-              </Text>
-            </View>
-
-            <View
-              style={{
-                marginTop: 8,
-                backgroundColor: "#fff4e5ff",
-                padding: 8,
-                borderRadius: 8,
-              }}
-            >
-              <Text style={styles.text}>
-                {t("pestDisease.symptoms", "Symptoms")}: {result.symptoms?.join(", ")}
-              </Text>
-            </View>
-
-            <View
-              style={{
-                marginTop: 8,
-                backgroundColor: "#f9e1f3ff",
-                padding: 8,
-                borderRadius: 8,
-              }}
-            >
-              <Text style={styles.text}>{t("pestDisease.cause", "Cause")}: {result.cause}</Text>
-            </View>
-
-            <View
-              style={{
-                marginTop: 8,
-                backgroundColor: "#d1f3fc7d",
-                padding: 8,
-                borderRadius: 8,
-              }}
-            >
-              <Text style={styles.text}>{t("pestDisease.lifeCycle", "Life Cycle")}: {result.life_cycle}</Text>
-            </View>
+        {result ? (
+          result.status === "infected" ? (
             <View style={{ marginTop: 16 }}>
-              {result.recommendations && (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginBottom: 8,
-                    gap: 8,
-                    backgroundColor: "#fdc794ff",
-                    padding: 8,
-                    borderRadius: 6,
-                  }}
-                >
-                  <Lightbulb color="#ff8800ff" />
-                  <Text style={styles.resultText}>
-                    {t("common.recommendation", "Recommendation")}: {result.recommendations}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: 6,
+                  backgroundColor: "#e0ffddff",
+                  borderRadius: 8,
+                }}
+              >
+                <View>
+                  <Text style={styles.text}>
+                    {t("common.name", "Name")}: {result.name}
+                  </Text>
+                  <Text style={styles.text}>
+                    {t("pestDisease.category", "Category")}: {result.category}
                   </Text>
                 </View>
-              )}
+                <View
+                  style={{
+                    width: "25%",
+                    padding: 4,
+                    borderRadius: 8,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 4,
+                    backgroundColor:
+                      result.severity === "Low"
+                        ? "#7efc0082" // green
+                        : result.severity === "Moderate"
+                          ? "#ffd90045" // yellow
+                          : result.severity === "High"
+                            ? "#ff8c0051" // orange
+                            : result.severity === "Critical"
+                              ? "#ff440051" // red
+                              : "#e0e0e0", // fallback
+                  }}
+                >
+                  <TriangleAlert />
+                  <Text
+                    style={{ fontSize: 9, color: "#1A1A1A", marginBottom: 8 }}
+                  >
+                    {t("common.severity", "Severity")}: {result.severity}
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={{
+                  marginTop: 8,
+                  padding: 8,
+                  backgroundColor: "#f0f8ffff",
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={styles.text}>
+                  {t("common.confidence", "Confidence")}: {result.confidence}%
+                </Text>
+
+                {/* Background bar */}
+                <View
+                  style={{
+                    height: 20,
+                    width: "100%",
+                    backgroundColor: "#E0E0E0", // gray background
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    marginTop: 4,
+                  }}
+                >
+                  {/* Filled bar */}
+                  <View
+                    style={{
+                      height: "100%",
+                      width:
+                        result.confidence !== undefined
+                          ? `${result.confidence}%`
+                          : "0%", // fill according to confidence
+                      backgroundColor:
+                        (result.confidence ?? 0) >= 75
+                          ? "#4CAF50" // green for high confidence
+                          : (result.confidence ?? 0) >= 40
+                            ? "#FFC107" // yellow for medium confidence
+                            : "#F44336", // red for low confidence
+                      borderRadius: 10,
+                    }}
+                  />
+                </View>
+              </View>
+
+              <View
+                style={{
+                  marginTop: 8,
+                  backgroundColor: "#daffd7ff",
+                  padding: 8,
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={styles.text}>
+                  {t("pestDisease.affectedArea", "Affected Area")}:{" "}
+                  {result.affected_area}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  marginTop: 8,
+                  backgroundColor: "#fff4e5ff",
+                  padding: 8,
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={styles.text}>
+                  {t("pestDisease.symptoms", "Symptoms")}:{" "}
+                  {result.symptoms?.join(", ")}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  marginTop: 8,
+                  backgroundColor: "#f9e1f3ff",
+                  padding: 8,
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={styles.text}>
+                  {t("pestDisease.cause", "Cause")}: {result.cause}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  marginTop: 8,
+                  backgroundColor: "#d1f3fc7d",
+                  padding: 8,
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={styles.text}>
+                  {t("pestDisease.lifeCycle", "Life Cycle")}:{" "}
+                  {result.life_cycle}
+                </Text>
+              </View>
+              <View style={{ marginTop: 16 }}>
+                {result.recommendations && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 8,
+                      gap: 8,
+                      backgroundColor: "#fdc794ff",
+                      padding: 8,
+                      borderRadius: 6,
+                    }}
+                  >
+                    <Lightbulb color="#ff8800ff" />
+                    <Text style={styles.resultText}>
+                      {t("common.recommendation", "Recommendation")}:{" "}
+                      {result.recommendations}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
-          </View>
+          ) : (
+            <Text style={styles.text}>
+              {result.message ||
+                t("pestDisease.noAdvancedData", "No advanced data available")}
+            </Text>
+          )
         ) : (
           <Text style={styles.text}>
-            {result.message || t("pestDisease.noAdvancedData", "No advanced data available")}
+            {t("pestDisease.noData", "No data provided")}
           </Text>
-        )
-      ) : (
-  <Text style={styles.text}>{t("pestDisease.noData", "No data provided")}</Text>
-      )}
+        )}
       </ScrollView>
     </SafeAreaView>
   );

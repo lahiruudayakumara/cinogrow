@@ -3,6 +3,7 @@ from app.models import User
 from app.schemas import UserCreate
 from app.core.security import get_password_hash, verify_password
 import uuid
+import datetime
 
 def create_user(db: Session, user_in: UserCreate):
     hashed_password = get_password_hash(user_in.password)
@@ -11,6 +12,7 @@ def create_user(db: Session, user_in: UserCreate):
         full_name=user_in.full_name,
         hashed_password=hashed_password,
         role=user_in.role,
+        created_at=datetime.datetime.now().isoformat(),  # Store full datetime YYYY-MM-DDTHH:MM:SS
     )
     db.add(db_user)
     db.commit()

@@ -75,3 +75,4 @@ if __name__ == "__main__":
     train_model(force_retrain=True)
 
 #model train - python oil_yield_model.py
+# Optimal Range: 98.90 - 141.48 kg (best accuracy zone)

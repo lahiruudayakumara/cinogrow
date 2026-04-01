@@ -7,8 +7,7 @@ from app.schemas.oil_yield import (
     MaterialBatchCreate, MaterialBatchUpdate, MaterialBatchRead,
     OilYieldPredictionCreate, OilYieldPredictionRead,
 )
-from training_scripts.oil_yield.oil_yield_model import load_model
-import numpy as np
+from app.services.oil.oil_yield_service import predict_oil_yield, get_prediction_summary
 import logging
 from sqlmodel import Session, select
 from app.db.session import get_session
@@ -20,33 +19,31 @@ from app.models.oil_yield.predictions import (
 router = APIRouter(prefix="/oil_yield", tags=["Oil Yield"])
 logger = logging.getLogger(__name__)
 
-_cached_model = None
-
-def get_model():
-    global _cached_model
-    if _cached_model is None:
-        _cached_model = load_model()
-    return _cached_model
-
 
 @router.post("/predict", response_model=OilYieldOutput)
 def predict_yield(data: OilYieldInput):
-    model = get_model()
-
-    species_encoded = 0 if data.species_variety == "Sri Gemunu" else 1
-    season_encoded  = 0 if data.harvesting_season == "January-May" else 1
-
-    X = np.array([[data.dried_mass_kg, species_encoded, season_encoded]])
-    prediction = model.predict(X)[0]
-
-    return {
-        "predicted_yield_kg": round(float(prediction), 2),
-        "input_summary": {
-            "dried_mass_kg": data.dried_mass_kg,
-            "species_variety": data.species_variety,
-            "harvesting_season": data.harvesting_season,
-        },
-    }
+    try:
+        # Use service layer to make prediction
+        predicted_yield = predict_oil_yield(
+            dried_mass_kg=data.dried_mass_kg,
+            species_variety=data.species_variety,
+            harvesting_season=data.harvesting_season
+        )
+        
+        # Return prediction with input summary
+        result = get_prediction_summary(
+            dried_mass_kg=data.dried_mass_kg,
+            species_variety=data.species_variety,
+            harvesting_season=data.harvesting_season,
+            predicted_yield_kg=predicted_yield
+        )
+        return result
+    except ValueError as e:
+        logger.warning(f"Validation error in oil yield prediction: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error in oil yield prediction: {e}")
+        raise HTTPException(status_code=500, detail="Failed to predict oil yield")
 
 
 @router.post("/price_forecast", response_model=PriceForecastOutput)

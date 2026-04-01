@@ -209,6 +209,29 @@ def update_material_batch(
         raise HTTPException(status_code=500, detail=f"Failed to update batch: {str(e)}")
 
 
+@router.delete("/batch/{batch_id}", status_code=204)
+def delete_material_batch(
+    batch_id: int,
+    session: Session = Depends(get_session),
+):
+    """
+    Delete a material batch record by ID.
+    
+    Returns 204 No Content on success.
+    Raises 404 if batch not found.
+    """
+    batch = session.get(MaterialBatch, batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail=f"Batch {batch_id} not found")
+    
+    try:
+        session.delete(batch)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete batch: {str(e)}")
+
+
 @router.get("/batch", response_model=list[MaterialBatchRead])
 def list_material_batches(
     source: str | None = None,

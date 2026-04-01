@@ -34,7 +34,6 @@ from app.models.yield_weather.hybrid_yield import HybridYieldResult
 from app.models.fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis
 from app.models.fertilizer.fertilizer import FertilizerType, FertilizerApplication, FertilizerSchedule, FertilizerRecommendation
 from app.models.oil_yield.material_batch import MaterialBatch
-from app.models.oil_yield.predictions import OilYieldPrediction, DistillationPrediction, QualityPrediction
 
 # Import database and routers
 from app.db.session import create_db_and_tables
@@ -46,7 +45,6 @@ from app.routers import auth
 
 # Import your oil yield router
 from app.oil_yield.router import router as oil_yield_router
-from app.oil_yield.predictions_router import router as oil_yield_predictions_router
 
 # Create FastAPI app
 app = FastAPI(

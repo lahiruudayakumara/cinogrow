@@ -83,36 +83,3 @@ class MaterialBatchRead(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
-
-
-# --------------------------
-# Prediction Storage Schemas
-# --------------------------
-
-class OilYieldPredictionCreate(BaseModel):
-    batch_id: int
-    predicted_yield_ml: float
-    predicted_yield_liters: float
-    input_summary: dict
-    recommendation: dict
-    predicted_at: str
-
-
-class OilYieldPredictionRead(BaseModel):
-    id: int
-    batch_id: int
-    predicted_yield_ml: float
-    predicted_yield_liters: float
-    dried_mass_kg: float
-    species_variety: str
-    harvesting_season: str
-    recommendation_primary: str
-    recommendation_tips: str
-    recommendation_quality: str
-    predicted_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-
-

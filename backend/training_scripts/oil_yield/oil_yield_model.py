@@ -13,14 +13,11 @@ DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "cinnamon_oil_yield_
 
 
 def encode_features(df):
-
     df['species_encoded'] = df['Species_Variety'].map({'Sri Gemunu': 0, 'Sri Vijaya': 1})
-
     df['season_encoded'] = df['Harvest_Season'].map({
         'October–December/January': 0,
         'May–August': 1
     })
-
     return df
 
 
@@ -37,15 +34,18 @@ def train_model(force_retrain=True):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     param_grid = {
-        'n_estimators': [100, 200],
-        'max_depth': [3, 5],
-        'learning_rate': [0.05, 0.1]
+        'n_estimators': [200, 400, 600],
+        'max_depth': [3, 4, 5],
+        'learning_rate': [0.01, 0.05, 0.1],
+        'subsample': [0.8, 1.0],
+        'colsample_bytree': [0.8, 1.0],
+        'min_child_weight': [1, 3],
     }
 
     grid_search = GridSearchCV(
-        estimator=XGBRegressor(random_state=42, verbosity=0),
+        estimator=XGBRegressor(random_state=42, verbosity=0, reg_alpha=0.1, reg_lambda=1.5),
         param_grid=param_grid,
-        cv=3,
+        cv=5,
         scoring='r2',
         n_jobs=-1
     )
@@ -57,6 +57,10 @@ def train_model(force_retrain=True):
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
     print(f"MAE: {mae:.3f} L | R²: {r2:.3f}")
+    print(f"Best params: {grid_search.best_params_}")
+
+    cv_scores = cross_val_score(model, X, y, cv=5, scoring='r2')
+    print(f"CV R²: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
 
     joblib.dump(model, MODEL_PATH)
     return model
@@ -74,5 +78,3 @@ def load_model():
 if __name__ == "__main__":
     train_model(force_retrain=True)
 
-#model train - python oil_yield_model.py
-# Optimal Range: 98.90 - 141.48 kg (best accuracy zone)

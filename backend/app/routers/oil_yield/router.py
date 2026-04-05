@@ -50,7 +50,7 @@ def predict_yield(data: OilYieldInput):
 def get_price_forecast():
     try:
         from training_scripts.oil_yield.price_forecast_model import forecast_prices as generate_forecast
-        return generate_forecast(time_range="weeks", steps=4)
+        return generate_forecast()
     except Exception as e:
         logger.error(f"Price forecast error: {e}")
         raise HTTPException(status_code=500, detail=f"Error generating price forecast: {str(e)}")

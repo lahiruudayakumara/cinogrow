@@ -9,6 +9,14 @@ from statsmodels.tsa.stattools import adfuller
 
 warnings.filterwarnings("ignore")
 
+# Kaggle integration for cinnamon oil prices dataset
+try:
+    import kagglehub
+    from kagglehub import KaggleDatasetAdapter
+    KAGGLEHUB_AVAILABLE = True
+except ImportError:
+    KAGGLEHUB_AVAILABLE = False
+
 MODEL_PATH = Path(__file__).resolve().parent / "price_forecast_model.pkl"
 META_PATH  = Path(__file__).resolve().parent / "price_forecast_model_meta.pkl"
 DATA_PATH  = next((p for p in [
@@ -16,12 +24,40 @@ DATA_PATH  = next((p for p in [
     Path(__file__).parent.parent / "database" / "oil" / "oil_price.csv",
 ] if p.exists()), None)
 
+# Kaggle dataset info
+KAGGLE_DATASET = "malmiwithanage/cinnamon-oil-prices"
+KAGGLE_FILE_PATH = "price_data.csv"
+
+def load_data_from_kaggle():
+    """Load cinnamon oil prices dataset from Kaggle using kagglehub"""
+    if not KAGGLEHUB_AVAILABLE:
+        return None
+    
+    try:
+        df = kagglehub.load_dataset(
+            KaggleDatasetAdapter.PANDAS,
+            KAGGLE_DATASET,
+            KAGGLE_FILE_PATH
+        )
+        print(f"Loaded from Kaggle: {len(df)} rows")
+        return df
+    except Exception as e:
+        return None
+
 PARAMS = {"n_estimators":800,"num_leaves":31,"max_depth":6,"learning_rate":0.03,
           "subsample":0.8,"colsample_bytree":0.8,"reg_alpha":0.1,"reg_lambda":1.0,
           "random_state":42,"verbose":-1}
 
-def load_data(path):
-    df = pd.read_csv(path)
+def load_data(path=None):
+    """Load and clean price data from Kaggle or local CSV files"""
+    df = load_data_from_kaggle()
+    
+    if df is None and path:
+        df = pd.read_csv(path)
+    
+    if df is None:
+        return None
+    
     df["price_lkr"] = df["price_lkr"].astype(str).str.replace(",","").astype(float)
     df["date"] = pd.to_datetime(df["date"])
     return df[["date","price_lkr"]].sort_values("date").drop_duplicates("date").reset_index(drop=True)
@@ -103,9 +139,9 @@ def forecast_prices(time_range=4, steps=None):
     try:
         model = joblib.load(MODEL_PATH); meta = joblib.load(META_PATH)
     except Exception:
-        model, meta = train(load_data(DATA_PATH))
+        model, meta = train(load_data())
 
-    df        = load_data(DATA_PATH)
+    df        = load_data()
     feat_cols = meta["feature_columns"]
     q_hat     = meta["q_hat"]
     extended  = df.copy()

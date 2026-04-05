@@ -5,50 +5,26 @@ from xgboost import XGBRegressor
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.metrics import mean_absolute_error, r2_score
 from pathlib import Path
+import kagglehub
+from kagglehub import KaggleDatasetAdapter
 
 warnings.filterwarnings('ignore', category=UserWarning, module='xgboost')
 
-# Kaggle integration for cinnamon oil yield dataset
-try:
-    import kagglehub
-    from kagglehub import KaggleDatasetAdapter
-    KAGGLEHUB_AVAILABLE = True
-except ImportError:
-    KAGGLEHUB_AVAILABLE = False
-
 MODEL_PATH = Path(__file__).resolve().parent / "oil_yield_model.pkl"
-DATA_PATH = Path(__file__).resolve().parent / "data_sets" / "cinnamon_oil_yield_dataset.csv"
 
-# Kaggle dataset info
-KAGGLE_DATASET = "malmiwithanage/cinnamon-oil-yield"
-KAGGLE_FILE_PATH = "cinnamon_oil_yield_dataset.csv"
-
-def load_data_from_kaggle():
+def load_data(path=None):
     """Load cinnamon oil yield dataset from Kaggle using kagglehub"""
-    if not KAGGLEHUB_AVAILABLE:
-        return None
-    
     try:
         df = kagglehub.load_dataset(
             KaggleDatasetAdapter.PANDAS,
-            KAGGLE_DATASET,
-            KAGGLE_FILE_PATH
+            "malmiwithanage/cinnamon-oil-yield",
+            "cinnamon_oil_yield_dataset.csv",
         )
         print(f"✅ Loaded from Kaggle: {len(df)} rows")
         return df
-    except Exception:
-        return None
-
-def load_data(path=None):
-    """Load cinnamon oil yield data from Kaggle or local CSV"""
-    df = load_data_from_kaggle()
-    
-    if df is None and path:
-        df = pd.read_csv(path)
-    elif df is None:
-        df = pd.read_csv(DATA_PATH)
-    
-    return df
+    except Exception as e:
+        print(f"❌ Failed to load from Kaggle: {e}")
+        raise
 
 
 def encode_features(df):

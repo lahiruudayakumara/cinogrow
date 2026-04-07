@@ -15,7 +15,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { BarChart } from 'react-native-chart-kit';
+import { LineChart } from 'react-native-chart-kit';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
@@ -100,8 +100,9 @@ export default function OilPricePredictor() {
       return { labels: [], datasets: [{ data: [] }] };
     }
 
-    const prices: number[] = forecastData.forecast || [];
-    const dates: string[] = forecastData.dates || [];
+    // Ensure we only plot 4 weekly prices
+    const prices: number[] = (forecastData.forecast || []).slice(0, 4);
+    const dates: string[] = (forecastData.dates || []).slice(0, 4);
 
     const labels = dates.map((dateStr) => {
       const d = new Date(dateStr);
@@ -174,10 +175,10 @@ export default function OilPricePredictor() {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {(() => {
                     const chartData = getChartData();
-                    // 72px per bar gives enough room for labels and values on top
+                    // 72px per point gives enough room for labels
                     const computedWidth = Math.max(CHART_WIDTH, chartData.labels.length * 72);
                     return (
-                      <BarChart
+                      <LineChart
                         data={chartData}
                         width={computedWidth}
                         height={250}
@@ -197,12 +198,18 @@ export default function OilPricePredictor() {
                             stroke: 'rgba(0, 0, 0, 0.05)',
                           },
                           barPercentage: 0.65,
+                          propsForDots: {
+                            r: '5',
+                            strokeWidth: '2',
+                            stroke: '#FF3B30',
+                          },
                         }}
                         style={styles.chart}
                         withVerticalLabels={true}
                         withHorizontalLabels={true}
                         withInnerLines={true}
-                        showValuesOnTopOfBars={true}
+                        withDots={true}
+                        withShadow={false}
                         verticalLabelRotation={45}
                         fromZero={false}
                       />

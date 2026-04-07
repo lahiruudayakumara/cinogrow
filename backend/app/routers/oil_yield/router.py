@@ -77,6 +77,103 @@ def predict_yield_for_batch(batch_id: int, session: Session = Depends(get_sessio
         raise HTTPException(status_code=500, detail="Failed to predict oil yield for batch")
 
 
+@router.post("/predictions", response_model=OilYieldPredictionRead, status_code=201)
+def save_yield_prediction(payload: OilYieldPredictionCreate, session: Session = Depends(get_session)):
+    """Persist a predicted oil yield for a batch.
+
+    This endpoint is called by the mobile app after a successful prediction
+    to store the details for later display.
+    """
+    summary = payload.input_summary or {}
+    rec     = payload.recommendation or {}
+
+    existing = session.exec(
+        select(OilYieldPrediction).where(OilYieldPrediction.batch_id == payload.batch_id)
+    ).first()
+
+    try:
+        if existing:
+            row = existing
+            row.predicted_yield_kg = payload.predicted_yield_kg
+            row.dried_mass_kg      = summary.get("dried_mass_kg", 0.0)
+            row.species_variety    = summary.get("species_variety", "")
+            row.age_years          = summary.get("age_years", 0.0)
+            row.harvesting_season  = summary.get("harvesting_season", "")
+            row.recommendation_primary = rec.get("primary", "")
+            row.recommendation_tips    = json.dumps(rec.get("tips", []))
+            row.recommendation_quality = rec.get("quality", "")
+            row.predicted_at           = datetime.fromisoformat(payload.predicted_at)
+        else:
+            row = OilYieldPrediction(
+                batch_id=payload.batch_id,
+                predicted_yield_kg=payload.predicted_yield_kg,
+                dried_mass_kg=summary.get("dried_mass_kg", 0.0),
+                species_variety=summary.get("species_variety", ""),
+                age_years=summary.get("age_years", 0.0),
+                harvesting_season=summary.get("harvesting_season", ""),
+                recommendation_primary=rec.get("primary", ""),
+                recommendation_tips=json.dumps(rec.get("tips", [])),
+                recommendation_quality=rec.get("quality", ""),
+                predicted_at=datetime.fromisoformat(payload.predicted_at),
+            )
+
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return row
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Failed to save oil yield prediction: {e}")
+        # Temporarily include underlying error to aid debugging
+        raise HTTPException(status_code=500, detail=f"Failed to save oil yield prediction: {e}")
+
+
+@router.get("/predictions", response_model=list[OilYieldPredictionRead])
+def list_yield_predictions(session: Session = Depends(get_session)):
+    try:
+        # Ensure table exists in environments where migrations haven't run yet
+        OilYieldPrediction.__table__.create(session.get_bind(), checkfirst=True)
+        return session.exec(select(OilYieldPrediction)).all()
+    except Exception as e:
+        logger.error(f"Failed to list oil yield predictions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list oil yield predictions")
+
+
+@router.get("/predictions/{batch_id}", response_model=OilYieldPredictionRead)
+def get_yield_prediction(batch_id: int, session: Session = Depends(get_session)):
+    try:
+        # Ensure table exists in environments where migrations haven't run yet
+        OilYieldPrediction.__table__.create(session.get_bind(), checkfirst=True)
+
+        row = session.exec(
+            select(OilYieldPrediction).where(OilYieldPrediction.batch_id == batch_id)
+        ).first()
+        if not row:
+            raise HTTPException(status_code=404, detail="Prediction not found")
+
+        # Map explicitly to avoid response validation errors from nullable/legacy DB fields
+        return OilYieldPredictionRead(
+            id=row.id,
+            batch_id=row.batch_id,
+            predicted_yield_kg=float(row.predicted_yield_kg or 0.0),
+            dried_mass_kg=float(row.dried_mass_kg or 0.0),
+            species_variety=row.species_variety or "",
+            age_years=float(row.age_years or 0.0),
+            harvesting_season=row.harvesting_season or "",
+            recommendation_primary=row.recommendation_primary or "",
+            recommendation_tips=row.recommendation_tips or "[]",
+            recommendation_quality=row.recommendation_quality or "",
+            predicted_at=row.predicted_at or datetime.utcnow(),
+        )
+    except HTTPException:
+        # Re-raise known HTTP errors
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get oil yield prediction for batch {batch_id}: {e}")
+        # Include underlying error message in detail to aid debugging
+        raise HTTPException(status_code=500, detail=f"Failed to get oil yield prediction: {e}")
+
+
 @router.post("/price_forecast", response_model=PriceForecastOutput)
 def get_price_forecast():
     try:

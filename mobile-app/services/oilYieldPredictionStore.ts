@@ -23,9 +23,6 @@ export interface OilYieldPrediction {
 
 export type PredictionsMap = Record<number, OilYieldPrediction>;
 
-// In-memory store now that backend /predictions/yield endpoints are removed
-const inMemoryPredictions: PredictionsMap = {};
-
 function rowToYieldPrediction(row: any): OilYieldPrediction {
   return {
     batchId: row.batch_id,
@@ -46,16 +43,35 @@ function rowToYieldPrediction(row: any): OilYieldPrediction {
 }
 
 export async function savePrediction(prediction: OilYieldPrediction): Promise<void> {
-  inMemoryPredictions[prediction.batchId] = prediction;
+  const res = await fetch(`${BASE}/oil_yield/predictions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      batch_id: prediction.batchId,
+      predicted_yield_kg: prediction.predictedYieldKg,
+      input_summary: prediction.inputSummary,
+      recommendation: prediction.recommendation,
+      predicted_at: prediction.predictedAt,
+    }),
+  });
+  if (!res.ok) throw new Error(`savePrediction failed: ${res.status}`);
 }
 
 export async function loadPredictions(): Promise<PredictionsMap> {
-  // Return a shallow copy so callers can't mutate internal state directly
-  return { ...inMemoryPredictions };
+  const res = await fetch(`${BASE}/oil_yield/predictions`);
+  if (!res.ok) throw new Error(`loadPredictions failed: ${res.status}`);
+  const rows: any[] = await res.json();
+  const map: PredictionsMap = {};
+  for (const row of rows) {
+    const p = rowToYieldPrediction(row);
+    map[p.batchId] = p;
+  }
+  return map;
 }
 
 export async function clearPrediction(batchId: number): Promise<void> {
-  delete inMemoryPredictions[batchId];
+  const res = await fetch(`${BASE}/oil_yield/predictions/${batchId}`, { method: 'DELETE' });
+  if (!res.ok && res.status !== 404) throw new Error(`clearPrediction failed: ${res.status}`);
 }
 
 // ─── Distillation-time prediction ─────────────────────────────────────────────

@@ -32,7 +32,6 @@ interface MaterialBatch {
   batch_name?: string;
   cinnamon_type: string;
   mass_kg: number;
-  plant_part: string;
   plant_age_years: number;
   harvest_season: string;
   created_at: string;
@@ -212,14 +211,6 @@ export default function AddMaterialBatchScreen() {
           <View style={styles.batchDetailRow}>
             <View style={styles.batchDetailItem}>
               <MaterialCommunityIcons name="sprout" size={16} color="#8E8E93" />
-              <Text style={styles.batchDetailLabel}>{t('oil_yield.add_batch.list.detail_labels.part')}</Text>
-            </View>
-            <Text style={styles.batchDetailValue}>{batch.plant_part}</Text>
-          </View>
-          
-          <View style={styles.batchDetailRow}>
-            <View style={styles.batchDetailItem}>
-              <MaterialCommunityIcons name="clock-outline" size={16} color="#8E8E93" />
               <Text style={styles.batchDetailLabel}>{t('oil_yield.add_batch.list.detail_labels.age')}</Text>
             </View>
             <Text style={styles.batchDetailValue}>{batch.plant_age_years} {t('oil_yield.add_batch.form.plant_age.suffix')}</Text>

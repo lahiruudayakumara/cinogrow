@@ -8,11 +8,9 @@ class OilYieldPrediction(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     batch_id: int = Field(index=True)
-    predicted_yield_ml: float
-    predicted_yield_liters: float
+    predicted_yield_kg: float
     dried_mass_kg: float
     species_variety: str = Field(max_length=100)
-    plant_part: str = Field(max_length=100)
     age_years: float
     harvesting_season: str = Field(max_length=100)
     recommendation_primary: str

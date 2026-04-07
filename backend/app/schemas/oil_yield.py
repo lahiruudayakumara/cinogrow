@@ -63,9 +63,8 @@ class MaterialBatchRead(BaseModel):
 
 class OilYieldPredictionCreate(BaseModel):
     batch_id: int
-    predicted_yield_ml: float
     predicted_yield_kg: float
-    input_summary: dict = Field(..., description="Summary of input parameters (dried_mass_kg, species_variety, plant_part, age_years, harvesting_season)")
+    input_summary: dict = Field(..., description="Summary of input parameters (dried_mass_kg, species_variety, age_years, harvesting_season)")
     recommendation: dict = Field(..., description="Recommendations dict with 'primary', 'tips', 'quality' keys")
     predicted_at: str = Field(..., description="ISO 8601 timestamp of prediction")
 
@@ -73,11 +72,9 @@ class OilYieldPredictionCreate(BaseModel):
 class OilYieldPredictionRead(BaseModel):
     id: int
     batch_id: int
-    predicted_yield_ml: float
     predicted_yield_kg: float
     dried_mass_kg: float
     species_variety: str
-    plant_part: str
     age_years: float
     harvesting_season: str
     recommendation_primary: str

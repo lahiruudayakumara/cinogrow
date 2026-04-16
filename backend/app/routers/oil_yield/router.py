@@ -7,7 +7,7 @@ from app.schemas.oil_yield import (
     MaterialBatchCreate, MaterialBatchUpdate, MaterialBatchRead,
     OilYieldPredictionCreate, OilYieldPredictionRead,
 )
-from app.services.oil.oil_yield_service import predict_oil_yield, get_prediction_summary
+from app.services.oil.oil_yield_service import predict_oil_yield
 import logging
 from sqlmodel import Session, select
 from app.db.session import get_session
@@ -23,19 +23,10 @@ logger = logging.getLogger(__name__)
 @router.post("/predict", response_model=OilYieldOutput)
 def predict_yield(data: OilYieldInput):
     try:
-        # Use service layer to make prediction
-        predicted_yield = predict_oil_yield(
+        result = predict_oil_yield(
             dried_mass_kg=data.dried_mass_kg,
             species_variety=data.species_variety,
             harvesting_season=data.harvesting_season
-        )
-        
-        # Return prediction with input summary
-        result = get_prediction_summary(
-            dried_mass_kg=data.dried_mass_kg,
-            species_variety=data.species_variety,
-            harvesting_season=data.harvesting_season,
-            predicted_yield_kg=predicted_yield
         )
         return result
     except ValueError as e:
@@ -56,17 +47,10 @@ def predict_yield_for_batch(batch_id: int, session: Session = Depends(get_sessio
         raise HTTPException(status_code=400, detail="Batch has no valid dried_mass_kg for prediction")
 
     try:
-        predicted_yield = predict_oil_yield(
+        result = predict_oil_yield(
             dried_mass_kg=batch.dried_mass_kg,
             species_variety=batch.cinnamon_type,
             harvesting_season=batch.harvest_season,
-        )
-
-        result = get_prediction_summary(
-            dried_mass_kg=batch.dried_mass_kg,
-            species_variety=batch.cinnamon_type,
-            harvesting_season=batch.harvest_season,
-            predicted_yield_kg=predicted_yield,
         )
         return result
     except ValueError as e:

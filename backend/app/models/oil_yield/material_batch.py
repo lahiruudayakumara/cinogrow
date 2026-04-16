@@ -14,7 +14,6 @@ class MaterialBatch(SQLModel, table=True):
     cinnamon_type: str = Field(max_length=100)
     mass_kg: float = Field(default=0.0)
     dried_mass_kg: Optional[float] = Field(default=None, description="Dried weight (kg). Required for purchased; recorded later for own_farm.")
-    plant_part: Optional[str] = Field(default="", max_length=100)
     plant_age_years: Optional[float] = Field(default=0.0)
     harvest_season: str = Field(max_length=100)
     source: str = Field(max_length=20)

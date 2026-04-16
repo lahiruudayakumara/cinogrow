@@ -6,12 +6,10 @@ const BASE = currentConfig.baseUrl;
 
 export interface OilYieldPrediction {
   batchId: number;
-  predictedYieldMl: number;
-  predictedYieldLiters: number;
+  predictedYieldKg: number;
   inputSummary: {
     dried_mass_kg: number;
     species_variety: string;
-    plant_part: string;
     age_years: number;
     harvesting_season: string;
   };
@@ -28,12 +26,10 @@ export type PredictionsMap = Record<number, OilYieldPrediction>;
 function rowToYieldPrediction(row: any): OilYieldPrediction {
   return {
     batchId: row.batch_id,
-    predictedYieldMl: row.predicted_yield_ml,
-    predictedYieldLiters: row.predicted_yield_liters,
+    predictedYieldKg: row.predicted_yield_kg,
     inputSummary: {
       dried_mass_kg: row.dried_mass_kg,
       species_variety: row.species_variety,
-      plant_part: row.plant_part,
       age_years: row.age_years,
       harvesting_season: row.harvesting_season,
     },
@@ -47,13 +43,12 @@ function rowToYieldPrediction(row: any): OilYieldPrediction {
 }
 
 export async function savePrediction(prediction: OilYieldPrediction): Promise<void> {
-  const res = await fetch(`${BASE}/oil_yield/predictions/yield`, {
+  const res = await fetch(`${BASE}/oil_yield/predictions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       batch_id: prediction.batchId,
-      predicted_yield_ml: prediction.predictedYieldMl,
-      predicted_yield_liters: prediction.predictedYieldLiters,
+      predicted_yield_kg: prediction.predictedYieldKg,
       input_summary: prediction.inputSummary,
       recommendation: prediction.recommendation,
       predicted_at: prediction.predictedAt,
@@ -63,7 +58,7 @@ export async function savePrediction(prediction: OilYieldPrediction): Promise<vo
 }
 
 export async function loadPredictions(): Promise<PredictionsMap> {
-  const res = await fetch(`${BASE}/oil_yield/predictions/yield`);
+  const res = await fetch(`${BASE}/oil_yield/predictions`);
   if (!res.ok) throw new Error(`loadPredictions failed: ${res.status}`);
   const rows: any[] = await res.json();
   const map: PredictionsMap = {};
@@ -75,7 +70,7 @@ export async function loadPredictions(): Promise<PredictionsMap> {
 }
 
 export async function clearPrediction(batchId: number): Promise<void> {
-  const res = await fetch(`${BASE}/oil_yield/predictions/yield/${batchId}`, { method: 'DELETE' });
+  const res = await fetch(`${BASE}/oil_yield/predictions/${batchId}`, { method: 'DELETE' });
   if (!res.ok && res.status !== 404) throw new Error(`clearPrediction failed: ${res.status}`);
 }
 
@@ -136,78 +131,5 @@ export async function clearDistillationPrediction(batchId: number): Promise<void
   if (!res.ok && res.status !== 404) throw new Error(`clearDistillationPrediction failed: ${res.status}`);
 }
 
-// ─── Oil-quality prediction ───────────────────────────────────────────────────
-
-export interface QualityPrediction {
-  batchId: number;
-  score: number;
-  label: string;          // 'Excellent' | 'Good' | 'Fair' | 'Poor'
-  priceRange: string;
-  recommendations: string[];
-  labAdvice: string;
-  color: string;
-  clarity: string;
-  aroma: string;
-  cinnamonType: string;
-  plantPart: string;
-  predictedAt: string;
-}
-
-export type QualityPredictionsMap = Record<number, QualityPrediction>;
-
-function rowToQualityPrediction(row: any): QualityPrediction {
-  return {
-    batchId: row.batch_id,
-    score: row.score,
-    label: row.label,
-    priceRange: row.price_range,
-    recommendations: JSON.parse(row.recommendations ?? '[]'),
-    labAdvice: row.lab_advice,
-    color: row.color,
-    clarity: row.clarity,
-    aroma: row.aroma,
-    cinnamonType: row.cinnamon_type,
-    plantPart: row.plant_part,
-    predictedAt: row.predicted_at,
-  };
-}
-
-export async function saveQualityPrediction(prediction: QualityPrediction): Promise<void> {
-  const res = await fetch(`${BASE}/oil_yield/predictions/quality`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      batch_id: prediction.batchId,
-      score: prediction.score,
-      label: prediction.label,
-      price_range: prediction.priceRange,
-      recommendations: prediction.recommendations,
-      lab_advice: prediction.labAdvice,
-      color: prediction.color,
-      clarity: prediction.clarity,
-      aroma: prediction.aroma,
-      cinnamon_type: prediction.cinnamonType,
-      plant_part: prediction.plantPart,
-      predicted_at: prediction.predictedAt,
-    }),
-  });
-  if (!res.ok) throw new Error(`saveQualityPrediction failed: ${res.status}`);
-}
-
-export async function loadQualityPredictions(): Promise<QualityPredictionsMap> {
-  const res = await fetch(`${BASE}/oil_yield/predictions/quality`);
-  if (!res.ok) throw new Error(`loadQualityPredictions failed: ${res.status}`);
-  const rows: any[] = await res.json();
-  const map: QualityPredictionsMap = {};
-  for (const row of rows) {
-    const p = rowToQualityPrediction(row);
-    map[p.batchId] = p;
-  }
-  return map;
-}
-
-export async function clearQualityPrediction(batchId: number): Promise<void> {
-  const res = await fetch(`${BASE}/oil_yield/predictions/quality/${batchId}`, { method: 'DELETE' });
-  if (!res.ok && res.status !== 404) throw new Error(`clearQualityPrediction failed: ${res.status}`);
-}
+// (Oil-quality prediction feature removed)
 

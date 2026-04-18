@@ -1801,7 +1801,7 @@
           "placeholder": "3.2",
           "suffix": "අවුරුදු"
         },
-        "harvest_season": {
+        "harvest_seasons": {
           "label": "අස්වැන්න කාලය",
           "subtitle": "අස්වනු ලබාගත් කාලය තෝරන්න",
           "options": [
@@ -1826,8 +1826,8 @@
           "featherings_chips": "පොතු සහ චිප්ස්"
         },
         "harvest_seasons": {
-          "may_august": "මැයි–අගෝස්තු",
-          "october_january": "ඔක්තෝබර්–දෙසැම්බර්/ජනවාරි"
+          "january_may": "ජනවාරි–අප්‍රේල්",
+          "june_december": "මැයි–අගෝස්තු"
         }
       },
       "buttons": {

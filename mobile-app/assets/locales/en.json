@@ -1703,7 +1703,7 @@
           "placeholder": "3.2",
           "suffix": "years"
         },
-        "harvest_season": {
+        "harvest_seasons": {
           "label": "Harvest Season",
           "subtitle": "Select season",
           "options": [
@@ -1728,8 +1728,8 @@
           "featherings_chips": "Featherings & Chips"
         },
         "harvest_seasons": {
-          "may_august": "May–August",
-          "october_january": "October–December/January"
+          "january_may": "January-May",
+          "june_december": "June-December"
         }
       },
       "buttons": {

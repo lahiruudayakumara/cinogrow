@@ -414,8 +414,8 @@ export default function AddMaterialBatchScreen() {
                 <MaterialCommunityIcons name="weather-sunny" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>{t('oil_yield.add_batch.form.harvest_season.label')}</Text>
-                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.harvest_season.subtitle')}</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.harvest_seasons.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.harvest_seasons.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.dropdownGroup}>

@@ -39,8 +39,8 @@ def define_param_grid(n_samples):
         'n_estimators': np.linspace(n_estimators_min, n_estimators_max, 5, dtype=int).tolist(),
         'max_depth': list(range(3, min(10, n_samples // 10 + 3))),
         'learning_rate': [0.01, 0.05, 0.1, 0.15],
-        'subsample': np.linspace(0.6, 1.0, 5).tolist(),
-        'colsample_bytree': np.linspace(0.6, 1.0, 5).tolist(),
+        'subsample': [0.6, 0.7, 0.8, 0.9, 1.0],
+        'colsample_bytree': [1.0, 0.8, 0.6],
         'min_child_weight': list(range(1, min(6, n_samples // 50 + 2))),
     }
 
@@ -88,4 +88,4 @@ def forecast_yield():
             raise ValueError
     except Exception:
         data = train(df)
-    return data["model"]
+    return data

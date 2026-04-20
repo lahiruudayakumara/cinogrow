@@ -46,6 +46,8 @@ def predict_yield_for_batch(batch_id: int, session: Session = Depends(get_sessio
     if batch.dried_mass_kg is None or batch.dried_mass_kg <= 0:
         raise HTTPException(status_code=400, detail="Batch has no valid dried_mass_kg for prediction")
 
+    logger.info(f"Processing batch prediction for batch_id={batch_id}: dried_mass_kg={batch.dried_mass_kg}, cinnamon_type={batch.cinnamon_type}, harvest_season={batch.harvest_season}")
+
     try:
         result = predict_oil_yield(
             dried_mass_kg=batch.dried_mass_kg,
@@ -57,8 +59,8 @@ def predict_yield_for_batch(batch_id: int, session: Session = Depends(get_sessio
         logger.warning(f"Validation error in batch-based oil yield prediction: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Error in batch-based oil yield prediction: {e}")
-        raise HTTPException(status_code=500, detail="Failed to predict oil yield for batch")
+        logger.error(f"Error in batch-based oil yield prediction for batch {batch_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to predict oil yield for batch: {str(e)}")
 
 
 @router.post("/predictions", response_model=OilYieldPredictionRead, status_code=201)

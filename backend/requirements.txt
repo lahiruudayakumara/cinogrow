@@ -8,6 +8,7 @@ numpy
 pandas
 scikit-learn
 xgboost
+lightgbm
 joblib
 pillow
 pillow-heif
@@ -36,3 +37,4 @@ inference-sdk
 
 # --- Kaggle Integration ---
 kaggle>=1.6.0
+kagglehub[pandas-datasets]

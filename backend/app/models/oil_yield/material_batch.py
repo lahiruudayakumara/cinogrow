@@ -12,13 +12,10 @@ class MaterialBatch(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     batch_name: Optional[str] = Field(default=None, max_length=120)
     cinnamon_type: str = Field(max_length=100)
-    mass_kg: float
+    mass_kg: float = Field(default=0.0)
     dried_mass_kg: Optional[float] = Field(default=None, description="Dried weight (kg). Required for purchased; recorded later for own_farm.")
-    plant_part: str = Field(max_length=100)
-    plant_age_years: float
+    plant_age_years: Optional[float] = Field(default=0.0)
     harvest_season: str = Field(max_length=100)
-    # Scene 1 = own_farm (user dries); Scene 2 = purchased (pre-dried by supplier)
     source: str = Field(max_length=20)
-    # Processing pipeline stage: raw → drying → distilling → quality_check → complete
     process_stage: str = Field(max_length=20)
     created_at: datetime = Field(default_factory=datetime.utcnow)

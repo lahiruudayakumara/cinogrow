@@ -735,55 +735,59 @@ const FertilizerResultScreen: React.FC = () => {
                                 {activeTab === 'overview' && (
                                     <>
                                         {/* Growth Stage */}
-                                        <View style={styles.recommendationCard}>
-                                            <View style={styles.cardHeader}>
-                                                <Ionicons name="git-branch-outline" size={20} color="#4CAF50" />
-                                                <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.growth_stage.title')}</Text>
+                                        {displayRecommendations?.growth_stage && (
+                                            <View style={styles.recommendationCard}>
+                                                <View style={styles.cardHeader}>
+                                                    <Ionicons name="git-branch-outline" size={20} color="#4CAF50" />
+                                                    <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.growth_stage.title')}</Text>
+                                                </View>
+                                                <Text style={styles.stageDescription}>{displayRecommendations.growth_stage.description}</Text>
                                             </View>
-                                            <Text style={styles.stageDescription}>{displayRecommendations.growth_stage.description}</Text>
-                                        </View>
+                                        )}
 
                                         {/* Primary Fertilizer */}
-                                        <View style={styles.recommendationCard}>
-                                            <View style={styles.cardHeader}>
-                                                <Ionicons name="flask-outline" size={20} color="#4CAF50" />
-                                                <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.primary_fertilizer.title')}</Text>
-                                            </View>
-                                            <View style={styles.fertilizerDetails}>
-                                                <Text style={styles.fertilizerName}>{displayRecommendations.primary_fertilizer.name}</Text>
-                                                <View style={styles.npkBadge}>
-                                                    <Text style={styles.npkText}>{t('fertilizer.result.recommendations.primary_fertilizer.npk')}: {displayRecommendations.primary_fertilizer.npk_ratio}</Text>
+                                        {displayRecommendations?.primary_fertilizer && (
+                                            <View style={styles.recommendationCard}>
+                                                <View style={styles.cardHeader}>
+                                                    <Ionicons name="flask-outline" size={20} color="#4CAF50" />
+                                                    <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.primary_fertilizer.title')}</Text>
                                                 </View>
-                                                {displayRecommendations.primary_fertilizer.dosage_note && (
-                                                    <View style={[styles.applicationMethodBox, { backgroundColor: '#FEF3C7', marginBottom: 12 }]}>
-                                                        <Ionicons name="information-circle" size={16} color="#D97706" />
-                                                        <Text style={[styles.applicationMethodText, { color: '#92400E', marginLeft: 8 }]}>
-                                                            {displayRecommendations.primary_fertilizer.dosage_note}
+                                                <View style={styles.fertilizerDetails}>
+                                                    <Text style={styles.fertilizerName}>{displayRecommendations.primary_fertilizer.name}</Text>
+                                                    <View style={styles.npkBadge}>
+                                                        <Text style={styles.npkText}>{t('fertilizer.result.recommendations.primary_fertilizer.npk')}: {displayRecommendations.primary_fertilizer.npk_ratio}</Text>
+                                                    </View>
+                                                    {displayRecommendations.primary_fertilizer.dosage_note && (
+                                                        <View style={[styles.applicationMethodBox, { backgroundColor: '#FEF3C7', marginBottom: 12 }]}>
+                                                            <Ionicons name="information-circle" size={16} color="#D97706" />
+                                                            <Text style={[styles.applicationMethodText, { color: '#92400E', marginLeft: 8 }]}>
+                                                                {displayRecommendations.primary_fertilizer.dosage_note}
+                                                            </Text>
+                                                        </View>
+                                                    )}
+                                                    <View style={styles.detailRow}>
+                                                        <Ionicons name="scale-outline" size={16} color="#6B7280" />
+                                                        <Text style={styles.detailText}>
+                                                            <Text style={styles.detailBold}>{t('fertilizer.result.recommendations.primary_fertilizer.dosage')}: </Text>
+                                                            {displayRecommendations.primary_fertilizer.dosage}
                                                         </Text>
                                                     </View>
-                                                )}
-                                                <View style={styles.detailRow}>
-                                                    <Ionicons name="scale-outline" size={16} color="#6B7280" />
-                                                    <Text style={styles.detailText}>
-                                                        <Text style={styles.detailBold}>{t('fertilizer.result.recommendations.primary_fertilizer.dosage')}: </Text>
-                                                        {displayRecommendations.primary_fertilizer.dosage}
-                                                    </Text>
-                                                </View>
-                                                <View style={styles.detailRow}>
-                                                    <Ionicons name="time-outline" size={16} color="#6B7280" />
-                                                    <Text style={styles.detailText}>
-                                                        <Text style={styles.detailBold}>{t('fertilizer.result.recommendations.primary_fertilizer.frequency')}: </Text>
-                                                        {displayRecommendations.primary_fertilizer.frequency}
-                                                    </Text>
-                                                </View>
-                                                <View style={styles.applicationMethodBox}>
-                                                    <Text style={styles.applicationMethodTitle}>{t('fertilizer.result.recommendations.primary_fertilizer.application_method')}:</Text>
-                                                    <Text style={styles.applicationMethodText}>
-                                                        {displayRecommendations.primary_fertilizer.application_method}
-                                                    </Text>
+                                                    <View style={styles.detailRow}>
+                                                        <Ionicons name="time-outline" size={16} color="#6B7280" />
+                                                        <Text style={styles.detailText}>
+                                                            <Text style={styles.detailBold}>{t('fertilizer.result.recommendations.primary_fertilizer.frequency')}: </Text>
+                                                            {displayRecommendations.primary_fertilizer.frequency}
+                                                        </Text>
+                                                    </View>
+                                                    <View style={styles.applicationMethodBox}>
+                                                        <Text style={styles.applicationMethodTitle}>{t('fertilizer.result.recommendations.primary_fertilizer.application_method')}:</Text>
+                                                        <Text style={styles.applicationMethodText}>
+                                                            {displayRecommendations.primary_fertilizer.application_method}
+                                                        </Text>
+                                                    </View>
                                                 </View>
                                             </View>
-                                        </View>
+                                        )}
                                     </>
                                 )}
 
@@ -840,30 +844,32 @@ const FertilizerResultScreen: React.FC = () => {
                                         )}
 
                                         {/* Additional Care Tips */}
-                                        <View style={styles.recommendationCard}>
-                                            <View style={styles.cardHeader}>
-                                                <Ionicons name="water-outline" size={20} color="#4CAF50" />
-                                                <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.additional_care.title')}</Text>
-                                            </View>
-                                            <View style={styles.careItem}>
-                                                <Ionicons name="water" size={16} color="#3B82F6" />
-                                                <Text style={styles.careText}>{displayRecommendations.additional_care.watering}</Text>
-                                            </View>
-                                            <View style={styles.careItem}>
-                                                <Ionicons name="layers" size={16} color="#8B7355" />
-                                                <Text style={styles.careText}>{displayRecommendations.additional_care.mulching}</Text>
-                                            </View>
-                                            <View style={styles.careItem}>
-                                                <Ionicons name="eye" size={16} color="#4CAF50" />
-                                                <Text style={styles.careText}>{displayRecommendations.additional_care.monitoring}</Text>
-                                            </View>
-                                            {displayRecommendations.additional_care.soil_testing && (
-                                                <View style={styles.careItem}>
-                                                    <Ionicons name="flask" size={16} color="#8B7355" />
-                                                    <Text style={styles.careText}>{displayRecommendations.additional_care.soil_testing}</Text>
+                                        {displayRecommendations?.additional_care && (
+                                            <View style={styles.recommendationCard}>
+                                                <View style={styles.cardHeader}>
+                                                    <Ionicons name="water-outline" size={20} color="#4CAF50" />
+                                                    <Text style={styles.cardTitle}>{t('fertilizer.result.recommendations.additional_care.title')}</Text>
                                                 </View>
-                                            )}
-                                        </View>
+                                                <View style={styles.careItem}>
+                                                    <Ionicons name="water" size={16} color="#3B82F6" />
+                                                    <Text style={styles.careText}>{displayRecommendations.additional_care?.watering || 'Maintain consistent watering'}</Text>
+                                                </View>
+                                                <View style={styles.careItem}>
+                                                    <Ionicons name="layers" size={16} color="#8B7355" />
+                                                    <Text style={styles.careText}>{displayRecommendations.additional_care?.mulching || 'Apply mulch as needed'}</Text>
+                                                </View>
+                                                <View style={styles.careItem}>
+                                                    <Ionicons name="eye" size={16} color="#4CAF50" />
+                                                    <Text style={styles.careText}>{displayRecommendations.additional_care?.monitoring || 'Monitor plant health regularly'}</Text>
+                                                </View>
+                                                {displayRecommendations.additional_care?.soil_testing && (
+                                                    <View style={styles.careItem}>
+                                                        <Ionicons name="flask" size={16} color="#8B7355" />
+                                                        <Text style={styles.careText}>{displayRecommendations.additional_care.soil_testing}</Text>
+                                                    </View>
+                                                )}
+                                            </View>
+                                        )}
                                     </>
                                 )}
 
@@ -908,7 +914,7 @@ const FertilizerResultScreen: React.FC = () => {
                                         )}
 
                                         {/* Organic Alternative */}
-                                        {displayRecommendations.organic_alternative && (
+                                        {displayRecommendations?.organic_alternative?.description && (
                                             <View style={styles.recommendationCard}>
                                                 <View style={styles.cardHeader}>
                                                     <Ionicons name="leaf" size={20} color="#16A34A" />

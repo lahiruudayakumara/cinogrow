@@ -34,7 +34,6 @@ from app.models.yield_weather.hybrid_yield import HybridYieldResult
 from app.models.fertilizer_predictions import FertilizerPrediction, FertilizerAnalysis
 from app.models.fertilizer.fertilizer import FertilizerType, FertilizerApplication, FertilizerSchedule, FertilizerRecommendation
 from app.models.oil_yield.material_batch import MaterialBatch
-from app.models.oil_yield.predictions import OilYieldPrediction, DistillationPrediction, QualityPrediction
 
 # Import database and routers
 from app.db.session import create_db_and_tables
@@ -45,8 +44,7 @@ from app.routers.tree_analysis import router as tree_analysis_router
 from app.routers import auth
 
 # Import your oil yield router
-from app.oil_yield.router import router as oil_yield_router
-from app.oil_yield.predictions_router import router as oil_yield_predictions_router
+from app.routers.oil_yield.router import router as oil_yield_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -77,7 +75,6 @@ async def startup_event():
 
 # Include routers
 app.include_router(oil_yield_router, prefix='/api/v1')
-app.include_router(oil_yield_predictions_router, prefix='/api/v1')  # Oil yield prediction
 app.include_router(roboflow_simple_router, prefix='/api/v1')  # Roboflow deficiency detection
 app.include_router(tree_analysis_router, prefix='/api/v1')  # Tree stem analysis
 app.include_router(weather.router, prefix="/api/v1")  # Weather endpoints at /api/v1/weather/

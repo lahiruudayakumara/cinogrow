@@ -32,7 +32,6 @@ interface MaterialBatch {
   batch_name?: string;
   cinnamon_type: string;
   mass_kg: number;
-  plant_part: string;
   plant_age_years: number;
   harvest_season: string;
   created_at: string;
@@ -48,8 +47,6 @@ export default function AddMaterialBatchScreen() {
   const [batchName, setBatchName] = useState('');
   const [cinnamonType, setCinnamonType] = useState('');
   const [massKg, setMassKg] = useState('');
-  const [plantPart, setPlantPart] = useState('');
-  const [plantAgeYears, setPlantAgeYears] = useState('');
   const [harvestSeason, setHarvestSeason] = useState('');
   const [loading, setLoading] = useState(false);
   const [batches, setBatches] = useState<MaterialBatch[]>([]);
@@ -62,13 +59,9 @@ export default function AddMaterialBatchScreen() {
     { value: 'Sri Gemunu',        label: t('oil_yield.add_batch.options.cinnamon_types.sri_gemunu') },
     { value: 'Sri Vijaya',        label: t('oil_yield.add_batch.options.cinnamon_types.sri_vijaya') },
   ];
-  const plantParts = [
-    { value: 'Leaves & Twigs',       label: t('oil_yield.add_batch.options.plant_parts.leaves_twigs') },
-    { value: 'Featherings & Chips',  label: t('oil_yield.add_batch.options.plant_parts.featherings_chips') },
-  ];
   const harvestSeasons = [
-    { value: 'May–August',                label: t('oil_yield.add_batch.options.harvest_seasons.may_august') },
-    { value: 'October–December/January', label: t('oil_yield.add_batch.options.harvest_seasons.october_january') },
+    { value: 'January-May',   label: t('oil_yield.add_batch.options.harvest_seasons.january_may') },
+    { value: 'June-December', label: t('oil_yield.add_batch.options.harvest_seasons.june_december') },
   ];
 
   useEffect(() => {
@@ -105,8 +98,6 @@ export default function AddMaterialBatchScreen() {
       const payload: Record<string, any> = {
         batch_name: batchName.trim() || undefined,
         cinnamon_type: cinnamonType.trim(),
-        plant_part: plantPart.trim(),
-        plant_age_years: parseFloat(plantAgeYears),
         harvest_season: harvestSeason.trim(),
         source,
       };
@@ -117,9 +108,7 @@ export default function AddMaterialBatchScreen() {
 
       if (
         !payload.cinnamon_type ||
-        !payload.plant_part ||
         !payload.harvest_season ||
-        isNaN(payload.plant_age_years) ||
         (isPurchased && (isNaN(payload.mass_kg) || payload.mass_kg <= 0))
       ) {
         Alert.alert(t('oil_yield.add_batch.alerts.validation'), t('oil_yield.add_batch.alerts.fill_fields'));
@@ -145,8 +134,6 @@ export default function AddMaterialBatchScreen() {
       // Reset form
       setCinnamonType('');
       setMassKg('');
-      setPlantPart('');
-      setPlantAgeYears('');
       setHarvestSeason('');
       setBatchName('');
       
@@ -224,14 +211,6 @@ export default function AddMaterialBatchScreen() {
           <View style={styles.batchDetailRow}>
             <View style={styles.batchDetailItem}>
               <MaterialCommunityIcons name="sprout" size={16} color="#8E8E93" />
-              <Text style={styles.batchDetailLabel}>{t('oil_yield.add_batch.list.detail_labels.part')}</Text>
-            </View>
-            <Text style={styles.batchDetailValue}>{batch.plant_part}</Text>
-          </View>
-          
-          <View style={styles.batchDetailRow}>
-            <View style={styles.batchDetailItem}>
-              <MaterialCommunityIcons name="clock-outline" size={16} color="#8E8E93" />
               <Text style={styles.batchDetailLabel}>{t('oil_yield.add_batch.list.detail_labels.age')}</Text>
             </View>
             <Text style={styles.batchDetailValue}>{batch.plant_age_years} {t('oil_yield.add_batch.form.plant_age.suffix')}</Text>
@@ -427,61 +406,6 @@ export default function AddMaterialBatchScreen() {
         </View>
         )}
 
-        {/* Plant Part */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="sprout" size={20} color="#4aab4e" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>{t('oil_yield.add_batch.form.plant_part.label')}</Text>
-                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.plant_part.subtitle')}</Text>
-              </View>
-            </View>
-            <View style={styles.dropdownGroup}>
-              {plantParts.map((item) => (
-                <DropdownOption
-                  key={item.value}
-                  label={item.label}
-                  value={item.value}
-                  selected={plantPart === item.value}
-                  onSelect={() => setPlantPart(item.value)}
-                  icon="sprout"
-                />
-              ))}
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Plant Age */}
-        <View style={styles.inputCard}>
-          <BlurView intensity={70} tint="light" style={styles.cardBlur}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconCircle}>
-                <MaterialCommunityIcons name="clock-outline" size={20} color="#4aab4e" />
-              </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>{t('oil_yield.add_batch.form.plant_age.label')}</Text>
-                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.plant_age.subtitle')}</Text>
-              </View>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                value={plantAgeYears}
-                onChangeText={setPlantAgeYears}
-                keyboardType="decimal-pad"
-                placeholder={t('oil_yield.add_batch.form.plant_age.placeholder')}
-                placeholderTextColor="#C7C7CC"
-              />
-              <View style={styles.inputSuffix}>
-                <Text style={styles.inputSuffixText}>{t('oil_yield.add_batch.form.plant_age.suffix')}</Text>
-              </View>
-            </View>
-          </BlurView>
-        </View>
-
         {/* Harvest Season */}
         <View style={styles.inputCard}>
           <BlurView intensity={70} tint="light" style={styles.cardBlur}>
@@ -490,8 +414,8 @@ export default function AddMaterialBatchScreen() {
                 <MaterialCommunityIcons name="weather-sunny" size={20} color="#4aab4e" />
               </View>
               <View style={styles.cardHeaderText}>
-                <Text style={styles.label}>{t('oil_yield.add_batch.form.harvest_season.label')}</Text>
-                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.harvest_season.subtitle')}</Text>
+                <Text style={styles.label}>{t('oil_yield.add_batch.form.harvest_seasons.label')}</Text>
+                <Text style={styles.labelSubtext}>{t('oil_yield.add_batch.form.harvest_seasons.subtitle')}</Text>
               </View>
             </View>
             <View style={styles.dropdownGroup}>

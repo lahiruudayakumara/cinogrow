@@ -15,7 +15,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { BarChart } from 'react-native-chart-kit';
+import { LineChart } from 'react-native-chart-kit';
 import { useTranslation } from 'react-i18next';
 import apiConfig from '../../../config/api';
 
@@ -30,27 +30,21 @@ const API_BASE_URL = Platform.OS === 'web'
 export default function OilPricePredictor() {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
-  const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [forecastData, setForecastData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showResults, setShowResults] = useState(false);
 
-  // SARIMA time series forecasting (UI: daily/weekly/monthly)
-  const fetchForecast = async (range: 'daily' | 'weekly' | 'monthly') => {
+  // SARIMA time series forecasting
+  const fetchForecast = async () => {
     console.log('🔍 Fetching SARIMA forecast');
     console.log('Oil Type: Leaf');
-    console.log('Time Range:', range);
+    console.log('Time Range: monthly');
 
     setLoading(true);
     setShowResults(false);
     setForecastData(null);
 
     try {
-      // Map UI range to backend-expected values
-      // weekly has no backend equivalent — fetch daily points and aggregate on the frontend
-      const backendRange = range === 'daily' ? 'days' : range === 'monthly' ? 'months' : 'days';
-      // daily: 30 days | weekly: 35 days (5 weeks × 7) | monthly: 12 months
-      const steps = range === 'daily' ? 30 : range === 'weekly' ? 35 : 12;
       const response = await fetch(`${API_BASE_URL}/oil_yield/price_forecast`, {
         method: 'POST',
         headers: {
@@ -58,8 +52,8 @@ export default function OilPricePredictor() {
         },
         body: JSON.stringify({
           oil_type: 'Leaf',
-          time_range: backendRange,
-          steps,
+          time_range: 'months',
+          steps: 12,
         }),
       });
 
@@ -75,7 +69,6 @@ export default function OilPricePredictor() {
       console.log('✅ Forecast data received');
       
       setForecastData(data);
-      setTimeRange(range);
       setShowResults(true);
     } catch (error: any) {
       console.error('❌ Forecast error:', error);
@@ -90,36 +83,16 @@ export default function OilPricePredictor() {
 
   // Load default chart on mount
   useEffect(() => {
-    fetchForecast('monthly');
+    fetchForecast();
   }, []);
 
-  const formatCurrency = (value: number) => {
-    return `Rs.${value.toFixed(2)}`;
-  };
-
-  // Aggregate daily points into weekly averages (8 weeks)
-  const aggregateWeekly = (values: number[]) => {
-    const weeks: number[] = [];
-    for (let i = 0; i < values.length; i += 7) {
-      const chunk = values.slice(i, i + 7);
-      if (chunk.length === 0) break;
-      const avg = chunk.reduce((a, b) => a + b, 0) / chunk.length;
-      weeks.push(Number(avg.toFixed(2)));
-    }
-    return weeks;
-  };
-
-  const getDisplayedStatistics = () => {
-    if (!forecastData || !forecastData.forecast) return null;
-    if (timeRange === 'weekly') {
-      const weekly = aggregateWeekly(forecastData.forecast);
-      if (weekly.length === 0) return null;
-      const mean = weekly.reduce((a: number, b: number) => a + b, 0) / weekly.length;
-      const min = Math.min(...weekly);
-      const max = Math.max(...weekly);
-      return { mean, min, max };
-    }
-    return forecastData.statistics || null;
+  const getTrendMessage = () => {
+    if (!forecastData || !forecastData.statistics) return null;
+    const { trend, signal } = forecastData.statistics;
+    
+    const trendText = trend === 'FLAT' ? 'stable' : trend === 'UP' ? 'rising' : 'declining';
+    
+    return `Price trend is ${trendText} for the next 4 weeks - ${signal === 'WATCH' ? 'Monitor closely' : signal === 'BUY' ? 'Good buying opportunity' : 'Price caution'}`;
   };
 
   const getChartData = () => {
@@ -127,44 +100,14 @@ export default function OilPricePredictor() {
       return { labels: [], datasets: [{ data: [] }] };
     }
 
-    let prices: number[] = forecastData.forecast || [];
+    // Ensure we only plot 4 weekly prices
+    const prices: number[] = (forecastData.forecast || []).slice(0, 4);
+    const dates: string[] = (forecastData.dates || []).slice(0, 4);
 
-    if (timeRange === 'weekly') {
-      prices = aggregateWeekly(prices);
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const pad2 = (n: number) => String(n).padStart(2, '0');
-    const monthShort = (d: Date) => d.toLocaleString('en-US', { month: 'short' });
-    const weekdayShort = (d: Date) => d.toLocaleString('en-US', { weekday: 'short' });
-
-    let labels: string[] = [];
-
-    if (timeRange === 'daily') {
-      labels = prices.map((_, i) => {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i);
-        if (i === 0) return `Today\n${pad2(d.getDate())} ${monthShort(d)}\n${d.getFullYear()}`;
-        if (i === 1) return `Tmrw\n${pad2(d.getDate())} ${monthShort(d)}\n${d.getFullYear()}`;
-        return `${weekdayShort(d)}\n${pad2(d.getDate())} ${monthShort(d)}\n${d.getFullYear()}`;
-      });
-    } else if (timeRange === 'weekly') {
-      labels = prices.map((_, i) => {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i * 7);
-        if (i === 0) return `This\nWeek\n${monthShort(d)} ${d.getFullYear()}`;
-        if (i === 1) return `Next\nWeek\n${monthShort(d)} ${d.getFullYear()}`;
-        return `Wk ${i + 1}\n${monthShort(d)}\n${d.getFullYear()}`;
-      });
-    } else {
-      // Monthly: generate labels starting from the current month
-      labels = prices.map((_, i) => {
-        const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
-        return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
-      });
-    }
+    const labels = dates.map((dateStr) => {
+      const d = new Date(dateStr);
+      return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+    });
 
     return {
       labels,
@@ -176,95 +119,6 @@ export default function OilPricePredictor() {
         },
       ],
     };
-  };
-
-  const RadioOption = ({ label, value, selected, onSelect, icon, subtitle }: {
-    label: string;
-    value: string;
-    selected: boolean;
-    onSelect: () => void;
-    icon: string;
-    subtitle?: string;
-  }) => (
-    <TouchableOpacity
-      style={[styles.radioOption, selected && styles.radioOptionSelected]}
-      onPress={onSelect}
-      activeOpacity={0.7}
-    >
-      <View style={styles.radioContent}>
-        <View style={styles.radioIconCircle}>
-          <MaterialCommunityIcons name={icon as any} size={20} color={selected ? '#FF3B30' : '#8E8E93'} />
-        </View>
-        <View style={styles.radioTextContainer}>
-          <Text style={[styles.radioLabel, selected && styles.radioLabelSelected]}>{label}</Text>
-          {subtitle && <Text style={styles.radioSubtext}>{subtitle}</Text>}
-        </View>
-      </View>
-      <View style={[styles.radioCircle, selected && { borderColor: '#FF3B30' }]}>
-        {selected && <View style={[styles.radioInner, { backgroundColor: '#FF3B30' }]} />}
-      </View>
-    </TouchableOpacity>
-  );
-
-  const ControlButton = ({ onPress, isPrimary, icon, text, disabled }: {
-    onPress: () => void;
-    isPrimary: boolean;
-    icon: string;
-    text: string;
-    disabled?: boolean;
-  }) => {
-    const scaleAnim = React.useRef(new Animated.Value(1)).current;
-
-    const handlePressIn = () => {
-      if (disabled) return;
-      Animated.spring(scaleAnim, {
-        toValue: 0.96,
-        useNativeDriver: true,
-        speed: 50,
-      }).start();
-    };
-
-    const handlePressOut = () => {
-      if (disabled) return;
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        friction: 4,
-        tension: 50,
-      }).start();
-    };
-
-    return (
-      <Animated.View style={[styles.controlButtonWrapper, { transform: [{ scale: scaleAnim }] }]}>
-        <TouchableOpacity
-          style={[
-            styles.controlButton,
-            isPrimary ? styles.primaryButton : styles.secondaryButton,
-            disabled && styles.disabledButton,
-          ]}
-          onPress={onPress}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          activeOpacity={1}
-          disabled={disabled}
-        >
-          <BlurView intensity={isPrimary ? 100 : 70} tint={isPrimary ? "dark" : "light"} style={styles.controlButtonBlur}>
-            <MaterialCommunityIcons 
-              name={icon as any} 
-              size={20} 
-              color={disabled ? '#C7C7CC' : (isPrimary ? '#FFFFFF' : '#FF3B30')} 
-            />
-            <Text style={[
-              styles.controlButtonText,
-              isPrimary ? styles.primaryButtonText : styles.secondaryButtonText,
-              disabled && styles.disabledButtonText,
-            ]}>
-              {text}
-            </Text>
-          </BlurView>
-        </TouchableOpacity>
-      </Animated.View>
-    );
   };
 
   return (
@@ -287,63 +141,9 @@ export default function OilPricePredictor() {
           </TouchableOpacity>
           
            <Text style={styles.header}>{t('oil_yield.price.header.title')}</Text>
-           <Text style={styles.headerSubtitle}>
-             {t('oil_yield.price.header.subtitle')}
-           </Text>
         </View>
 
-        {/* View Toggle Buttons */}
-        {!loading && (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('oil_yield.price.view.title')}</Text>
-            </View>
-            <View style={styles.viewToggleContainer}>
-              <TouchableOpacity
-                style={[styles.viewToggleButton, timeRange === 'daily' && styles.viewToggleButtonActive]}
-                onPress={() => fetchForecast('daily')}
-                activeOpacity={0.7}
-              >
-                <MaterialCommunityIcons 
-                  name="calendar-today" 
-                  size={18} 
-                  color={timeRange === 'daily' ? '#FFFFFF' : '#8E8E93'} 
-                />
-                <Text style={[styles.viewToggleText, timeRange === 'daily' && styles.viewToggleTextActive]}>
-                  {t('oil_yield.price.view.daily')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.viewToggleButton, timeRange === 'weekly' && styles.viewToggleButtonActive]}
-                onPress={() => fetchForecast('weekly')}
-                activeOpacity={0.7}
-              >
-                <MaterialCommunityIcons 
-                  name="calendar-week" 
-                  size={18} 
-                  color={timeRange === 'weekly' ? '#FFFFFF' : '#8E8E93'} 
-                />
-                <Text style={[styles.viewToggleText, timeRange === 'weekly' && styles.viewToggleTextActive]}>
-                  {t('oil_yield.price.view.weekly')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.viewToggleButton, timeRange === 'monthly' && styles.viewToggleButtonActive]}
-                onPress={() => fetchForecast('monthly')}
-                activeOpacity={0.7}
-              >
-                <MaterialCommunityIcons 
-                  name="calendar-month" 
-                  size={18} 
-                  color={timeRange === 'monthly' ? '#FFFFFF' : '#8E8E93'} 
-                />
-                <Text style={[styles.viewToggleText, timeRange === 'monthly' && styles.viewToggleTextActive]}>
-                  {t('oil_yield.price.view.monthly')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
+
 
         {/* Loading State */}
         {loading && (
@@ -375,13 +175,13 @@ export default function OilPricePredictor() {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {(() => {
                     const chartData = getChartData();
-                    // 72px per bar gives enough room for labels and values on top
+                    // 72px per point gives enough room for labels
                     const computedWidth = Math.max(CHART_WIDTH, chartData.labels.length * 72);
                     return (
-                      <BarChart
+                      <LineChart
                         data={chartData}
                         width={computedWidth}
-                        height={300}
+                        height={250}
                         yAxisLabel="Rs."
                         yAxisSuffix=""
                         chartConfig={{
@@ -398,12 +198,18 @@ export default function OilPricePredictor() {
                             stroke: 'rgba(0, 0, 0, 0.05)',
                           },
                           barPercentage: 0.65,
+                          propsForDots: {
+                            r: '5',
+                            strokeWidth: '2',
+                            stroke: '#FF3B30',
+                          },
                         }}
                         style={styles.chart}
                         withVerticalLabels={true}
                         withHorizontalLabels={true}
                         withInnerLines={true}
-                        showValuesOnTopOfBars={true}
+                        withDots={true}
+                        withShadow={false}
                         verticalLabelRotation={45}
                         fromZero={false}
                       />
@@ -418,47 +224,15 @@ export default function OilPricePredictor() {
                 </View>
               </BlurView>
             </View>
+            {/* Trend & Signal Card */}
+            {forecastData && forecastData.statistics && (
+              <View style={styles.trendCard}>
+                <BlurView intensity={70} tint="light" style={styles.trendBlur}>
+                  <Text style={styles.trendMessage}>{getTrendMessage()}</Text>
+                </BlurView>
+              </View>
+            )}
 
-            {/* Statistics Card */}
-            <View style={styles.recommendationCard}>
-              <BlurView intensity={70} tint="light" style={styles.recommendationBlur}>
-                <View style={styles.recommendationHeader}>
-                  {/* <View style={styles.recommendationIconCircle}>
-                    <MaterialCommunityIcons name="chart-box" size={20} color="#4aab4e" />
-                  </View> */}
-                  <Text style={styles.recommendationTitle}>{t('oil_yield.price.stats.title')}</Text>
-                </View>
-                
-                {getDisplayedStatistics() && (
-                  <>
-                    <View style={styles.statsGrid}>
-                      <View style={styles.statItem}>
-                        <MaterialCommunityIcons name="arrow-up" size={20} color="#30D158" />
-                        <Text style={styles.statLabel}>{t('oil_yield.price.stats.average')}</Text>
-                        <Text style={styles.statValue}>
-                          {formatCurrency((getDisplayedStatistics() as any).mean || 0)}
-                        </Text>
-                      </View>
-                      <View style={styles.statItem}>
-                        <MaterialCommunityIcons name="arrow-down" size={20} color="#FF3B30" />
-                        <Text style={styles.statLabel}>{t('oil_yield.price.stats.min')}</Text>
-                        <Text style={styles.statValue}>
-                          {formatCurrency((getDisplayedStatistics() as any).min || 0)}
-                        </Text>
-                      </View>
-                      <View style={styles.statItem}>
-                        <MaterialCommunityIcons name="arrow-up" size={20} color="#FF9F0A" />
-                        <Text style={styles.statLabel}>{t('oil_yield.price.stats.max')}</Text>
-                        <Text style={styles.statValue}>
-                          {formatCurrency((getDisplayedStatistics() as any).max || 0)}
-                        </Text>
-                      </View>
-                    </View>
-                    
-                  </>
-                )}
-              </BlurView>
-            </View>
           </>
         )}
 
@@ -1062,32 +836,7 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
     letterSpacing: -0.41,
   },
-  forecastSummary: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginTop: 12,
-  },
-  summaryItem: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.02)',
-    borderRadius: 10,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#8E8E93',
-    letterSpacing: -0.08,
-    marginBottom: 4,
-  },
-  summaryValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#000000',
-    letterSpacing: -0.24,
-  },
+
   chartCard: {
     borderRadius: 20,
     overflow: 'hidden',
@@ -1161,66 +910,27 @@ const styles = StyleSheet.create({
     color: '#3C3C43',
     letterSpacing: -0.08,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: 12,
+  trendCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
     marginBottom: 16,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.02)',
-    borderRadius: 12,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#8E8E93',
-    letterSpacing: -0.08,
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
-    letterSpacing: -0.24,
-  },
-  viewToggleContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 24,
-  },
-  viewToggleButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 0, 0, 0.06)',
-  },
-  viewToggleButtonActive: {
-    backgroundColor: '#22c232ff',
-    borderColor: '#23c04dff',
-    shadowColor: '#1cb435ff',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  viewToggleText: {
+  trendBlur: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+    padding: 16,
+  },
+  trendMessage: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#8E8E93',
+    color: '#1C1C1E',
+    lineHeight: 22,
     letterSpacing: -0.24,
-  },
-  viewToggleTextActive: {
-    color: '#FFFFFF',
   },
 });

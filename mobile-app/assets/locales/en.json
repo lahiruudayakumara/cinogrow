@@ -1216,6 +1216,7 @@
         "structural_pruning": "Structural Pruning",
         "bark_harvesting": "Bark Harvesting",
         "pre_harvest_management": "Pre-Harvest Management",
+        "routine_pest_monitoring": "Routine Pest Monitoring",
         "post_harvest_processing": "Post-Harvest Processing",
         "coppice_management": "Coppice Management",
         "general_plant_care": "General Plant Care",
@@ -1702,7 +1703,7 @@
           "placeholder": "3.2",
           "suffix": "years"
         },
-        "harvest_season": {
+        "harvest_seasons": {
           "label": "Harvest Season",
           "subtitle": "Select season",
           "options": [
@@ -1727,8 +1728,8 @@
           "featherings_chips": "Featherings & Chips"
         },
         "harvest_seasons": {
-          "may_august": "May–August",
-          "october_january": "October–December/January"
+          "january_may": "January-May",
+          "june_december": "June-December"
         }
       },
       "buttons": {

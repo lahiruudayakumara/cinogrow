@@ -1358,6 +1358,7 @@
         "quality_drying": "අස්වනු පසු සැකසීම",
         "regeneration": "පඳුරු කළමනාකරණය",
         "nutrient_deficiency_check": "පෝෂක ඌනතා පරීක්ෂණය",
+        "routine_pest_monitoring": "නිත්‍ය පළිබෝධ නිරීක්ෂණය",
         "disease_pest_scan": "රෝග සහ පළිබෝධ ස්කෑන්",
         "weather_water_advisory": "කාලගුණ මත පදනම් වූ ජල උපදේශන",
         "growth_yield_projection": "වර්ධන අවධියේ අස්වැන්න අනාවැකිය",
@@ -1800,7 +1801,7 @@
           "placeholder": "3.2",
           "suffix": "අවුරුදු"
         },
-        "harvest_season": {
+        "harvest_seasons": {
           "label": "අස්වැන්න කාලය",
           "subtitle": "අස්වනු ලබාගත් කාලය තෝරන්න",
           "options": [
@@ -1825,8 +1826,8 @@
           "featherings_chips": "පොතු සහ චිප්ස්"
         },
         "harvest_seasons": {
-          "may_august": "මැයි–අගෝස්තු",
-          "october_january": "ඔක්තෝබර්–දෙසැම්බර්/ජනවාරි"
+          "january_may": "ජනවාරි–අප්‍රේල්",
+          "june_december": "මැයි–අගෝස්තු"
         }
       },
       "buttons": {

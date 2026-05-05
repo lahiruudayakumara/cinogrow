@@ -128,7 +128,7 @@ export default function ProfileScreen() {
         {/* Navigate to Home Screen */}
         <Pressable
           style={styles.navButton}
-          onPress={() => router.push("/screens/home/homeScreen")}
+          onPress={() => router.push("/screens/yield-weather/YieldWeatherHome")}
           accessibilityRole="button"
           accessibilityLabel="Go to Home"
         >

@@ -1678,10 +1678,7 @@
         "cinnamon_type": {
           "label": "Cinnamon Type",
           "subtitle": "Select variety",
-          "options": [
-            "Sri Gemunu",
-            "Sri Vijaya"
-          ]
+          "options": ["Sri Gemunu", "Sri Vijaya"]
         },
         "mass": {
           "label": "Mass (kg)",
@@ -1692,10 +1689,7 @@
         "plant_part": {
           "label": "Plant Part",
           "subtitle": "Select part",
-          "options": [
-            "Leaves & Twigs",
-            "Featherings & Chips"
-          ]
+          "options": ["Leaves & Twigs", "Featherings & Chips"]
         },
         "plant_age": {
           "label": "Plant Age",
@@ -1706,10 +1700,7 @@
         "harvest_seasons": {
           "label": "Harvest Season",
           "subtitle": "Select season",
-          "options": [
-            "May–August",
-            "October–December/January"
-          ]
+          "options": ["May–August", "October–December/January"]
         }
       },
       "source": {
@@ -1728,8 +1719,8 @@
           "featherings_chips": "Featherings & Chips"
         },
         "harvest_seasons": {
-          "january_may": "January-May",
-          "june_december": "June-December"
+          "january_may": "October–December/January",
+          "june_december": "May–August"
         }
       },
       "buttons": {
